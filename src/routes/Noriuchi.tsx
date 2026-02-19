@@ -63,6 +63,14 @@ export function Noriuchi() {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
   };
 
+  const handleTransfer = (fromIndex: number, targetId: string, amount: number) => {
+    setMembers((prev) => prev.map((m, i) => {
+      if (i === fromIndex) return { ...m, collectMedals: m.collectMedals - amount };
+      if (m.id === targetId) return { ...m, collectMedals: m.collectMedals + amount, storedMedals: amount };
+      return m;
+    }));
+  };
+
   const handleCountChange = (newCount: number) => {
     setMemberCount(newCount);
     setMembers((prev) => {
@@ -182,7 +190,7 @@ export function Noriuchi() {
             </div>
           </div>
           <button type="button" className="btn btn-sm  w-full mt-2" onClick={() => setActiveTab("settlement")}>
-            精算入力へ <Icon icon="fa6-solid:arrow-right" className="size-3" />
+            精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
           </button>
         </div>
 
@@ -206,13 +214,17 @@ export function Noriuchi() {
                     medalSteps={medalSteps}
                     mode="settlement"
                     onChange={(updated) => updateMember(i, updated)}
+                    otherMembers={members.filter((_, j) => j !== i).map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
+                    onTransfer={(targetId, amount) => handleTransfer(i, targetId, amount)}
+                    memberResult={result.members[i]}
+                    settlements={result.settlements.filter((s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name)}
                   />
                 </div>
               ))}
             </div>
           </div>
           <button type="button" className="btn btn-sm w-full mt-2" onClick={() => setActiveTab("playing")}>
-            <Icon icon="fa6-solid:arrow-left" className="size-3" /> 入力画面へ
+            <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
           </button>
         </div>
       </div>

@@ -51,24 +51,6 @@ export function SettlementView({ result, lendingRate, exchangeRate }: Props) {
         </div>
       </div>
 
-      {/* 精算 */}
-      <div className="bg-base-100 border border-base-300 rounded-lg p-2">
-        <div className="font-bold text-sm text-center mb-2">精算</div>
-        {result.settlements.length === 0 ? (
-          <p className="text-center text-sm opacity-60">精算不要</p>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {result.settlements.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 bg-base-200 rounded p-2">
-                <span>{s.from}</span>
-                <span><Icon icon="fa6-solid:arrow-right" className="size-3" /></span>
-                <span>{s.to}</span>
-                <span className="ml-auto">{fmt(s.amount)} 円</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
       <dialog ref={modalRef} className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-2">分配方式について</h3>
