@@ -2,11 +2,12 @@ import type { Member, MemberResult, Settlement, CalcResult } from "../types";
 
 export function calculate(
   members: Member[],
-  rate: number
+  lendingRate: number,
+  exchangeRate: number
 ): CalcResult {
   const memberResults: MemberResult[] = members.map((m) => {
-    const totalInvest = m.investMedals * rate + m.investCash;
-    const totalCollect = m.collectMedals * rate + m.collectCash;
+    const totalInvest = m.investMedals * lendingRate + m.investCash;
+    const totalCollect = m.collectMedals * exchangeRate + m.collectCash;
     return {
       id: m.id,
       name: m.name,

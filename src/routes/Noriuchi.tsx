@@ -8,15 +8,10 @@ import { ImportModal } from "../components/ImportModal";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
 import { encodeShareURL, decodeShareData } from "../utils/share";
+import { ANIMAL_EMOJIS, LENDING_RATE_OPTIONS, getExchangeOptions, pickRandomEmoji } from "../types";
 import type { Member } from "../types";
 
 const MAX_MEMBERS = 4;
-const ANIMAL_EMOJIS = [
-  "🐶","🐱","🐰","🐻","🐼","🐨","🐯","🦁","🐮","🐷",
-  "🐸","🐵","🐔","🐧","🐦","🦊","🦝","🦄","🐴","🐺",
-  "🐗","🐲","🦎","🐢","🐍","🦅","🦉","🦇","🐝","🐞",
-  "🦋","🐙","🦈","🐬","🐳","🐘","🦒","🦘","🦩","🦜",
-];
 
 function pickRandomEmojis(count: number): string[] {
   const shuffled = [...ANIMAL_EMOJIS].sort(() => Math.random() - 0.5);
@@ -42,7 +37,8 @@ function isMemberEmpty(m: Member) {
 
 export function Noriuchi() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [rate, setRate] = useLocalStorage("noridachi-rate", 20);
+  const [lendingRate, setLendingRate] = useLocalStorage("noridachi-rate", 20);
+  const [exchangeRate, setExchangeRate] = useLocalStorage("noridachi-exchangeRate", 20);
   const [slotSize, setSlotSize] = useLocalStorage<46 | 50>("noridachi-slotSize", 46);
   const [memberCount, setMemberCount] = useLocalStorage("noridachi-memberCount", 2);
   const [usedEmojis] = useLocalStorage("noridachi-emojis", DEFAULT_EMOJIS);
@@ -52,6 +48,24 @@ export function Noriuchi() {
   ]);
   const [shareIndex, setShareIndex] = useState<number | null>(null);
   const [pendingShare, setPendingShare] = useState<Omit<Member, "id"> | null>(null);
+
+  // localStorage から読み込んだメンバーの空名前を補完
+  useEffect(() => {
+    if (members.some((m) => !m.name.trim())) {
+      setMembers((prev) => prev.map((m) => m.name.trim() ? m : { ...m, name: pickRandomEmoji() }));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const exchangeOptions = useMemo(
+    () => getExchangeOptions(lendingRate),
+    [lendingRate]
+  );
+
+  const handleLendingRateChange = (newRate: number) => {
+    setLendingRate(newRate);
+    // 等価にリセット
+    setExchangeRate(newRate);
+  };
 
   const applyShare = (index: number) => {
     if (!pendingShare) return;
@@ -68,7 +82,8 @@ export function Noriuchi() {
     const decoded = decodeShareData(d);
     if (!decoded) return;
 
-    setRate(decoded.rate);
+    setLendingRate(decoded.lendingRate);
+    setExchangeRate(decoded.exchangeRate);
     setSlotSize(decoded.slotSize);
     setSearchParams({}, { replace: true });
 
@@ -102,8 +117,8 @@ export function Noriuchi() {
   };
 
   const filledMembers = useMemo(
-    () => members.map((m, i) => ({ ...m, name: m.name.trim() || usedEmojis[i] || `メンバー${i + 1}` })),
-    [members, usedEmojis]
+    () => members.map((m) => ({ ...m, name: m.name.trim() || pickRandomEmoji() })),
+    [members]
   );
 
   const medalSteps = useMemo(
@@ -112,15 +127,17 @@ export function Noriuchi() {
   );
 
   const result = useMemo(
-    () => calculate(filledMembers, rate),
-    [filledMembers, rate]
+    () => calculate(filledMembers, lendingRate, exchangeRate),
+    [filledMembers, lendingRate, exchangeRate]
   );
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-2">
-        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">レート</label>
-        <RateSelector rate={rate} onChange={setRate} />
+        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">貸出</label>
+        <RateSelector rate={lendingRate} options={LENDING_RATE_OPTIONS} onChange={handleLendingRateChange} />
+        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">交換</label>
+        <RateSelector rate={exchangeRate} options={exchangeOptions} onChange={setExchangeRate} />
       </div>
       <div className="flex items-center gap-3 mb-4">
         <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">再プレイ単位</label>
@@ -144,7 +161,7 @@ export function Noriuchi() {
         </select>
       </div>
 
-      <SettlementView result={result} rate={rate} />
+      <SettlementView result={result} exchangeRate={exchangeRate} />
 
       <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
         <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
@@ -152,7 +169,6 @@ export function Noriuchi() {
             <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
               <MemberForm
                 member={member}
-                index={i}
                 medalSteps={medalSteps}
                 onChange={(updated) => updateMember(i, updated)}
                 onShare={() => setShareIndex(i)}
@@ -164,7 +180,7 @@ export function Noriuchi() {
 
       {shareIndex !== null && (
         <ShareModal
-          url={encodeShareURL(filledMembers[shareIndex], rate, slotSize)}
+          url={encodeShareURL(filledMembers[shareIndex], lendingRate, exchangeRate, slotSize)}
           onClose={() => setShareIndex(null)}
         />
       )}

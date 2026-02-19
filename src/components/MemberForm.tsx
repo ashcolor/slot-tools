@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { StepInput } from "./StepInput";
+import { pickRandomEmoji } from "../types";
 import type { Member } from "../types";
 
 interface Props {
   member: Member;
-  index: number;
+
   medalSteps: number[];
   onChange: (updated: Member) => void;
   onShare?: () => void;
@@ -14,7 +15,7 @@ interface Props {
 const CASH_STEPS = [1000, 10000];
 const fmtCash = (v: number) => v.toLocaleString();
 
-export function MemberForm({ member, index, medalSteps, onChange, onShare }: Props) {
+export function MemberForm({ member, medalSteps, onChange, onShare }: Props) {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +54,7 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
             className="input input-bordered input-sm w-full font-semibold text-center"
             value={member.name}
             onChange={(e) => update("name", e.target.value)}
-            onBlur={() => setEditing(false)}
+            onBlur={() => { if (!member.name.trim()) update("name", pickRandomEmoji()); setEditing(false); }}
             onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
           />
         ) : (
@@ -61,7 +62,7 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
             className="text-lg text-center cursor-pointer py-1 hover:opacity-70 transition-opacity"
             onClick={() => setEditing(true)}
           >
-            {member.name || `メンバー${index + 1}`}
+            {member.name}
           </div>
         )}
         </div>

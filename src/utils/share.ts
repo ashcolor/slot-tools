@@ -1,7 +1,9 @@
+import { pickRandomEmoji } from "../types";
 import type { Member } from "../types";
 
 interface ShareData {
-  r: number;       // rate
+  lr: number;      // lendingRate
+  er: number;      // exchangeRate
   s: 46 | 50;      // slotSize
   n: string;       // name
   im: number;      // investMedals
@@ -10,15 +12,28 @@ interface ShareData {
   cc: number;      // collectCash
 }
 
+// 旧形式（後方互換）
+interface LegacyShareData {
+  r: number;
+  s: 46 | 50;
+  n: string;
+  im: number;
+  ic: number;
+  cm: number;
+  cc: number;
+}
+
 export interface DecodedShare {
-  rate: number;
+  lendingRate: number;
+  exchangeRate: number;
   slotSize: 46 | 50;
   member: Omit<Member, "id">;
 }
 
-export function encodeShareURL(member: Member, rate: number, slotSize: 46 | 50): string {
+export function encodeShareURL(member: Member, lendingRate: number, exchangeRate: number, slotSize: 46 | 50): string {
   const data: ShareData = {
-    r: rate,
+    lr: lendingRate,
+    er: exchangeRate,
     s: slotSize,
     n: member.name,
     im: member.investMedals,
@@ -36,12 +51,18 @@ export function encodeShareURL(member: Member, rate: number, slotSize: 46 | 50):
 export function decodeShareData(param: string): DecodedShare | null {
   try {
     const json = decodeURIComponent(escape(atob(param)));
-    const data: ShareData = JSON.parse(json);
+    const data = JSON.parse(json) as ShareData & Partial<LegacyShareData>;
+
+    // 旧形式: r のみ → 両方に同じ値を使う
+    const lendingRate = data.lr ?? data.r ?? 20;
+    const exchangeRate = data.er ?? data.r ?? 20;
+
     return {
-      rate: data.r,
+      lendingRate,
+      exchangeRate,
       slotSize: data.s,
       member: {
-        name: data.n,
+        name: data.n || pickRandomEmoji(),
         investMedals: data.im || 0,
         investCash: data.ic || 0,
         collectMedals: data.cm || 0,

@@ -4,15 +4,15 @@ import type { CalcResult } from "../types";
 
 interface Props {
   result: CalcResult;
-  rate: number;
+  exchangeRate: number;
 }
 
-export function SettlementView({ result, rate }: Props) {
+export function SettlementView({ result, exchangeRate }: Props) {
   const [tab, setTab] = useState<"cash" | "medal">("cash");
   const [settlementOpen, setSettlementOpen] = useState(false);
   const modalRef = useRef<HTMLDialogElement>(null);
-  const fmt = (n: number) => n.toLocaleString();
-  const fmtMedal = (n: number) => Math.round(n / rate).toLocaleString();
+  const fmt = (n: number) => Math.round(n).toLocaleString();
+  const fmtMedal = (n: number) => Math.round(n / exchangeRate).toLocaleString();
 
   const isCash = tab === "cash";
   const unit = isCash ? "円" : "枚";
