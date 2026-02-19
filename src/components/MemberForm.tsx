@@ -4,16 +4,14 @@ import type { Member } from "../types";
 interface Props {
   member: Member;
   index: number;
-  canRemove: boolean;
   medalSteps: number[];
   onChange: (updated: Member) => void;
-  onRemove: () => void;
   onShare?: () => void;
 }
 
 const CASH_STEPS = [1000, 10000];
 
-export function MemberForm({ member, index, canRemove, medalSteps, onChange, onRemove, onShare }: Props) {
+export function MemberForm({ member, index, medalSteps, onChange, onShare }: Props) {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 

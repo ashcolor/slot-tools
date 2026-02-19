@@ -157,10 +157,8 @@ export function Home() {
               <MemberForm
                 member={member}
                 index={i}
-                canRemove={false}
                 medalSteps={medalSteps}
                 onChange={(updated) => updateMember(i, updated)}
-                onRemove={() => {}}
                 onShare={() => setShareIndex(i)}
               />
             </div>
