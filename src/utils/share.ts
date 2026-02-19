@@ -43,7 +43,7 @@ export function encodeShareURL(member: Member, lendingRate: number, exchangeRate
   };
   const json = JSON.stringify(data);
   const encoded = btoa(unescape(encodeURIComponent(json)));
-  const url = new URL("/noridachi", window.location.origin);
+  const url = new URL("/noriuchi", window.location.origin);
   url.searchParams.set("d", encoded);
   return url.toString();
 }

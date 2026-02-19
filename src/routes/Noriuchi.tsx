@@ -37,12 +37,12 @@ function isMemberEmpty(m: Member) {
 
 export function Noriuchi() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [lendingRate, setLendingRate] = useLocalStorage("noridachi-rate", 20);
-  const [exchangeRate, setExchangeRate] = useLocalStorage("noridachi-exchangeRate", 20);
-  const [slotSize, setSlotSize] = useLocalStorage<46 | 50>("noridachi-slotSize", 46);
-  const [memberCount, setMemberCount] = useLocalStorage("noridachi-memberCount", 2);
-  const [usedEmojis] = useLocalStorage("noridachi-emojis", DEFAULT_EMOJIS);
-  const [members, setMembers] = useLocalStorage<Member[]>("noridachi-members", [
+  const [lendingRate, setLendingRate] = useLocalStorage("noriuchi-rate", 20);
+  const [exchangeRate, setExchangeRate] = useLocalStorage("noriuchi-exchangeRate", 20);
+  const [slotSize, setSlotSize] = useLocalStorage<46 | 50>("noriuchi-slotSize", 46);
+  const [memberCount, setMemberCount] = useLocalStorage("noriuchi-memberCount", 2);
+  const [usedEmojis] = useLocalStorage("noriuchi-emojis", DEFAULT_EMOJIS);
+  const [members, setMembers] = useLocalStorage<Member[]>("noriuchi-members", [
     createMember(usedEmojis[0]),
     createMember(usedEmojis[1]),
   ]);

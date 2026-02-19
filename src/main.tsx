@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
       <div className="max-w-4xl mx-auto px-4 pb-8 pt-4">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/noridachi" element={<Noriuchi />} />
+          <Route path="/noriuchi" element={<Noriuchi />} />
         </Routes>
       </div>
     </BrowserRouter>
