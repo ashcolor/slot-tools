@@ -11,6 +11,7 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <div className="max-w-4xl mx-auto px-4 pb-8">
         <Header />
+        <div className="pt-4" />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/noridachi" element={<Home />} />
