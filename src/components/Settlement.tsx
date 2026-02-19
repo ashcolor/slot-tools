@@ -9,6 +9,7 @@ interface Props {
 
 export function SettlementView({ result, rate }: Props) {
   const [tab, setTab] = useState<"cash" | "medal">("cash");
+  const [settlementOpen, setSettlementOpen] = useState(false);
   const modalRef = useRef<HTMLDialogElement>(null);
   const fmt = (n: number) => n.toLocaleString();
   const fmtMedal = (n: number) => Math.round(n / rate).toLocaleString();
@@ -65,20 +66,23 @@ export function SettlementView({ result, rate }: Props) {
       </div>
 
       {/* 精算アコーディオン */}
-      <div className="collapse collapse-arrow bg-base-100 shadow-sm">
-        <input type="checkbox" />
-        <div className="collapse-title font-bold text-sm text-center">精算</div>
+      <div className="collapse bg-base-100 shadow-sm">
+        <input type="checkbox" onChange={(e) => setSettlementOpen(e.target.checked)} />
+        <div className="collapse-title font-bold text-sm text-center min-h-0 py-2 pe-4 relative">
+          精算
+          <Icon icon="fa6-solid:chevron-down" className={`size-3 absolute right-3 top-1/2 -translate-y-1/2 opacity-50 transition-transform ${settlementOpen ? "rotate-180" : ""}`} />
+        </div>
         <div className="collapse-content">
           {result.settlements.length === 0 ? (
-            <p className="text-center opacity-60">精算不要</p>
+            <p className="text-center">精算不要</p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               {result.settlements.map((s, i) => (
-                <div key={i} className="flex items-center gap-2 bg-base-200 rounded-lg p-3 font-semibold">
-                  <span className="text-error">{s.from}</span>
-                  <span className="opacity-40">→</span>
-                  <span className="text-success">{s.to}</span>
-                  <span className="ml-auto text-lg">{display(s.amount)} {unit}</span>
+                <div key={i} className="flex items-center gap-2 bg-base-200 rounded p-2">
+                  <span>{s.from}</span>
+                  <span><Icon icon="fa6-solid:arrow-right" className="size-3" /></span>
+                  <span>{s.to}</span>
+                  <span className="ml-auto">{display(s.amount)} {unit}</span>
                 </div>
               ))}
             </div>
