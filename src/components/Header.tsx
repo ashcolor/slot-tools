@@ -39,8 +39,12 @@ export function Header() {
         <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />
       )}
 
-      <div className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="pt-14">
+      <div className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <img src="/logo.png" alt="ロゴ" className="h-10 w-10" />
+          <span className="text-lg font-extrabold">パチスロツール</span>
+        </div>
+        <div>
           <ul className="menu w-full">
             <li>
               <button type="button" onClick={() => go("/")} className="font-semibold">
@@ -56,6 +60,23 @@ export function Header() {
               </li>
             ))}
           </ul>
+        </div>
+        <div className="mt-auto">
+          <div className="border-t border-base-300" />
+          <div className="p-4 flex justify-center">
+            <a
+              href="https://www.buymeacoffee.com/ashcolor"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Buy me a coffee"
+            >
+              <img
+                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+                alt="Buy Me A Coffee"
+                className="h-8"
+              />
+            </a>
+          </div>
         </div>
       </div>
     </>
