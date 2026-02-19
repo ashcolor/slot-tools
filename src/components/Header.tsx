@@ -48,9 +48,9 @@ export function Header() {
             aria-label="テーマ切替"
           >
             {dark ? (
-              <Icon icon="bi:moon" className="h-5 w-5" />
+              <Icon icon="bi:moon" className="size-5" />
             ) : (
-              <Icon icon="bi:sun" className="h-5 w-5" />
+              <Icon icon="bi:sun" className="size-5" />
             )}
           </button>
         </div>
@@ -62,7 +62,7 @@ export function Header() {
 
       <div className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-          <img src="/logo.png" alt="ロゴ" className="h-10 w-10" />
+          <img src="/logo.png" alt="ロゴ" className="size-10" />
           <span className="text-lg font-extrabold">パチスロツール</span>
         </div>
         <div>

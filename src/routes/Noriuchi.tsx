@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { RateSelector } from "../components/RateSelector";
 import { MemberForm } from "../components/MemberForm";
 import { SettlementView } from "../components/Settlement";
 import { ShareModal } from "../components/ShareModal";
+import { ImportModal } from "../components/ImportModal";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
 import { encodeShareURL, decodeShareData } from "../utils/share";
@@ -51,11 +52,11 @@ export function Noriuchi() {
   ]);
   const [shareIndex, setShareIndex] = useState<number | null>(null);
   const [pendingShare, setPendingShare] = useState<Omit<Member, "id"> | null>(null);
-  const importModalRef = useRef<HTMLDialogElement>(null);
 
-  const applyShare = (index: number, data: Omit<Member, "id">) => {
+  const applyShare = (index: number) => {
+    if (!pendingShare) return;
     setMembers((prev) => prev.map((m, i) =>
-      i === index ? { ...m, ...data } : m
+      i === index ? { ...m, ...pendingShare } : m
     ));
     setPendingShare(null);
   };
@@ -74,18 +75,14 @@ export function Noriuchi() {
     // 空きスロットを探す（index 0 = 自分はスキップ）
     const emptyIndex = members.findIndex((m, i) => i > 0 && isMemberEmpty(m));
     if (emptyIndex !== -1) {
-      applyShare(emptyIndex, decoded.member);
+      setMembers((prev) => prev.map((m, i) =>
+        i === emptyIndex ? { ...m, ...decoded.member } : m
+      ));
     } else {
       // 空きなし → モーダルで確認
       setPendingShare(decoded.member);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (pendingShare) {
-      importModalRef.current?.showModal();
-    }
-  }, [pendingShare]);
 
   const updateMember = (index: number, updated: Member) => {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
@@ -172,58 +169,13 @@ export function Noriuchi() {
         />
       )}
 
-      <dialog ref={importModalRef} className="modal">
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">データの読み込み</h3>
-          {pendingShare && memberCount <= 2 ? (
-            <>
-              <p className="py-4">
-                「{filledMembers[1]?.name}」を「{pendingShare.name}」のデータで上書きしますか？
-              </p>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn btn-sm" onClick={() => setPendingShare(null)}>キャンセル</button>
-                </form>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => {
-                    if (pendingShare) applyShare(1, pendingShare);
-                    importModalRef.current?.close();
-                  }}
-                >
-                  上書き
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="py-4">どのメンバーに展開しますか？</p>
-              <div className="flex flex-col gap-2">
-                {filledMembers.slice(1).map((m, i) => (
-                  <button
-                    key={m.id}
-                    className="btn btn-sm"
-                    onClick={() => {
-                      if (pendingShare) applyShare(i + 1, pendingShare);
-                      importModalRef.current?.close();
-                    }}
-                  >
-                    {m.name}
-                  </button>
-                ))}
-              </div>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn btn-sm" onClick={() => setPendingShare(null)}>キャンセル</button>
-                </form>
-              </div>
-            </>
-          )}
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button onClick={() => setPendingShare(null)}>close</button>
-        </form>
-      </dialog>
+      <ImportModal
+        pendingShare={pendingShare}
+        memberCount={memberCount}
+        filledMembers={filledMembers}
+        onApply={applyShare}
+        onCancel={() => setPendingShare(null)}
+      />
     </div>
   );
 }

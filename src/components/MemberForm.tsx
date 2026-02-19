@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import { StepInput } from "./StepInput";
 import type { Member } from "../types";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const CASH_STEPS = [1000, 10000];
+const fmtCash = (v: number) => v.toLocaleString();
 
 export function MemberForm({ member, index, medalSteps, onChange, onShare }: Props) {
   const [editing, setEditing] = useState(false);
@@ -22,10 +24,6 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
 
   const update = (field: keyof Member, value: string | number) => {
     onChange({ ...member, [field]: value });
-  };
-
-  const numChange = (field: keyof Member) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    update(field, Number(e.target.value) || 0);
   };
 
   const addTo = (field: keyof Member, amount: number) => {
@@ -46,7 +44,7 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
             onClick={handleReset}
             aria-label="リセット"
           >
-            <Icon icon="fa6-solid:trash-can" className="h-2.5 w-2.5" />
+            <Icon icon="fa6-solid:trash-can" className="size-2.5" />
           </button>
         {editing ? (
           <input
@@ -73,63 +71,26 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
           <div>
             <div className="text-xs font-bold text-red-900 mb-1">投資</div>
             <div className="flex flex-col gap-2">
-              <div>
-                <div className="flex items-center gap-1">
-                  <Icon icon="fa6-solid:coins" className="text-base text-gray-900 shrink-0 w-8" />
-                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      className="grow w-0 min-w-0 text-right"
-                      value={member.investMedals || ""}
-                      onChange={numChange("investMedals")}
-                    />
-                    <span className="text-xs opacity-50">枚</span>
-                  </label>
-                </div>
-                <div className="flex gap-1 mt-1">
-                  {medalSteps.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className="btn btn-xs flex-1 min-w-0"
-                      onClick={() => addTo("investMedals", v)}
-                    >
-                      +{v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <Icon icon="fa6-solid:money-bill" className="text-base text-amber-900 shrink-0 w-8" />
-                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
-                    <input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      placeholder="0"
-                      className="grow w-0 min-w-0 text-right"
-                      value={member.investCash || ""}
-                      onChange={numChange("investCash")}
-                    />
-                    <span className="text-xs opacity-50">円</span>
-                  </label>
-                </div>
-                <div className="flex gap-1 mt-1">
-                  {CASH_STEPS.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className="btn btn-xs flex-1 min-w-0"
-                      onClick={() => addTo("investCash", v)}
-                    >
-                      +{v.toLocaleString()}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <StepInput
+                icon="fa6-solid:coins"
+                iconClass="text-base text-gray-900 shrink-0 w-8"
+                value={member.investMedals}
+                unit="枚"
+                steps={medalSteps}
+                onChange={(v) => update("investMedals", v)}
+                onAdd={(v) => addTo("investMedals", v)}
+              />
+              <StepInput
+                icon="fa6-solid:money-bill"
+                iconClass="text-base text-amber-900 shrink-0 w-8"
+                value={member.investCash}
+                unit="円"
+                step={1000}
+                steps={CASH_STEPS}
+                onChange={(v) => update("investCash", v)}
+                onAdd={(v) => addTo("investCash", v)}
+                formatStep={fmtCash}
+              />
             </div>
           </div>
 
@@ -137,69 +98,32 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
           <div>
             <div className="text-xs font-bold text-blue-900 mb-1">回収</div>
             <div className="flex flex-col gap-2">
-              <div>
-                <div className="flex items-center gap-1">
-                  <Icon icon="fa6-solid:coins" className="text-base text-gray-900 shrink-0 w-8" />
-                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      className="grow w-0 min-w-0 text-right"
-                      value={member.collectMedals || ""}
-                      onChange={numChange("collectMedals")}
-                    />
-                    <span className="text-xs opacity-50">枚</span>
-                  </label>
-                </div>
-                <div className="flex gap-1 mt-1">
-                  {medalSteps.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className="btn btn-xs flex-1 min-w-0"
-                      onClick={() => addTo("collectMedals", v)}
-                    >
-                      +{v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <Icon icon="fa6-solid:money-bill" className="text-base text-amber-900 shrink-0 w-8" />
-                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
-                    <input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      placeholder="0"
-                      className="grow w-0 min-w-0 text-right"
-                      value={member.collectCash || ""}
-                      onChange={numChange("collectCash")}
-                    />
-                    <span className="text-xs opacity-50">円</span>
-                  </label>
-                </div>
-                <div className="flex gap-1 mt-1">
-                  {CASH_STEPS.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className="btn btn-xs flex-1 min-w-0"
-                      onClick={() => addTo("collectCash", v)}
-                    >
-                      +{v.toLocaleString()}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <StepInput
+                icon="fa6-solid:coins"
+                iconClass="text-base text-gray-900 shrink-0 w-8"
+                value={member.collectMedals}
+                unit="枚"
+                steps={medalSteps}
+                onChange={(v) => update("collectMedals", v)}
+                onAdd={(v) => addTo("collectMedals", v)}
+              />
+              <StepInput
+                icon="fa6-solid:money-bill"
+                iconClass="text-base text-amber-900 shrink-0 w-8"
+                value={member.collectCash}
+                unit="円"
+                step={1000}
+                steps={CASH_STEPS}
+                onChange={(v) => update("collectCash", v)}
+                onAdd={(v) => addTo("collectCash", v)}
+                formatStep={fmtCash}
+              />
             </div>
           </div>
 
         {onShare && (
           <button type="button" className="btn btn-xs w-full" onClick={onShare}>
-            <Icon icon="fa6-solid:share-nodes" className="h-3 w-3" />
+            <Icon icon="fa6-solid:share-nodes" className="size-3" />
             共有
           </button>
         )}

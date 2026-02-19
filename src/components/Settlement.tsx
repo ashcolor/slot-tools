@@ -49,17 +49,17 @@ export function SettlementView({ result, rate }: Props) {
       {/* タブ + インフォ */}
       <div role="tablist" className="tabs tabs-lift tabs-sm">
         <button type="button" role="tab" className={`tab gap-1 ${tab === "medal" ? "tab-active" : ""}`} onClick={() => setTab("medal")}>
-          <Icon icon="fa6-solid:coins" className="h-3.5 w-3.5 text-gray-900" />
+          <Icon icon="fa6-solid:coins" className="size-3.5 text-gray-900" />
           メダル
         </button>
         <button type="button" role="tab" className={`tab gap-1 ${tab === "cash" ? "tab-active" : ""}`} onClick={() => setTab("cash")}>
-          <Icon icon="fa6-solid:money-bill" className="h-3.5 w-3.5 text-amber-900" />
+          <Icon icon="fa6-solid:money-bill" className="size-3.5 text-amber-900" />
           現金
         </button>
       </div>
       <div className="relative bg-base-100 border border-base-300 border-t-0 rounded-b-lg p-2">
         <button type="button" className="absolute top-1 right-1 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
-          <Icon icon="bi:info-circle" className="h-4 w-4" />
+          <Icon icon="bi:info-circle" className="size-4" />
         </button>
         {summaryContent}
       </div>

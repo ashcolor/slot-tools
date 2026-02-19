@@ -33,9 +33,9 @@ export function ShareModal({ url, onClose }: Props) {
           />
           <button type="button" className="btn btn-sm btn-square btn-neutral shrink-0" onClick={handleCopy} aria-label="コピー">
             {copied ? (
-              <Icon icon="fa6-solid:check" className="h-4 w-4" />
+              <Icon icon="fa6-solid:check" className="size-4" />
             ) : (
-              <Icon icon="fa6-regular:copy" className="h-4 w-4" />
+              <Icon icon="fa6-regular:copy" className="size-4" />
             )}
           </button>
         </div>
