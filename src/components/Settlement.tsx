@@ -4,14 +4,13 @@ import type { CalcResult } from "../types";
 
 interface Props {
   result: CalcResult;
-  lendingRate: number;
   exchangeRate: number;
 }
 
-export function SettlementView({ result, lendingRate, exchangeRate }: Props) {
+export function SettlementView({ result, exchangeRate }: Props) {
   const modalRef = useRef<HTMLDialogElement>(null);
   const fmt = (n: number) => Math.round(n).toLocaleString();
-  const toMedalByLending = (n: number) => Math.round(n / lendingRate).toLocaleString();
+
   const toMedalByExchange = (n: number) => Math.round(n / exchangeRate).toLocaleString();
 
   const memberCount = result.members.length;

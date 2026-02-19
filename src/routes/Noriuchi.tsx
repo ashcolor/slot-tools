@@ -203,7 +203,7 @@ export function Noriuchi() {
           onChange={() => setActiveTab("settlement")}
         />
         <div className="tab-content py-2">
-          <SettlementView result={result} lendingRate={lendingRate} exchangeRate={exchangeRate} />
+          <SettlementView result={result} exchangeRate={exchangeRate} />
           <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
             <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
               {members.map((member, i) => (
