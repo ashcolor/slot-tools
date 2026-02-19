@@ -15,7 +15,7 @@ export interface Member {
   investMedals: number;
   investCash: number;
   collectMedals: number;
-  collectCash: number;
+  storedMedals: number;
 }
 
 
@@ -74,6 +74,7 @@ export interface CalcResult {
   totalInvest: number;
   totalCollect: number;
   totalProfit: number;
+  totalInvestMedals: number;
   members: MemberResult[];
   settlements: Settlement[];
 }

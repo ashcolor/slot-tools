@@ -10,14 +10,15 @@ interface Props {
   onChange: (value: number) => void;
   onAdd: (amount: number) => void;
   formatStep?: (v: number) => string;
+  error?: boolean;
 }
 
-export function StepInput({ icon, iconClass, value, unit, step, steps, onChange, onAdd, formatStep }: Props) {
+export function StepInput({ icon, iconClass, value, unit, step, steps, onChange, onAdd, formatStep, error }: Props) {
   return (
     <div>
       <div className="flex items-center gap-1">
         <Icon icon={icon} className={iconClass} />
-        <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
+        <label className={`input input-bordered input-md flex items-center gap-1 flex-1 min-w-0${error ? " input-error" : ""}`}>
           <input
             type="number"
             min={0}
@@ -30,18 +31,20 @@ export function StepInput({ icon, iconClass, value, unit, step, steps, onChange,
           <span className="text-xs opacity-50">{unit}</span>
         </label>
       </div>
-      <div className="flex gap-1 mt-1">
-        {steps.map((v) => (
-          <button
-            key={v}
-            type="button"
-            className="btn btn-xs flex-1 min-w-0"
-            onClick={() => onAdd(v)}
-          >
-            +{formatStep ? formatStep(v) : v}
-          </button>
-        ))}
-      </div>
+      {steps.length > 0 && (
+        <div className="flex gap-1 mt-1">
+          {steps.map((v) => (
+            <button
+              key={v}
+              type="button"
+              className="btn btn-xs flex-1 min-w-0"
+              onClick={() => onAdd(v)}
+            >
+              +{formatStep ? formatStep(v) : v}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

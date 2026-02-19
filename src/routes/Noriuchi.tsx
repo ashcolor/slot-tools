@@ -1,13 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Icon } from "@iconify/react";
 import { RateSelector } from "../components/RateSelector";
 import { MemberForm } from "../components/MemberForm";
 import { SettlementView } from "../components/Settlement";
-import { ShareModal } from "../components/ShareModal";
-import { ImportModal } from "../components/ImportModal";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
-import { encodeShareURL, decodeShareData } from "../utils/share";
 import { ANIMAL_EMOJIS, LENDING_RATE_OPTIONS, getExchangeOptions, pickRandomEmoji } from "../types";
 import type { Member } from "../types";
 
@@ -20,23 +17,18 @@ function pickRandomEmojis(count: number): string[] {
 
 function createMember(emoji: string): Member {
   return {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36),
     name: emoji,
     investMedals: 0,
     investCash: 0,
     collectMedals: 0,
-    collectCash: 0,
+    storedMedals: 0,
   };
 }
 
 const DEFAULT_EMOJIS = pickRandomEmojis(MAX_MEMBERS);
 
-function isMemberEmpty(m: Member) {
-  return m.investMedals === 0 && m.investCash === 0 && m.collectMedals === 0 && m.collectCash === 0;
-}
-
 export function Noriuchi() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [lendingRate, setLendingRate] = useLocalStorage("noriuchi-rate", 20);
   const [exchangeRate, setExchangeRate] = useLocalStorage("noriuchi-exchangeRate", 20);
   const [slotSize, setSlotSize] = useLocalStorage<46 | 50>("noriuchi-slotSize", 46);
@@ -46,8 +38,8 @@ export function Noriuchi() {
     createMember(usedEmojis[0]),
     createMember(usedEmojis[1]),
   ]);
-  const [shareIndex, setShareIndex] = useState<number | null>(null);
-  const [pendingShare, setPendingShare] = useState<Omit<Member, "id"> | null>(null);
+  const [activeTab, setActiveTab] = useState<"playing" | "settlement">("playing");
+  const infoModalRef = useRef<HTMLDialogElement>(null);
 
   // localStorage から読み込んだメンバーの空名前を補完
   useEffect(() => {
@@ -66,38 +58,6 @@ export function Noriuchi() {
     // 等価にリセット
     setExchangeRate(newRate);
   };
-
-  const applyShare = (index: number) => {
-    if (!pendingShare) return;
-    setMembers((prev) => prev.map((m, i) =>
-      i === index ? { ...m, ...pendingShare } : m
-    ));
-    setPendingShare(null);
-  };
-
-  // 共有URLからデータを読み込み
-  useEffect(() => {
-    const d = searchParams.get("d");
-    if (!d) return;
-    const decoded = decodeShareData(d);
-    if (!decoded) return;
-
-    setLendingRate(decoded.lendingRate);
-    setExchangeRate(decoded.exchangeRate);
-    setSlotSize(decoded.slotSize);
-    setSearchParams({}, { replace: true });
-
-    // 空きスロットを探す（index 0 = 自分はスキップ）
-    const emptyIndex = members.findIndex((m, i) => i > 0 && isMemberEmpty(m));
-    if (emptyIndex !== -1) {
-      setMembers((prev) => prev.map((m, i) =>
-        i === emptyIndex ? { ...m, ...decoded.member } : m
-      ));
-    } else {
-      // 空きなし → モーダルで確認
-      setPendingShare(decoded.member);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateMember = (index: number, updated: Member) => {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
@@ -161,37 +121,102 @@ export function Noriuchi() {
         </select>
       </div>
 
-      <SettlementView result={result} exchangeRate={exchangeRate} />
-
-      <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
-        <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
-          {members.map((member, i) => (
-            <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
-              <MemberForm
-                member={member}
-                medalSteps={medalSteps}
-                onChange={(updated) => updateMember(i, updated)}
-                onShare={() => setShareIndex(i)}
-              />
+      <div className="tabs tabs-box">
+        <input
+          type="radio"
+          name="noriuchi_tabs"
+          className="tab flex-1"
+          aria-label="遊技中"
+          checked={activeTab === "playing"}
+          onChange={() => setActiveTab("playing")}
+        />
+        <div className="tab-content py-4">
+          <div className="card bg-base-100 shadow-sm mb-4 relative">
+            <button type="button" className="absolute top-1 right-1 opacity-50" onClick={() => infoModalRef.current?.showModal()} aria-label="計算について">
+              <Icon icon="bi:info-circle" className="size-4" />
+            </button>
+            <div className="card-body p-3 flex-row items-center justify-center gap-6 text-center">
+              <div>
+                <div className="text-xs opacity-60">総投資</div>
+                <div className="font-bold text-red-900">{Math.round(result.totalInvest).toLocaleString()} 円</div>
+              </div>
+              <div>
+                <div className="text-xs opacity-60">出玉</div>
+                <div className="font-bold text-blue-900">{members.reduce((s, m) => s + m.collectMedals, 0).toLocaleString()} 枚</div>
+              </div>
+              <div>
+                <div className="text-xs opacity-60">収支</div>
+                <div className={`font-bold ${result.totalProfit >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                  {result.totalProfit >= 0 ? "+" : ""}{Math.round(result.totalProfit).toLocaleString()} 円
+                </div>
+              </div>
             </div>
-          ))}
+          </div>
+          <dialog ref={infoModalRef} className="modal">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg mb-2">途中結果について</h3>
+              <p className="text-sm opacity-70">
+                再プレイ枚数は貸出レートで、出玉は交換レートで円換算しています。貯メダルの入力前のため、全メダルを換金した場合の概算値です。
+              </p>
+              <div className="modal-action">
+                <form method="dialog">
+                  <button className="btn btn-sm">閉じる</button>
+                </form>
+              </div>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button>close</button></form>
+          </dialog>
+          <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
+            <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
+              {members.map((member, i) => (
+                <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                  <MemberForm
+                    member={member}
+                    exchangeRate={exchangeRate}
+                    medalSteps={medalSteps}
+                    mode="playing"
+                    onChange={(updated) => updateMember(i, updated)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <button type="button" className="btn btn-sm  w-full mt-2" onClick={() => setActiveTab("settlement")}>
+            精算入力へ <Icon icon="fa6-solid:arrow-right" className="size-3" />
+          </button>
+        </div>
+
+        <input
+          type="radio"
+          name="noriuchi_tabs"
+          className="tab flex-1"
+          aria-label="精算"
+          checked={activeTab === "settlement"}
+          onChange={() => setActiveTab("settlement")}
+        />
+        <div className="tab-content py-2">
+          <SettlementView result={result} lendingRate={lendingRate} exchangeRate={exchangeRate} />
+          <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
+            <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
+              {members.map((member, i) => (
+                <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                  <MemberForm
+                    member={member}
+                    exchangeRate={exchangeRate}
+                    medalSteps={medalSteps}
+                    mode="settlement"
+                    onChange={(updated) => updateMember(i, updated)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <button type="button" className="btn btn-sm w-full mt-2" onClick={() => setActiveTab("playing")}>
+            <Icon icon="fa6-solid:arrow-left" className="size-3" /> 入力画面へ
+          </button>
         </div>
       </div>
 
-      {shareIndex !== null && (
-        <ShareModal
-          url={encodeShareURL(filledMembers[shareIndex], lendingRate, exchangeRate, slotSize)}
-          onClose={() => setShareIndex(null)}
-        />
-      )}
-
-      <ImportModal
-        pendingShare={pendingShare}
-        memberCount={memberCount}
-        filledMembers={filledMembers}
-        onApply={applyShare}
-        onCancel={() => setPendingShare(null)}
-      />
     </div>
   );
 }

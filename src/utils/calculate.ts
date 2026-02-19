@@ -6,8 +6,16 @@ export function calculate(
   exchangeRate: number
 ): CalcResult {
   const memberResults: MemberResult[] = members.map((m) => {
-    const totalInvest = m.investMedals * lendingRate + m.investCash;
-    const totalCollect = m.collectMedals * exchangeRate + m.collectCash;
+    // 先に投資メダルと貯メダルを相殺
+    const medalDiff = m.storedMedals - m.investMedals;
+    // 回収メダルから貯メダルを引いた分が換金分
+    const cashedOut = m.collectMedals - m.storedMedals;
+    const totalCollect =
+      cashedOut * exchangeRate +
+      (medalDiff >= 0 ? medalDiff * exchangeRate : 0);
+    const totalInvest =
+      m.investCash +
+      (medalDiff < 0 ? -medalDiff * lendingRate : 0);
     return {
       id: m.id,
       name: m.name,
@@ -39,7 +47,9 @@ export function calculate(
 
   const settlements = calcSettlements(memberResults);
 
-  return { totalInvest, totalCollect, totalProfit, members: memberResults, settlements };
+  const totalInvestMedals = members.reduce((s, m) => s + m.investMedals, 0);
+
+  return { totalInvest, totalCollect, totalProfit, totalInvestMedals, members: memberResults, settlements };
 }
 
 function calcSettlements(members: MemberResult[]): Settlement[] {
