@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
+import { Icon } from "@iconify/react";
 import { tools } from "../tools";
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(
+    () => document.documentElement.dataset.theme === "dark"
+  );
   const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
@@ -15,23 +19,40 @@ export function Header() {
 
   return (
     <>
-      <header className="navbar bg-base-100 border-b border-base-300 px-0 min-h-0 py-2">
+      <header className="navbar bg-base-100 shadow-sm">
         <div className="flex-none">
           <button
             type="button"
-            className="btn btn-ghost btn-square btn-sm"
+            className="btn btn-square btn-ghost"
             onClick={() => setOpen(!open)}
             aria-label="メニュー"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Icon icon="fa6-solid:bars" className="size-4" />
           </button>
         </div>
         <div className="flex-1">
           <Link to="/" className="text-lg font-extrabold">
             パチスロツール{currentTool ? ` ${currentTool.title}` : ""}
           </Link>
+        </div>
+        <div className="flex-none">
+          <button
+            type="button"
+            className="btn btn-square btn-ghost"
+            onClick={() => {
+              const next = dark ? "light" : "dark";
+              document.documentElement.dataset.theme = next;
+              localStorage.setItem("theme", next);
+              setDark(!dark);
+            }}
+            aria-label="テーマ切替"
+          >
+            {dark ? (
+              <Icon icon="bi:moon" className="h-5 w-5" />
+            ) : (
+              <Icon icon="bi:sun" className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </header>
 

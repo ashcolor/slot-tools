@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Icon } from "@iconify/react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface Props {
@@ -30,8 +31,12 @@ export function ShareModal({ url, onClose }: Props) {
             value={url}
             className="input input-bordered input-sm flex-1 min-w-0 text-xs"
           />
-          <button type="button" className="btn btn-sm btn-neutral shrink-0" onClick={handleCopy}>
-            {copied ? "✓" : "コピー"}
+          <button type="button" className="btn btn-sm btn-square btn-neutral shrink-0" onClick={handleCopy} aria-label="コピー">
+            {copied ? (
+              <Icon icon="fa6-solid:check" className="h-4 w-4" />
+            ) : (
+              <Icon icon="fa6-regular:copy" className="h-4 w-4" />
+            )}
           </button>
         </div>
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Icon } from "@iconify/react";
 import type { Member } from "../types";
 
 interface Props {
@@ -31,9 +32,22 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
     update(field, (member[field] as number) + amount);
   };
 
+  const handleReset = () => {
+    onChange({ ...member, investMedals: 0, investCash: 0, collectMedals: 0, collectCash: 0 });
+  };
+
   return (
     <div className="card bg-base-100 shadow-sm">
-      <div className="card-body p-3 gap-2">
+      <div className="card-body p-3">
+        <div className="relative">
+          <button
+            type="button"
+            className="absolute -top-1 -left-1 opacity-30 hover:opacity-100 transition-opacity"
+            onClick={handleReset}
+            aria-label="リセット"
+          >
+            <Icon icon="fa6-solid:trash-can" className="h-2.5 w-2.5" />
+          </button>
         {editing ? (
           <input
             ref={inputRef}
@@ -52,16 +66,17 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
             {member.name || `メンバー${index + 1}`}
           </div>
         )}
+        </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-6">
           {/* 投資 */}
           <div>
-            <div className="text-xs font-bold opacity-80 mb-1">投資</div>
+            <div className="text-xs font-bold text-red-900 mb-1">投資</div>
             <div className="flex flex-col gap-2">
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-50 shrink-0 w-8">メダル</span>
-                  <label className="input input-bordered input-sm flex items-center gap-1 flex-1 min-w-0">
+                  <Icon icon="fa6-solid:coins" className="text-base text-gray-900 shrink-0 w-8" />
+                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
                     <input
                       type="number"
                       min={0}
@@ -88,8 +103,8 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
               </div>
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-50 shrink-0 w-8">現金</span>
-                  <label className="input input-bordered input-sm flex items-center gap-1 flex-1 min-w-0">
+                  <Icon icon="fa6-solid:money-bill" className="text-base text-amber-900 shrink-0 w-8" />
+                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
                     <input
                       type="number"
                       min={0}
@@ -120,12 +135,12 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
 
           {/* 回収 */}
           <div>
-            <div className="text-xs font-bold opacity-80 mb-1">回収</div>
+            <div className="text-xs font-bold text-blue-900 mb-1">回収</div>
             <div className="flex flex-col gap-2">
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-50 shrink-0 w-8">メダル</span>
-                  <label className="input input-bordered input-sm flex items-center gap-1 flex-1 min-w-0">
+                  <Icon icon="fa6-solid:coins" className="text-base text-gray-900 shrink-0 w-8" />
+                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
                     <input
                       type="number"
                       min={0}
@@ -152,8 +167,8 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
               </div>
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs opacity-50 shrink-0 w-8">現金</span>
-                  <label className="input input-bordered input-sm flex items-center gap-1 flex-1 min-w-0">
+                  <Icon icon="fa6-solid:money-bill" className="text-base text-amber-900 shrink-0 w-8" />
+                  <label className="input input-bordered input-md flex items-center gap-1 flex-1 min-w-0">
                     <input
                       type="number"
                       min={0}
@@ -181,16 +196,15 @@ export function MemberForm({ member, index, medalSteps, onChange, onShare }: Pro
               </div>
             </div>
           </div>
-        </div>
 
         {onShare && (
           <button type="button" className="btn btn-xs w-full" onClick={onShare}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
+            <Icon icon="fa6-solid:share-nodes" className="h-3 w-3" />
             共有
           </button>
         )}
+        </div>
+
       </div>
     </div>
   );

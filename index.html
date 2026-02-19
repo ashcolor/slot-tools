@@ -25,6 +25,10 @@
     <meta name="twitter:image" content="https://pachi-slot.ashcolor.jp/ogp.jpg" />
   </head>
   <body>
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem("theme") || "light";
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

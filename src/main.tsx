@@ -2,19 +2,18 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Header } from "./components/Header";
-import { Dashboard } from "./routes/Dashboard";
 import { Home } from "./routes/Home";
+import { Noriuchi } from "./routes/Noriuchi";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <div className="max-w-4xl mx-auto px-4 pb-8">
-        <Header />
-        <div className="pt-4" />
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 pb-8 pt-4">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/noridachi" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/noridachi" element={<Noriuchi />} />
         </Routes>
       </div>
     </BrowserRouter>

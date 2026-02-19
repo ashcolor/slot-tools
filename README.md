@@ -1,3 +1,9 @@
+精算ロジックを詰める
+　回収した枚は46で割るか53で割るか
+　精算した場合は現金の受け渡しだけにするか
+READMEに書きたい
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

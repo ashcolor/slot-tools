@@ -8,7 +8,7 @@ interface Props {
 export function RateSelector({ rate, onChange }: Props) {
   return (
     <select
-      className="select select-bordered select-sm flex-1"
+      className="select select-bordered select-sm w-auto"
       value={rate}
       onChange={(e) => onChange(Number(e.target.value))}
     >
