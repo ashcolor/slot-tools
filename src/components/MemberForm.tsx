@@ -10,7 +10,7 @@ interface Props {
   medalSteps: number[];
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
-  otherMembers?: { id: string; name: string; investMedals: number }[];
+  otherMembers?: { id: string; name: string; investMedals: number; storedMedals: number }[];
   onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
@@ -163,8 +163,8 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                         <div className="flex flex-col gap-1 shrink-0">
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary w-full"
-                            disabled={!transferTarget || (() => { const t = otherMembers.find((m) => m.id === transferTarget); return !t || member.collectMedals < t.investMedals; })()}
+                            className="btn btn-xs btn-primary w-full h-auto py-1"
+                            disabled={!transferTarget || (() => { const t = otherMembers.find((m) => m.id === transferTarget); return !t || member.collectMedals < t.investMedals || t.storedMedals >= t.investMedals || (t.investMedals > 0 && t.collectMedals >= t.investMedals); })()}
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
@@ -173,18 +173,18 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                               }
                             }}
                           >
-                            再プレイ補填（{otherMembers.find((m) => m.id === transferTarget)?.investMedals.toLocaleString() ?? 0}枚）
+                            再プレイ補填<br />（{otherMembers.find((m) => m.id === transferTarget)?.investMedals.toLocaleString() ?? 0}枚）
                           </button>
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary w-full"
+                            className="btn btn-xs btn-primary w-full h-auto py-1"
                             disabled={!transferTarget || !member.collectMedals}
                             onClick={() => {
                               onTransfer(transferTarget, member.collectMedals, false);
                               setTransferOpen(false);
                             }}
                           >
-                            出玉全て（{member.collectMedals.toLocaleString()}枚）
+                            出玉全て<br />（{member.collectMedals.toLocaleString()}枚）
                           </button>
                         </div>
                       </div>

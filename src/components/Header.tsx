@@ -84,7 +84,7 @@ export function Header() {
         </div>
         <div className="mt-auto">
           <div className="border-t border-base-300" />
-          <div className="p-4 flex justify-center">
+          <div className="p-4 flex items-center justify-center gap-3">
             <a
               href="https://www.buymeacoffee.com/ashcolor"
               target="_blank"
@@ -96,6 +96,15 @@ export function Header() {
                 alt="Buy Me A Coffee"
                 className="h-8"
               />
+            </a>
+            <a
+              href="https://x.com/ashcolor06"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-ghost btn-square"
+              title="X (Twitter)"
+            >
+              <Icon icon="fa6-brands:x-twitter" className="size-4" />
             </a>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Icon } from "@iconify/react";
 import { RateSelector } from "../components/RateSelector";
 import { MemberForm } from "../components/MemberForm";
@@ -38,7 +38,7 @@ export function Noriuchi() {
     createMember(usedEmojis[0]),
     createMember(usedEmojis[1]),
   ]);
-  const [activeTab, setActiveTab] = useState<"playing" | "settlement">("playing");
+  const [activeTab, setActiveTab] = useLocalStorage<"playing" | "settlement">("noriuchi-activeTab", "playing");
   const configModalRef = useRef<HTMLDialogElement>(null);
   const resetModalRef = useRef<HTMLDialogElement>(null);
 
@@ -228,7 +228,7 @@ export function Noriuchi() {
               <button className="btn btn-sm">キャンセル</button>
               <button
                 className="btn btn-sm btn-error"
-                onClick={() => setMembers((prev) => prev.map((m) => ({ ...m, investMedals: 0, investCash: 0, collectMedals: 0, storedMedals: 0 })))}
+                onClick={() => { setMembers((prev) => prev.map((m) => ({ ...m, investMedals: 0, investCash: 0, collectMedals: 0, storedMedals: 0 }))); setActiveTab("playing"); }}
               >
                 リセット
               </button>
