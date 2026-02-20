@@ -1,8 +1,44 @@
 export const ANIMAL_EMOJIS = [
-  "🐶","🐱","🐰","🐻","🐼","🐨","🐯","🦁","🐮","🐷",
-  "🐸","🐵","🐔","🐧","🐦","🦊","🦝","🦄","🐴","🐺",
-  "🐗","🐲","🦎","🐢","🐍","🦅","🦉","🦇","🐝","🐞",
-  "🦋","🐙","🦈","🐬","🐳","🐘","🦒","🦘","🦩","🦜",
+  "🐶",
+  "🐱",
+  "🐰",
+  "🐻",
+  "🐼",
+  "🐨",
+  "🐯",
+  "🦁",
+  "🐮",
+  "🐷",
+  "🐸",
+  "🐵",
+  "🐔",
+  "🐧",
+  "🐦",
+  "🦊",
+  "🦝",
+  "🦄",
+  "🐴",
+  "🐺",
+  "🐗",
+  "🐲",
+  "🦎",
+  "🐢",
+  "🐍",
+  "🦅",
+  "🦉",
+  "🦇",
+  "🐝",
+  "🐞",
+  "🦋",
+  "🐙",
+  "🦈",
+  "🐬",
+  "🐳",
+  "🐘",
+  "🦒",
+  "🦘",
+  "🦩",
+  "🦜",
 ];
 
 export function pickRandomEmoji(): string {
@@ -18,7 +54,6 @@ export interface Member {
   storedMedals: number;
 }
 
-
 export interface RateOption {
   label: string;
   value: number;
@@ -30,9 +65,7 @@ export const LENDING_RATE_OPTIONS: RateOption[] = [
   { label: "1000円/46枚", value: 1000 / 46 },
 ];
 
-export const PACHINKO_LENDING_OPTIONS: RateOption[] = [
-  { label: "4円", value: 4 },
-];
+export const PACHINKO_LENDING_OPTIONS: RateOption[] = [{ label: "4円", value: 4 }];
 
 export const PACHISLOT_LENDING_OPTIONS: RateOption[] = [
   { label: "20スロ", value: 20 },

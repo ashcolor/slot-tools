@@ -5,9 +5,7 @@ import { tools } from "../tools";
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(
-    () => document.documentElement.dataset.theme === "dracula"
-  );
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dracula");
   const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
@@ -56,11 +54,11 @@ export function Header() {
         </div>
       </header>
 
-      {open && (
-        <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />
-      )}
+      {open && <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />}
 
-      <div className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}
+      >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
           <span className="text-lg font-extrabold">パチスロツール</span>

@@ -16,7 +16,12 @@ export function SettlementView({ result }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="relative bg-base-100 border border-base-300 rounded-lg p-2">
-        <button type="button" className="absolute top-2 right-2 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
+        <button
+          type="button"
+          className="absolute top-2 right-2 opacity-50"
+          onClick={() => modalRef.current?.showModal()}
+          aria-label="分配方式について"
+        >
           <Icon icon="bi:info-circle" className="size-4" />
         </button>
         <div className="flex flex-col gap-3">
@@ -24,21 +29,30 @@ export function SettlementView({ result }: Props) {
             <div>
               <div className="text-xs opacity-60">全体投資</div>
               <div className="text-lg font-bold text-invest">{fmt(result.displayInvest)} 円</div>
-              <div className="text-xs opacity-50">再プレイ <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>枚 込み</div>
+              <div className="text-xs opacity-50">
+                再プレイ{" "}
+                <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>枚
+                込み
+              </div>
             </div>
             <div>
               <div className="text-xs opacity-60">全体回収</div>
               <div className="text-lg font-bold text-collect">{fmt(result.displayCollect)} 円</div>
-              <div className="text-xs opacity-50">出玉 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>枚</div>
+              <div className="text-xs opacity-50">
+                出玉 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>
+                枚
+              </div>
             </div>
           </div>
           <div className="text-center">
             <div className="text-xs opacity-60">収支 / 人</div>
             <div className={`text-xl font-bold ${perPerson >= 0 ? "text-plus" : "text-minus"}`}>
-              {perPerson >= 0 ? "+" : ""}{fmt(Math.round(perPerson))} 円
+              {perPerson >= 0 ? "+" : ""}
+              {fmt(Math.round(perPerson))} 円
             </div>
             <div className="text-xs mt-1 opacity-60">
-              全体合計 {result.totalProfit >= 0 ? "+" : ""}{fmt(result.totalProfit)} 円
+              全体合計 {result.totalProfit >= 0 ? "+" : ""}
+              {fmt(result.totalProfit)} 円
             </div>
           </div>
         </div>
@@ -65,8 +79,13 @@ export function SettlementView({ result }: Props) {
                 <div>現金換算投資 = 現金投資 + (メダル減少分 × 貸出レート)</div>
                 <div>収支 = 現金換算回収 − 現金換算投資</div>
               </div>
-              <div className="text-xs opacity-60 mt-0.5">※メダル差分が正なら「増加分」、負なら「減少分」として計算</div>
-              <div className="text-xs opacity-60 mt-0.5">※再プレイや貯メダルの増減を考慮しているため、上記の回収額 − 投資額とは一致しない場合があります</div>
+              <div className="text-xs opacity-60 mt-0.5">
+                ※メダル差分が正なら「増加分」、負なら「減少分」として計算
+              </div>
+              <div className="text-xs opacity-60 mt-0.5">
+                ※再プレイや貯メダルの増減を考慮しているため、上記の回収額 −
+                投資額とは一致しない場合があります
+              </div>
             </div>
           </div>
           <div className="modal-action">
@@ -75,7 +94,9 @@ export function SettlementView({ result }: Props) {
             </form>
           </div>
         </div>
-        <form method="dialog" className="modal-backdrop"><button>close</button></form>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
     </div>
   );

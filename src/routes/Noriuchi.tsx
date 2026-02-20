@@ -5,7 +5,13 @@ import { MemberForm } from "../components/MemberForm";
 import { SettlementView } from "../components/Settlement";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
-import { ANIMAL_EMOJIS, PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS, getExchangeOptions, pickRandomEmoji } from "../types";
+import {
+  ANIMAL_EMOJIS,
+  PACHINKO_LENDING_OPTIONS,
+  PACHISLOT_LENDING_OPTIONS,
+  getExchangeOptions,
+  pickRandomEmoji,
+} from "../types";
 import type { Member } from "../types";
 
 const MAX_MEMBERS = 4;
@@ -38,21 +44,23 @@ export function Noriuchi() {
     createMember(usedEmojis[0]),
     createMember(usedEmojis[1]),
   ]);
-  const [activeTab, setActiveTab] = useLocalStorage<"playing" | "settlement">("noriuchi-activeTab", "playing");
+  const [activeTab, setActiveTab] = useLocalStorage<"playing" | "settlement">(
+    "noriuchi-activeTab",
+    "playing",
+  );
   const configModalRef = useRef<HTMLDialogElement>(null);
   const resetModalRef = useRef<HTMLDialogElement>(null);
 
   // localStorage から読み込んだメンバーの空名前を補完
   useEffect(() => {
     if (members.some((m) => !m.name.trim())) {
-      setMembers((prev) => prev.map((m) => m.name.trim() ? m : { ...m, name: pickRandomEmoji() }));
+      setMembers((prev) =>
+        prev.map((m) => (m.name.trim() ? m : { ...m, name: pickRandomEmoji() })),
+      );
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const exchangeOptions = useMemo(
-    () => getExchangeOptions(lendingRate),
-    [lendingRate]
-  );
+  const exchangeOptions = useMemo(() => getExchangeOptions(lendingRate), [lendingRate]);
 
   const handleLendingRateChange = (newRate: number) => {
     setLendingRate(newRate);
@@ -64,12 +72,29 @@ export function Noriuchi() {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
   };
 
-  const handleTransfer = (fromIndex: number, targetId: string, amount: number, setStoredMedals: boolean) => {
-    setMembers((prev) => prev.map((m, i) => {
-      if (i === fromIndex) return { ...m, collectMedals: m.collectMedals - amount, storedMedals: setStoredMedals ? m.storedMedals : 0 };
-      if (m.id === targetId) return { ...m, collectMedals: m.collectMedals + amount, ...(setStoredMedals ? { storedMedals: amount } : {}) };
-      return m;
-    }));
+  const handleTransfer = (
+    fromIndex: number,
+    targetId: string,
+    amount: number,
+    setStoredMedals: boolean,
+  ) => {
+    setMembers((prev) =>
+      prev.map((m, i) => {
+        if (i === fromIndex)
+          return {
+            ...m,
+            collectMedals: m.collectMedals - amount,
+            storedMedals: setStoredMedals ? m.storedMedals : 0,
+          };
+        if (m.id === targetId)
+          return {
+            ...m,
+            collectMedals: m.collectMedals + amount,
+            ...(setStoredMedals ? { storedMedals: amount } : {}),
+          };
+        return m;
+      }),
+    );
   };
 
   const handleCountChange = (newCount: number) => {
@@ -77,7 +102,7 @@ export function Noriuchi() {
     setMembers((prev) => {
       if (newCount > prev.length) {
         const added = Array.from({ length: newCount - prev.length }, (_, i) =>
-          createMember(usedEmojis[prev.length + i] || `メンバー${prev.length + i + 1}`)
+          createMember(usedEmojis[prev.length + i] || `メンバー${prev.length + i + 1}`),
         );
         return [...prev, ...added];
       }
@@ -87,32 +112,37 @@ export function Noriuchi() {
 
   const filledMembers = useMemo(
     () => members.map((m) => ({ ...m, name: m.name.trim() || pickRandomEmoji() })),
-    [members]
+    [members],
   );
 
-  const medalSteps = useMemo(
-    () => [slotSize, slotSize * 10],
-    [slotSize]
-  );
+  const medalSteps = useMemo(() => [slotSize, slotSize * 10], [slotSize]);
 
   const result = useMemo(
     () => calculate(filledMembers, lendingRate, exchangeRate),
-    [filledMembers, lendingRate, exchangeRate]
+    [filledMembers, lendingRate, exchangeRate],
   );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 text-sm opacity-70">
-          <span className="badge badge-neutral badge-sm">{lendingRate === 4 ? "パチンコ" : "スロット"}</span>
+          <span className="badge badge-neutral badge-sm">
+            {lendingRate === 4 ? "パチンコ" : "スロット"}
+          </span>
           <span>
             <span>貸出：</span>
-            <span className="font-bold">{(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find((o) => o.value === lendingRate)?.label ?? `${lendingRate}円`}</span>
+            <span className="font-bold">
+              {(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find(
+                (o) => o.value === lendingRate,
+              )?.label ?? `${lendingRate}円`}
+            </span>
           </span>
-            <Icon icon="fa6-solid:arrow-right" className="size-3" />
+          <Icon icon="fa6-solid:arrow-right" className="size-3" />
           <span>
             <span>交換：</span>
-            <span className="font-bold">{exchangeOptions.find((o) => o.value === exchangeRate)?.label ?? `${exchangeRate}円`}</span>
+            <span className="font-bold">
+              {exchangeOptions.find((o) => o.value === exchangeRate)?.label ?? `${exchangeRate}円`}
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -146,7 +176,10 @@ export function Noriuchi() {
                 className="tab"
                 aria-label="スロット"
                 checked={lendingRate !== 4}
-                onChange={() => { handleLendingRateChange(20); setSlotSize(46); }}
+                onChange={() => {
+                  handleLendingRateChange(20);
+                  setSlotSize(46);
+                }}
               />
               <input
                 type="radio"
@@ -154,7 +187,10 @@ export function Noriuchi() {
                 className="tab"
                 aria-label="パチンコ"
                 checked={lendingRate === 4}
-                onChange={() => { handleLendingRateChange(4); setSlotSize(125); }}
+                onChange={() => {
+                  handleLendingRateChange(4);
+                  setSlotSize(125);
+                }}
               />
             </div>
             <div>
@@ -162,11 +198,21 @@ export function Noriuchi() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold">貸出</label>
-                  <RateSelector rate={lendingRate} options={lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS} onChange={handleLendingRateChange} />
+                  <RateSelector
+                    rate={lendingRate}
+                    options={
+                      lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS
+                    }
+                    onChange={handleLendingRateChange}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold">交換</label>
-                  <RateSelector rate={exchangeRate} options={exchangeOptions} onChange={setExchangeRate} />
+                  <RateSelector
+                    rate={exchangeRate}
+                    options={exchangeOptions}
+                    onChange={setExchangeRate}
+                  />
                 </div>
               </div>
             </div>
@@ -203,7 +249,9 @@ export function Noriuchi() {
                     onChange={(e) => handleCountChange(Number(e.target.value))}
                   >
                     {[1, 2, 3, 4].map((n) => (
-                      <option key={n} value={n}>{n}人</option>
+                      <option key={n} value={n}>
+                        {n}人
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -216,7 +264,9 @@ export function Noriuchi() {
             </form>
           </div>
         </div>
-        <form method="dialog" className="modal-backdrop"><button>close</button></form>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
 
       <dialog ref={resetModalRef} className="modal">
@@ -228,14 +278,27 @@ export function Noriuchi() {
               <button className="btn btn-sm">キャンセル</button>
               <button
                 className="btn btn-sm btn-error"
-                onClick={() => { setMembers((prev) => prev.map((m) => ({ ...m, investMedals: 0, investCash: 0, collectMedals: 0, storedMedals: 0 }))); setActiveTab("playing"); }}
+                onClick={() => {
+                  setMembers((prev) =>
+                    prev.map((m) => ({
+                      ...m,
+                      investMedals: 0,
+                      investCash: 0,
+                      collectMedals: 0,
+                      storedMedals: 0,
+                    })),
+                  );
+                  setActiveTab("playing");
+                }}
               >
                 リセット
               </button>
             </form>
           </div>
         </div>
-        <form method="dialog" className="modal-backdrop"><button>close</button></form>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
 
       <div className="tabs tabs-box tabs-xs">
@@ -264,7 +327,11 @@ export function Noriuchi() {
                 ))}
               </div>
             </div>
-            <button type="button" className="btn btn-primary btn-soft self-end" onClick={() => setActiveTab("settlement")}>
+            <button
+              type="button"
+              className="btn btn-primary btn-soft self-end"
+              onClick={() => setActiveTab("settlement")}
+            >
               精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
             </button>
           </div>
@@ -291,22 +358,31 @@ export function Noriuchi() {
                       medalSteps={medalSteps}
                       mode="settlement"
                       onChange={(updated) => updateMember(i, updated)}
-                      otherMembers={members.filter((_, j) => j !== i).map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
-                      onTransfer={(targetId, amount, setStoredMedals) => handleTransfer(i, targetId, amount, setStoredMedals)}
+                      otherMembers={members
+                        .filter((_, j) => j !== i)
+                        .map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
+                      onTransfer={(targetId, amount, setStoredMedals) =>
+                        handleTransfer(i, targetId, amount, setStoredMedals)
+                      }
                       memberResult={result.members[i]}
-                      settlements={result.settlements.filter((s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name)}
+                      settlements={result.settlements.filter(
+                        (s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name,
+                      )}
                     />
                   </div>
                 ))}
               </div>
             </div>
-            <button type="button" className="btn btn-soft self-start" onClick={() => setActiveTab("playing")}>
+            <button
+              type="button"
+              className="btn btn-soft self-start"
+              onClick={() => setActiveTab("playing")}
+            >
               <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
             </button>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

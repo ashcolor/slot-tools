@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: corporate --default, dracula --prefersdark;
+  themes:
+    corporate --default,
+    dracula --prefersdark;
 }
 
 @theme {

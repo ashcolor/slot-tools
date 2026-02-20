@@ -3,19 +3,15 @@ import type { Member, MemberResult, Settlement, CalcResult } from "../types";
 export function calculate(
   members: Member[],
   lendingRate: number,
-  exchangeRate: number
+  exchangeRate: number,
 ): CalcResult {
   const memberResults: MemberResult[] = members.map((m) => {
     // 先に投資メダルと貯メダルを相殺
     const medalDiff = m.storedMedals - m.investMedals;
     // 回収メダルから貯メダルを引いた分が換金分
     const cashedOut = m.collectMedals - m.storedMedals;
-    const totalCollect =
-      cashedOut * exchangeRate +
-      (medalDiff >= 0 ? medalDiff * exchangeRate : 0);
-    const totalInvest =
-      m.investCash +
-      (medalDiff < 0 ? -medalDiff * lendingRate : 0);
+    const totalCollect = cashedOut * exchangeRate + (medalDiff >= 0 ? medalDiff * exchangeRate : 0);
+    const totalInvest = m.investCash + (medalDiff < 0 ? -medalDiff * lendingRate : 0);
     return {
       id: m.id,
       name: m.name,
@@ -55,7 +51,18 @@ export function calculate(
   const displayInvest = totalInvestCash + totalInvestMedals * lendingRate;
   const displayCollect = totalCollectMedals * exchangeRate;
 
-  return { totalInvest, totalCollect, totalProfit, totalInvestMedals, totalCollectMedals, totalInvestCash, displayInvest, displayCollect, members: memberResults, settlements };
+  return {
+    totalInvest,
+    totalCollect,
+    totalProfit,
+    totalInvestMedals,
+    totalCollectMedals,
+    totalInvestCash,
+    displayInvest,
+    displayCollect,
+    members: memberResults,
+    settlements,
+  };
 }
 
 function calcSettlements(members: MemberResult[]): Settlement[] {
