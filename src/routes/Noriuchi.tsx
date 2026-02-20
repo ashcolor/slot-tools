@@ -103,13 +103,17 @@ export function Noriuchi() {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1 text-sm opacity-70">
-          <span className="font-bold">{lendingRate === 4 ? "パチンコ" : "スロット"}</span>
-          <span>貸出</span>
-          <span className="font-bold">{(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find((o) => o.value === lendingRate)?.label ?? `${lendingRate}円`}</span>
-          <Icon icon="fa6-solid:arrow-right" className="size-3" />
-          <span>交換</span>
-          <span className="font-bold">{exchangeOptions.find((o) => o.value === exchangeRate)?.label ?? `${exchangeRate}円`}</span>
+        <div className="flex items-center gap-2 text-sm opacity-70">
+          <span className="badge badge-neutral badge-sm">{lendingRate === 4 ? "パチンコ" : "スロット"}</span>
+          <span>
+            <span>貸出：</span>
+            <span className="font-bold">{(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find((o) => o.value === lendingRate)?.label ?? `${lendingRate}円`}</span>
+          </span>
+            <Icon icon="fa6-solid:arrow-right" className="size-3" />
+          <span>
+            <span>交換：</span>
+            <span className="font-bold">{exchangeOptions.find((o) => o.value === exchangeRate)?.label ?? `${exchangeRate}円`}</span>
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -234,7 +238,7 @@ export function Noriuchi() {
         <form method="dialog" className="modal-backdrop"><button>close</button></form>
       </dialog>
 
-      <div className="tabs tabs-box">
+      <div className="tabs tabs-box tabs-xs">
         <input
           type="radio"
           name="noriuchi_tabs"
@@ -243,24 +247,24 @@ export function Noriuchi() {
           checked={activeTab === "playing"}
           onChange={() => setActiveTab("playing")}
         />
-        <div className="tab-content py-2">
-          <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
-            <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
-              {members.map((member, i) => (
-                <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
-                  <MemberForm
-                    member={member}
-                    exchangeRate={exchangeRate}
-                    medalSteps={medalSteps}
-                    mode="playing"
-                    onChange={(updated) => updateMember(i, updated)}
-                  />
-                </div>
-              ))}
+        <div className="tab-content">
+          <div className="flex flex-col gap-2">
+            <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
+              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex gap-3 w-min"}>
+                {members.map((member, i) => (
+                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                    <MemberForm
+                      member={member}
+                      exchangeRate={exchangeRate}
+                      medalSteps={medalSteps}
+                      mode="playing"
+                      onChange={(updated) => updateMember(i, updated)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="flex justify-end">
-            <button type="button" className="btn btn-primary btn-soft mt-2" onClick={() => setActiveTab("settlement")}>
+            <button type="button" className="btn btn-primary btn-soft self-end" onClick={() => setActiveTab("settlement")}>
               精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
             </button>
           </div>
@@ -274,30 +278,32 @@ export function Noriuchi() {
           checked={activeTab === "settlement"}
           onChange={() => setActiveTab("settlement")}
         />
-        <div className="tab-content p">
-          <SettlementView result={result} />
-          <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
-            <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
-              {members.map((member, i) => (
-                <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
-                  <MemberForm
-                    member={member}
-                    exchangeRate={exchangeRate}
-                    medalSteps={medalSteps}
-                    mode="settlement"
-                    onChange={(updated) => updateMember(i, updated)}
-                    otherMembers={members.filter((_, j) => j !== i).map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
-                    onTransfer={(targetId, amount, setStoredMedals) => handleTransfer(i, targetId, amount, setStoredMedals)}
-                    memberResult={result.members[i]}
-                    settlements={result.settlements.filter((s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name)}
-                  />
-                </div>
-              ))}
+        <div className="tab-content">
+          <div className="flex flex-col gap-2">
+            <SettlementView result={result} />
+            <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
+              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex gap-3 w-min"}>
+                {members.map((member, i) => (
+                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                    <MemberForm
+                      member={member}
+                      exchangeRate={exchangeRate}
+                      medalSteps={medalSteps}
+                      mode="settlement"
+                      onChange={(updated) => updateMember(i, updated)}
+                      otherMembers={members.filter((_, j) => j !== i).map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
+                      onTransfer={(targetId, amount, setStoredMedals) => handleTransfer(i, targetId, amount, setStoredMedals)}
+                      memberResult={result.members[i]}
+                      settlements={result.settlements.filter((s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
+            <button type="button" className="btn btn-soft self-start" onClick={() => setActiveTab("playing")}>
+              <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
+            </button>
           </div>
-          <button type="button" className="btn btn-soft mt-2" onClick={() => setActiveTab("playing")}>
-            <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
-          </button>
         </div>
       </div>
 

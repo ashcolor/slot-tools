@@ -15,8 +15,8 @@ export function SettlementView({ result }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative bg-base-100 border border-base-300 rounded-lg p-4">
-        <button type="button" className="absolute top-4 right-4 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
+      <div className="relative bg-base-100 border border-base-300 rounded-lg p-2">
+        <button type="button" className="absolute top-2 right-2 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
           <Icon icon="bi:info-circle" className="size-4" />
         </button>
         <div className="flex flex-col gap-3">
