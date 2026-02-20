@@ -11,7 +11,7 @@ interface Props {
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
   otherMembers?: { id: string; name: string; investMedals: number }[];
-  onTransfer?: (targetId: string, amount: number) => void;
+  onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
 }
@@ -48,6 +48,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
             ref={inputRef}
             type="text"
             className="input input-bordered input-sm w-full font-semibold text-center"
+            maxLength={5}
             value={member.name}
             onChange={(e) => update("name", e.target.value)}
             onBlur={() => { if (!member.name.trim()) update("name", pickRandomEmoji()); setEditing(false); }}
@@ -124,9 +125,17 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                     <span className="text-xs font-bold">再プレイ</span>
                     <span>{member.investMedals.toLocaleString()} 枚</span>
                   </div>
-                  <div className="flex justify-between text-blue-900 dark:text-blue-400">
-                    <span className="text-xs font-bold">出玉</span>
-                    <span>{member.collectMedals.toLocaleString()} 枚</span>
+                  <div className="text-blue-900 dark:text-blue-400">
+                    <div className="text-xs font-bold mb-1">出玉</div>
+                    <StepInput
+                      icon="akar-icons:coin"
+                      iconClass="text-base text-blue-900 dark:text-blue-400 shrink-0 w-8"
+                      value={member.collectMedals}
+                      unit="枚"
+                      steps={[]}
+                      onChange={(v) => update("collectMedals", v)}
+                      onAdd={() => {}}
+                    />
                   </div>
                 </div>
 
@@ -143,44 +152,42 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                       <Icon icon={transferOpen ? "fa6-solid:chevron-up" : "fa6-solid:chevron-down"} className="size-2" />
                     </button>
                     {transferOpen && (
-                      <div className="mt-2 p-2 rounded-lg bg-base-200 flex flex-col gap-2">
-                        <div className="flex items-center gap-1">
-                          <Icon icon="fa6-solid:arrow-right" className="size-3 opacity-50 shrink-0" />
-                          <select
-                            className="select select-bordered select-xs flex-1"
-                            value={transferTarget}
-                            onChange={(e) => setTransferTarget(e.target.value)}
-                          >
-                            {otherMembers.map((m) => (
-                              <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                      <div className="mt-2 p-2 rounded-lg bg-base-200 flex items-center gap-1">
+                        <select
+                          className="select select-bordered select-xs flex-1 min-w-0"
+                          value={transferTarget}
+                          onChange={(e) => setTransferTarget(e.target.value)}
+                        >
+                          {otherMembers.map((m) => (
+                            <option key={m.id} value={m.id}>{m.name}</option>
+                          ))}
+                        </select>
+                        <span className="text-xs opacity-60 shrink-0 leading-6">へ</span>
+                        <div className="flex flex-col gap-1 shrink-0">
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary flex-1"
+                            className="btn btn-xs btn-primary w-full"
                             disabled={!transferTarget || (() => { const t = otherMembers.find((m) => m.id === transferTarget); return !t || member.collectMedals < t.investMedals; })()}
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
-                                onTransfer(transferTarget, target.investMedals);
+                                onTransfer(transferTarget, target.investMedals, true);
                                 setTransferOpen(false);
                               }
                             }}
                           >
-                            再プレイ補填
+                            再プレイ補填（{otherMembers.find((m) => m.id === transferTarget)?.investMedals.toLocaleString() ?? 0}枚）
                           </button>
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary flex-1"
+                            className="btn btn-xs btn-primary w-full"
                             disabled={!transferTarget || !member.collectMedals}
                             onClick={() => {
-                              onTransfer(transferTarget, member.collectMedals);
+                              onTransfer(transferTarget, member.collectMedals, false);
                               setTransferOpen(false);
                             }}
                           >
-                            出玉全て
+                            出玉全て（{member.collectMedals.toLocaleString()}枚）
                           </button>
                         </div>
                       </div>
@@ -223,6 +230,14 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                     </div>
                   )}
                 </div>
+
+                {/* メダル収支 */}
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm font-bold">メダル収支</span>
+                  <span className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                    {member.storedMedals - member.investMedals >= 0 ? "+" : ""}{(member.storedMedals - member.investMedals).toLocaleString()} 枚
+                  </span>
+                </div>
               </div>
 
               {/* 現金 */}
@@ -235,32 +250,25 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                   </div>
                   <div className="flex justify-between text-blue-900 dark:text-blue-400">
                     <span className="font-bold">換金</span>
-                    <span>{Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚 → {Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate).toLocaleString()} 円</span>
+                    <span className="flex items-center gap-1">{Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚 <Icon icon="fa6-solid:arrow-right" className="size-2" /> {Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate).toLocaleString()} 円</span>
                   </div>
                 </div>
+
+                {/* 現金収支 */}
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm font-bold">現金収支</span>
+                  <span className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                    {Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "+" : ""}{Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash).toLocaleString()} 円
+                  </span>
+                </div>
+
                 {memberResult && (
                   <div>
-                    <div className="divider my-1" />
-                    <div className="text-xs font-bold opacity-50 mb-2">個人収支</div>
-                    <div className="flex flex-col gap-0.5 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-xs font-bold">メダル</span>
-                        <span className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-blue-500" : "text-red-500"}`}>
-                          {member.storedMedals - member.investMedals >= 0 ? "+" : ""}{(member.storedMedals - member.investMedals).toLocaleString()} 枚
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs font-bold">現金</span>
-                        <span className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-blue-500" : "text-red-500"}`}>
-                          {Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "+" : ""}{Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash).toLocaleString()} 円
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-base-300 pt-1 mt-1">
-                        <span className="text-xs font-bold">合計</span>
-                        <span className={`font-bold ${memberResult.profit >= 0 ? "text-blue-500" : "text-red-500"}`}>
-                          {memberResult.profit >= 0 ? "+" : ""}{Math.round(memberResult.profit).toLocaleString()} 円
-                        </span>
-                      </div>
+                    <div className="flex justify-between items-center border-t border-base-300 pt-2 mt-2">
+                      <span className="text-sm font-bold">合計</span>
+                      <span className={`text-base font-bold ${memberResult.profit >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                        {memberResult.profit >= 0 ? "+" : ""}{Math.round(memberResult.profit).toLocaleString()} 円
+                      </span>
                     </div>
                     <div className="divider my-1" />
                     <div className="text-xs font-bold opacity-50 mb-2">精算</div>

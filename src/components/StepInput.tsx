@@ -47,10 +47,10 @@ export function StepInput({ icon, iconClass, value, unit, step, steps, onChange,
               <button
                 key={v}
                 type="button"
-                className="btn  btn-success btn-soft flex-1 min-w-0"
+                className="btn btn-primary btn-soft flex-1 min-w-0"
                 onClick={() => onAdd(v)}
               >
-                <Icon icon="mdi:plus-circle-outline" className="size-3 shrink-0" />{fmt(v)}
+                <Icon icon="mdi:plus-circle-outline" className="size-4 shrink-0" />{fmt(v)}
               </button>
             ))}
           </div>
@@ -62,7 +62,7 @@ export function StepInput({ icon, iconClass, value, unit, step, steps, onChange,
                 className="btn btn-xs btn-error btn-soft flex-1 min-w-0"
                 onClick={() => onAdd(-v)}
               >
-                <Icon icon="mdi:minus-circle-outline" className="size-3" />{fmt(v)}
+                <Icon icon="mdi:minus-circle-outline" className="size-4" />{fmt(v)}
               </button>
             ))}
           </div>

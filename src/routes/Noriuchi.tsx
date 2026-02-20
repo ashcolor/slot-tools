@@ -64,10 +64,10 @@ export function Noriuchi() {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
   };
 
-  const handleTransfer = (fromIndex: number, targetId: string, amount: number) => {
+  const handleTransfer = (fromIndex: number, targetId: string, amount: number, setStoredMedals: boolean) => {
     setMembers((prev) => prev.map((m, i) => {
-      if (i === fromIndex) return { ...m, collectMedals: m.collectMedals - amount };
-      if (m.id === targetId) return { ...m, collectMedals: m.collectMedals + amount, storedMedals: amount };
+      if (i === fromIndex) return { ...m, collectMedals: m.collectMedals - amount, storedMedals: setStoredMedals ? m.storedMedals : 0 };
+      if (m.id === targetId) return { ...m, collectMedals: m.collectMedals + amount, ...(setStoredMedals ? { storedMedals: amount } : {}) };
       return m;
     }));
   };
@@ -285,7 +285,7 @@ export function Noriuchi() {
                     mode="settlement"
                     onChange={(updated) => updateMember(i, updated)}
                     otherMembers={members.filter((_, j) => j !== i).map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals }))}
-                    onTransfer={(targetId, amount) => handleTransfer(i, targetId, amount)}
+                    onTransfer={(targetId, amount, setStoredMedals) => handleTransfer(i, targetId, amount, setStoredMedals)}
                     memberResult={result.members[i]}
                     settlements={result.settlements.filter((s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name)}
                   />
