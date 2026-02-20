@@ -5,7 +5,7 @@ import { MemberForm } from "../components/MemberForm";
 import { SettlementView } from "../components/Settlement";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
-import { ANIMAL_EMOJIS, LENDING_RATE_OPTIONS, getExchangeOptions, pickRandomEmoji } from "../types";
+import { ANIMAL_EMOJIS, PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS, getExchangeOptions, pickRandomEmoji } from "../types";
 import type { Member } from "../types";
 
 const MAX_MEMBERS = 4;
@@ -31,7 +31,7 @@ const DEFAULT_EMOJIS = pickRandomEmojis(MAX_MEMBERS);
 export function Noriuchi() {
   const [lendingRate, setLendingRate] = useLocalStorage("noriuchi-rate", 20);
   const [exchangeRate, setExchangeRate] = useLocalStorage("noriuchi-exchangeRate", 20);
-  const [slotSize, setSlotSize] = useLocalStorage<46 | 50>("noriuchi-slotSize", 46);
+  const [slotSize, setSlotSize] = useLocalStorage<46 | 50 | 125>("noriuchi-slotSize", 46);
   const [memberCount, setMemberCount] = useLocalStorage("noriuchi-memberCount", 2);
   const [usedEmojis] = useLocalStorage("noriuchi-emojis", DEFAULT_EMOJIS);
   const [members, setMembers] = useLocalStorage<Member[]>("noriuchi-members", [
@@ -40,6 +40,8 @@ export function Noriuchi() {
   ]);
   const [activeTab, setActiveTab] = useState<"playing" | "settlement">("playing");
   const infoModalRef = useRef<HTMLDialogElement>(null);
+  const configModalRef = useRef<HTMLDialogElement>(null);
+  const resetModalRef = useRef<HTMLDialogElement>(null);
 
   // localStorage から読み込んだメンバーの空名前を補完
   useEffect(() => {
@@ -101,33 +103,137 @@ export function Noriuchi() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-2">
-        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">貸出</label>
-        <RateSelector rate={lendingRate} options={LENDING_RATE_OPTIONS} onChange={handleLendingRateChange} />
-        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">交換</label>
-        <RateSelector rate={exchangeRate} options={exchangeOptions} onChange={setExchangeRate} />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-1 text-sm opacity-70">
+          <span className="font-bold">{lendingRate === 4 ? "パチンコ" : "スロット"}</span>
+          <span>貸出</span>
+          <span className="font-bold">{(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find((o) => o.value === lendingRate)?.label ?? `${lendingRate}円`}</span>
+          <Icon icon="fa6-solid:arrow-right" className="size-3" />
+          <span>交換</span>
+          <span className="font-bold">{exchangeOptions.find((o) => o.value === exchangeRate)?.label ?? `${exchangeRate}円`}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square"
+            onClick={() => configModalRef.current?.showModal()}
+            aria-label="設定"
+          >
+            <Icon icon="fa6-solid:gear" className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square"
+            onClick={() => resetModalRef.current?.showModal()}
+            aria-label="リセット"
+          >
+            <Icon icon="fa6-regular:trash-can" className="size-4" />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-3 mb-4">
-        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">再プレイ単位</label>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={slotSize}
-          onChange={(e) => setSlotSize(Number(e.target.value) as 46 | 50)}
-        >
-          <option value={46}>46枚</option>
-          <option value={50}>50枚</option>
-        </select>
-        <label className="text-xs font-bold uppercase tracking-wide opacity-60 shrink-0">人数</label>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={memberCount}
-          onChange={(e) => handleCountChange(Number(e.target.value))}
-        >
-          {[1, 2, 3, 4].map((n) => (
-            <option key={n} value={n}>{n}人</option>
-          ))}
-        </select>
-      </div>
+
+      <dialog ref={configModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-4">設定</h3>
+          <div className="flex flex-col gap-4">
+            <div className="tabs tabs-box w-fit mx-auto">
+              <input
+                type="radio"
+                name="game_type"
+                className="tab"
+                aria-label="スロット"
+                checked={lendingRate !== 4}
+                onChange={() => { handleLendingRateChange(20); setSlotSize(46); }}
+              />
+              <input
+                type="radio"
+                name="game_type"
+                className="tab"
+                aria-label="パチンコ"
+                checked={lendingRate === 4}
+                onChange={() => { handleLendingRateChange(4); setSlotSize(125); }}
+              />
+            </div>
+            <div>
+              <div className="text-xs font-bold opacity-50 mb-2">レート</div>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold">貸出</label>
+                  <RateSelector rate={lendingRate} options={lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS} onChange={handleLendingRateChange} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold">交換</label>
+                  <RateSelector rate={exchangeRate} options={exchangeOptions} onChange={setExchangeRate} />
+                </div>
+              </div>
+            </div>
+            <div className="divider my-0" />
+            <div>
+              <div className="text-xs font-bold opacity-50 mb-2">入力設定</div>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold">再プレイ単位</label>
+                  {lendingRate === 4 ? (
+                    <select
+                      className="select select-bordered select-sm w-auto"
+                      value={slotSize}
+                      onChange={(e) => setSlotSize(Number(e.target.value) as 125)}
+                    >
+                      <option value={125}>125玉</option>
+                    </select>
+                  ) : (
+                    <select
+                      className="select select-bordered select-sm w-auto"
+                      value={slotSize}
+                      onChange={(e) => setSlotSize(Number(e.target.value) as 46 | 50)}
+                    >
+                      <option value={46}>46枚</option>
+                      <option value={50}>50枚</option>
+                    </select>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold">メンバー数</label>
+                  <select
+                    className="select select-bordered select-sm w-auto"
+                    value={memberCount}
+                    onChange={(e) => handleCountChange(Number(e.target.value))}
+                  >
+                    {[1, 2, 3, 4].map((n) => (
+                      <option key={n} value={n}>{n}人</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-sm">閉じる</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop"><button>close</button></form>
+      </dialog>
+
+      <dialog ref={resetModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-2">リセット</h3>
+          <p className="text-sm opacity-70">全メンバーの入力内容をリセットしますか？</p>
+          <div className="modal-action">
+            <form method="dialog" className="flex gap-2">
+              <button className="btn btn-sm">キャンセル</button>
+              <button
+                className="btn btn-sm btn-error"
+                onClick={() => setMembers((prev) => prev.map((m) => ({ ...m, investMedals: 0, investCash: 0, collectMedals: 0, storedMedals: 0 })))}
+              >
+                リセット
+              </button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop"><button>close</button></form>
+      </dialog>
 
       <div className="tabs tabs-box">
         <input

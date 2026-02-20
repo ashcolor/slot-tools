@@ -188,7 +188,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                               setTransferOpen(false);
                             }}
                           >
-                            全て
+                            出玉全て
                           </button>
                         </div>
                       </div>
