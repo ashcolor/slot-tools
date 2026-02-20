@@ -10,7 +10,7 @@ interface Props {
   medalSteps: number[];
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
-  otherMembers?: { id: string; name: string; investMedals: number; storedMedals: number }[];
+  otherMembers?: { id: string; name: string; investMedals: number; storedMedals: number; collectMedals: number }[];
   onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
@@ -186,27 +186,26 @@ export function MemberForm({
                               !transferTarget ||
                               (() => {
                                 const t = otherMembers.find((m) => m.id === transferTarget);
-                                return (
-                                  !t ||
-                                  member.collectMedals < t.investMedals ||
-                                  t.storedMedals >= t.investMedals ||
-                                  (t.investMedals > 0 && t.collectMedals >= t.investMedals)
-                                );
+                                if (!t) return true;
+                                const amount = Math.max(t.investMedals - t.collectMedals, 0);
+                                return amount === 0 || member.collectMedals < amount;
                               })()
                             }
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
-                                onTransfer(transferTarget, target.investMedals, true);
+                                const amount = Math.max(target.investMedals - target.collectMedals, 0);
+                                onTransfer(transferTarget, amount, true);
                                 setTransferOpen(false);
                               }
                             }}
                           >
                             再プレイ補填
                             <br />（
-                            {otherMembers
-                              .find((m) => m.id === transferTarget)
-                              ?.investMedals.toLocaleString() ?? 0}
+                            {(() => {
+                              const t = otherMembers.find((m) => m.id === transferTarget);
+                              return Math.max((t?.investMedals ?? 0) - (t?.collectMedals ?? 0), 0).toLocaleString();
+                            })()}
                             枚）
                           </button>
                           <button
