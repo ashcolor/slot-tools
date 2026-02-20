@@ -39,7 +39,6 @@ export function Noriuchi() {
     createMember(usedEmojis[1]),
   ]);
   const [activeTab, setActiveTab] = useState<"playing" | "settlement">("playing");
-  const infoModalRef = useRef<HTMLDialogElement>(null);
   const configModalRef = useRef<HTMLDialogElement>(null);
   const resetModalRef = useRef<HTMLDialogElement>(null);
 
@@ -245,41 +244,6 @@ export function Noriuchi() {
           onChange={() => setActiveTab("playing")}
         />
         <div className="tab-content py-4">
-          <div className="card bg-base-100 shadow-sm mb-4 relative">
-            <button type="button" className="absolute top-1 right-1 opacity-50" onClick={() => infoModalRef.current?.showModal()} aria-label="計算について">
-              <Icon icon="bi:info-circle" className="size-4" />
-            </button>
-            <div className="card-body p-3 flex-row items-center justify-center gap-6 text-center">
-              <div>
-                <div className="text-xs opacity-60">総投資</div>
-                <div className="font-bold text-red-900">{Math.round(result.totalInvest).toLocaleString()} 円</div>
-              </div>
-              <div>
-                <div className="text-xs opacity-60">出玉</div>
-                <div className="font-bold text-blue-900">{members.reduce((s, m) => s + m.collectMedals, 0).toLocaleString()} 枚</div>
-              </div>
-              <div>
-                <div className="text-xs opacity-60">収支</div>
-                <div className={`font-bold ${result.totalProfit >= 0 ? "text-blue-500" : "text-red-500"}`}>
-                  {result.totalProfit >= 0 ? "+" : ""}{Math.round(result.totalProfit).toLocaleString()} 円
-                </div>
-              </div>
-            </div>
-          </div>
-          <dialog ref={infoModalRef} className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg mb-2">途中結果について</h3>
-              <p className="text-sm opacity-70">
-                再プレイ枚数は貸出レートで、出玉は交換レートで円換算しています。貯メダルの入力前のため、全メダルを換金した場合の概算値です。
-              </p>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn btn-sm">閉じる</button>
-                </form>
-              </div>
-            </div>
-            <form method="dialog" className="modal-backdrop"><button>close</button></form>
-          </dialog>
           <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
             <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
               {members.map((member, i) => (

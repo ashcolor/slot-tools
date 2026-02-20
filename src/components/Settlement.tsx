@@ -26,12 +26,12 @@ export function SettlementView({ result, exchangeRate }: Props) {
           <div className="flex items-center justify-center gap-8 text-center">
             <div>
               <div className="text-xs opacity-60">総投資</div>
-              <div className="text-lg font-bold text-red-900">{fmt(result.totalInvest)} 円</div>
+              <div className="text-lg font-bold text-red-900 dark:text-red-400">{fmt(result.totalInvest)} 円</div>
               <div className="text-xs opacity-50">（再プレイ{result.totalInvestMedals.toLocaleString()}枚 含む）</div>
             </div>
             <div>
               <div className="text-xs opacity-60">総回収</div>
-              <div className="text-lg font-bold text-blue-900">{fmt(result.totalCollect)} 円</div>
+              <div className="text-lg font-bold text-blue-900 dark:text-blue-400">{fmt(result.totalCollect)} 円</div>
               <div className="text-xs opacity-50">={toMedalByExchange(result.totalCollect)} 枚</div>
             </div>
           </div>

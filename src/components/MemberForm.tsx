@@ -23,6 +23,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
   const [editing, setEditing] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferTarget, setTransferTarget] = useState(otherMembers?.[0]?.id ?? "");
+  const [doneSettlements, setDoneSettlements] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,25 +35,14 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
   };
 
   const addTo = (field: keyof Member, amount: number) => {
-    update(field, (member[field] as number) + amount);
+    update(field, Math.max(0, (member[field] as number) + amount));
   };
 
-  const handleReset = () => {
-    onChange({ ...member, investMedals: 0, investCash: 0, collectMedals: 0, storedMedals: 0 });
-  };
 
   return (
     <div className="card bg-base-100 shadow-sm">
       <div className="card-body p-3">
-        <div className="relative">
-          <button
-            type="button"
-            className="absolute -top-1 -left-1 opacity-30 hover:opacity-100 transition-opacity"
-            onClick={handleReset}
-            aria-label="リセット"
-          >
-            <Icon icon="fa6-solid:trash-can" className="size-2.5" />
-          </button>
+        <div>
         {editing ? (
           <input
             ref={inputRef}
@@ -78,24 +68,25 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
             <>
               {/* 再プレイ */}
               <div>
-                <div className="text-xs font-bold text-red-900 mb-1">再プレイ</div>
+                <div className="text-xs font-bold text-red-900 dark:text-red-400 mb-1">再プレイ</div>
                 <StepInput
                   icon="material-symbols:replay"
-                  iconClass="text-base text-red-900 shrink-0 w-8"
+                  iconClass="text-base text-red-900 dark:text-red-400 shrink-0 w-8"
                   value={member.investMedals}
                   unit="枚"
                   steps={medalSteps}
                   onChange={(v) => update("investMedals", v)}
                   onAdd={(v) => addTo("investMedals", v)}
+                  readOnly
                 />
               </div>
 
               {/* 現金投資 */}
               <div>
-                <div className="text-xs font-bold text-red-900 mb-1">現金投資</div>
+                <div className="text-xs font-bold text-red-900 dark:text-red-400 mb-1">現金投資</div>
                 <StepInput
                   icon="akar-icons:money"
-                  iconClass="text-base text-red-900 shrink-0 w-8"
+                  iconClass="text-base text-red-900 dark:text-red-400 shrink-0 w-8"
                   value={member.investCash}
                   unit="円"
                   step={1000}
@@ -103,15 +94,16 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                   onChange={(v) => update("investCash", v)}
                   onAdd={(v) => addTo("investCash", v)}
                   formatStep={fmtCash}
+                  readOnly
                 />
               </div>
 
               {/* 出玉 */}
               <div>
-                <div className="text-xs font-bold text-blue-900 mb-1">出玉</div>
+                <div className="text-xs font-bold text-blue-900 dark:text-blue-400 mb-1">出玉</div>
                 <StepInput
                   icon="akar-icons:coin"
-                  iconClass="text-base text-blue-900 shrink-0 w-8"
+                  iconClass="text-base text-blue-900 dark:text-blue-400 shrink-0 w-8"
                   value={member.collectMedals}
                   unit="枚"
                   steps={[]}
@@ -126,13 +118,13 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
             <>
               {/* メダル */}
               <div>
-                <div className="text-xs font-bold opacity-50 mb-2">メダル</div>
+                <div className="text-xs font-bold opacity-50 mb-2">メダル結果</div>
                 <div className="flex flex-col gap-0.5 text-sm">
-                  <div className="flex justify-between text-red-900">
+                  <div className="flex justify-between text-red-900 dark:text-red-400">
                     <span className="text-xs font-bold">再プレイ</span>
                     <span>{member.investMedals.toLocaleString()} 枚</span>
                   </div>
-                  <div className="flex justify-between text-blue-900">
+                  <div className="flex justify-between text-blue-900 dark:text-blue-400">
                     <span className="text-xs font-bold">出玉</span>
                     <span>{member.collectMedals.toLocaleString()} 枚</span>
                   </div>
@@ -164,11 +156,11 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                             ))}
                           </select>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex flex-col gap-1">
                           <button
                             type="button"
                             className="btn btn-xs btn-primary flex-1"
-                            disabled={!transferTarget}
+                            disabled={!transferTarget || (() => { const t = otherMembers.find((m) => m.id === transferTarget); return !t || member.collectMedals < t.investMedals; })()}
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
@@ -177,7 +169,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                               }
                             }}
                           >
-                            再プレイ分
+                            再プレイ補填
                           </button>
                           <button
                             type="button"
@@ -235,13 +227,13 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
 
               {/* 現金 */}
               <div>
-                <div className="text-xs font-bold opacity-50 mb-2">現金</div>
+                <div className="text-xs font-bold opacity-50 mb-2">現金結果</div>
                 <div className="text-xs flex flex-col gap-0.5">
-                  <div className="flex justify-between text-red-900">
+                  <div className="flex justify-between text-red-900 dark:text-red-400">
                     <span className="font-bold">現金投資</span>
                     <span>{member.investCash.toLocaleString()} 円</span>
                   </div>
-                  <div className="flex justify-between text-blue-900">
+                  <div className="flex justify-between text-blue-900 dark:text-blue-400">
                     <span className="font-bold">換金</span>
                     <span>{Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚 → {Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate).toLocaleString()} 円</span>
                   </div>
@@ -249,7 +241,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                 {memberResult && (
                   <div>
                     <div className="divider my-1" />
-                    <div className="text-xs font-bold opacity-50 mb-2">結果</div>
+                    <div className="text-xs font-bold opacity-50 mb-2">個人収支</div>
                     <div className="flex flex-col gap-0.5 text-sm">
                       <div className="flex justify-between">
                         <span className="text-xs font-bold">メダル</span>
@@ -270,21 +262,34 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                         </span>
                       </div>
                     </div>
-                    {settlements && settlements.length > 0 && (
-                      <div className="divider my-1" />
-                    )}
-                    {settlements && settlements.length > 0 && (
+                    <div className="divider my-1" />
+                    <div className="text-xs font-bold opacity-50 mb-2">精算</div>
+                    {settlements && settlements.length > 0 ? (
                       <div className="flex flex-col gap-0.5 text-sm">
                         {settlements.map((s, i) => {
                           const isPayer = s.from === memberResult.name;
+                          const done = doneSettlements.has(i);
                           return (
-                            <div key={i} className="flex justify-between">
-                              <span>{isPayer ? `${s.to} に渡す` : `${s.from} から受取`}</span>
-                              <span className="font-bold">{Math.round(s.amount).toLocaleString()} 円</span>
+                            <div
+                              key={i}
+                              className={`cursor-pointer select-none transition-opacity ${done ? "line-through opacity-40" : ""}`}
+                              onClick={() => setDoneSettlements((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(i)) next.delete(i);
+                                else next.add(i);
+                                return next;
+                              })}
+                            >
+                              {isPayer
+                                ? <><span className="font-bold">{s.to}</span> に <span className="font-bold">{Math.round(s.amount).toLocaleString()} 円</span> 渡す</>
+                                : <><span className="font-bold">{s.from}</span> から <span className="font-bold">{Math.round(s.amount).toLocaleString()} 円</span> 受取</>
+                              }
                             </div>
                           );
                         })}
                       </div>
+                    ) : (
+                      <div className="text-sm opacity-50">精算なし</div>
                     )}
                   </div>
                 )}
