@@ -84,6 +84,10 @@ export interface CalcResult {
   totalCollect: number;
   totalProfit: number;
   totalInvestMedals: number;
+  totalCollectMedals: number;
+  totalInvestCash: number;
+  displayInvest: number;
+  displayCollect: number;
   members: MemberResult[];
   settlements: Settlement[];
 }

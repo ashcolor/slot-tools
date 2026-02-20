@@ -4,47 +4,41 @@ import type { CalcResult } from "../types";
 
 interface Props {
   result: CalcResult;
-  exchangeRate: number;
 }
 
-export function SettlementView({ result, exchangeRate }: Props) {
+export function SettlementView({ result }: Props) {
   const modalRef = useRef<HTMLDialogElement>(null);
   const fmt = (n: number) => Math.round(n).toLocaleString();
-
-  const toMedalByExchange = (n: number) => Math.round(n / exchangeRate).toLocaleString();
 
   const memberCount = result.members.length;
   const perPerson = memberCount > 0 ? result.totalProfit / memberCount : 0;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative bg-base-100 border border-base-300 rounded-lg p-2">
-        <button type="button" className="absolute top-1 right-1 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
+      <div className="relative bg-base-100 border border-base-300 rounded-lg p-4">
+        <button type="button" className="absolute top-4 right-4 opacity-50" onClick={() => modalRef.current?.showModal()} aria-label="分配方式について">
           <Icon icon="bi:info-circle" className="size-4" />
         </button>
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-center gap-8 text-center">
             <div>
-              <div className="text-xs opacity-60">総投資</div>
-              <div className="text-lg font-bold text-red-900 dark:text-red-400">{fmt(result.totalInvest)} 円</div>
-              <div className="text-xs opacity-50">（再プレイ{result.totalInvestMedals.toLocaleString()}枚 含む）</div>
+              <div className="text-xs opacity-60">全体投資</div>
+              <div className="text-lg font-bold text-red-900 dark:text-red-400">{fmt(result.displayInvest)} 円</div>
+              <div className="text-xs opacity-50">再プレイ <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>枚 込み</div>
             </div>
             <div>
-              <div className="text-xs opacity-60">総回収</div>
-              <div className="text-lg font-bold text-blue-900 dark:text-blue-400">{fmt(result.totalCollect)} 円</div>
-              <div className="text-xs opacity-50">={toMedalByExchange(result.totalCollect)} 枚</div>
+              <div className="text-xs opacity-60">全体回収</div>
+              <div className="text-lg font-bold text-blue-900 dark:text-blue-400">{fmt(result.displayCollect)} 円</div>
+              <div className="text-xs opacity-50">出玉 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>枚</div>
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs opacity-60">収支</div>
-            <div className={`text-xl font-bold ${result.totalProfit >= 0 ? "text-blue-500" : "text-red-500"}`}>
-              {result.totalProfit >= 0 ? "+" : ""}{fmt(result.totalProfit)} 円
+            <div className="text-xs opacity-60">収支 / 人</div>
+            <div className={`text-xl font-bold ${perPerson >= 0 ? "text-blue-500" : "text-red-500"}`}>
+              {perPerson >= 0 ? "+" : ""}{fmt(Math.round(perPerson))} 円
             </div>
-            <div className={`text-sm ${result.totalProfit >= 0 ? "text-blue-500" : "text-red-500"} opacity-70`}>
-              {result.totalProfit >= 0 ? "+" : ""}{toMedalByExchange(result.totalProfit)} 枚
-            </div>
-            <div className="text-sm mt-1 opacity-60">
-              {perPerson >= 0 ? "+" : ""}{fmt(Math.round(perPerson))} 円 / 人
+            <div className="text-xs mt-1 opacity-60">
+              全体合計 {result.totalProfit >= 0 ? "+" : ""}{fmt(result.totalProfit)} 円
             </div>
           </div>
         </div>
@@ -52,10 +46,29 @@ export function SettlementView({ result, exchangeRate }: Props) {
 
       <dialog ref={modalRef} className="modal">
         <div className="modal-box">
-          <h3 className="font-bold text-lg mb-2">分配方式について</h3>
-          <p className="text-sm opacity-70">
-            全体の損益を均等に分配します。各メンバーの取り分 = 自分の投資額 + (全体損益 / 人数) となり、全員の収支が同じになります。
-          </p>
+          <h3 className="font-bold text-lg mb-2">計算式について</h3>
+          <div className="text-sm flex flex-col gap-3 opacity-70">
+            <div>
+              <div className="font-bold mb-1">投資額</div>
+              <div>現金投資 + (再プレイ × 貸出レート)</div>
+            </div>
+            <div>
+              <div className="font-bold mb-1">回収額</div>
+              <div>出玉 × 交換レート</div>
+            </div>
+            <div>
+              <div className="font-bold mb-1">収支</div>
+              <div className="flex flex-col gap-1">
+                <div>換金枚数 = 出玉 − 貯メダル</div>
+                <div>メダル差分 = 貯メダル − 再プレイ</div>
+                <div>現金換算回収 = (換金枚数 × 交換レート) + (メダル増加分 × 交換レート)</div>
+                <div>現金換算投資 = 現金投資 + (メダル減少分 × 貸出レート)</div>
+                <div>収支 = 現金換算回収 − 現金換算投資</div>
+              </div>
+              <div className="text-xs opacity-60 mt-0.5">※メダル差分が正なら「増加分」、負なら「減少分」として計算</div>
+              <div className="text-xs opacity-60 mt-0.5">※再プレイや貯メダルの増減を考慮しているため、上記の回収額 − 投資額とは一致しない場合があります</div>
+            </div>
+          </div>
           <div className="modal-action">
             <form method="dialog">
               <button className="btn btn-sm">閉じる</button>

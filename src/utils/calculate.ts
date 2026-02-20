@@ -48,8 +48,14 @@ export function calculate(
   const settlements = calcSettlements(memberResults);
 
   const totalInvestMedals = members.reduce((s, m) => s + m.investMedals, 0);
+  const totalCollectMedals = members.reduce((s, m) => s + m.collectMedals, 0);
+  const totalInvestCash = members.reduce((s, m) => s + m.investCash, 0);
 
-  return { totalInvest, totalCollect, totalProfit, totalInvestMedals, members: memberResults, settlements };
+  // 表示用: 単純な計算式に基づく値
+  const displayInvest = totalInvestCash + totalInvestMedals * lendingRate;
+  const displayCollect = totalCollectMedals * exchangeRate;
+
+  return { totalInvest, totalCollect, totalProfit, totalInvestMedals, totalCollectMedals, totalInvestCash, displayInvest, displayCollect, members: memberResults, settlements };
 }
 
 function calcSettlements(members: MemberResult[]): Settlement[] {
