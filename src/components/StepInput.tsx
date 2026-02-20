@@ -5,7 +5,6 @@ interface Props {
   iconClass: string;
   value: number;
   unit: string;
-  step?: number;
   steps: number[];
   onChange: (value: number) => void;
   onAdd: (amount: number) => void;
@@ -14,27 +13,26 @@ interface Props {
   readOnly?: boolean;
 }
 
-export function StepInput({ icon, iconClass, value, unit, step, steps, onChange, onAdd, formatStep, error, readOnly }: Props) {
+export function StepInput({ icon, iconClass, value, unit, steps, onChange, onAdd, formatStep, error, readOnly }: Props) {
   const fmt = (v: number) => formatStep ? formatStep(v) : String(v);
   return (
     <div>
       <div className="flex items-center gap-1">
         <Icon icon={icon} className={iconClass} />
         {readOnly ? (
-          <div className={`input input-md flex items-center gap-1 flex-1 min-w-0 bg-base-200${error ? " input-error" : ""}`}>
-            <span className="flex-1 text-right font-bold">{value.toLocaleString()}</span>
+          <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
+            <span className="font-bold text-xl">{value.toLocaleString()}</span>
             <span className="text-xs opacity-50">{unit}</span>
           </div>
         ) : (
           <label className={`input input-bordered input-md flex items-center gap-1 flex-1 min-w-0${error ? " input-error" : ""}`}>
             <input
-              type="number"
-              min={0}
-              step={step}
+              type="text"
+              inputMode="numeric"
               placeholder="0"
               className="grow w-0 min-w-0 text-right"
-              value={value || ""}
-              onChange={(e) => onChange(Number(e.target.value) || 0)}
+              value={value ? value.toLocaleString() : ""}
+              onChange={(e) => onChange(Number(e.target.value.replace(/,/g, "")) || 0)}
             />
             <span className="text-xs opacity-50">{unit}</span>
           </label>

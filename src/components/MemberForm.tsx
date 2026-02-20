@@ -15,7 +15,6 @@ interface Props {
   memberResult?: MemberResult;
   settlements?: Settlement[];
 }
-
 const CASH_STEPS = [1000, 10000];
 const fmtCash = (v: number) => v.toLocaleString();
 
@@ -37,7 +36,6 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
   const addTo = (field: keyof Member, amount: number) => {
     update(field, Math.max(0, (member[field] as number) + amount));
   };
-
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -90,7 +88,6 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                   iconClass="text-base text-red-900 dark:text-red-400 shrink-0 w-8"
                   value={member.investCash}
                   unit="円"
-                  step={1000}
                   steps={CASH_STEPS}
                   onChange={(v) => update("investCash", v)}
                   onAdd={(v) => addTo("investCash", v)}
