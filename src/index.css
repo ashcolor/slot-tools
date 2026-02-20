@@ -1,4 +1,20 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: corporate --default, dracula --prefersdark;
+}
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@theme {
+  --color-invest: #7f1d1d;
+  --color-collect: #1e3a5f;
+  --color-store: #db2777;
+  --color-plus: #3b82f6;
+  --color-minus: #ef4444;
+}
+
+[data-theme="dracula"] {
+  --color-invest: #f87171;
+  --color-collect: #60a5fa;
+  --color-store: #f472b6;
+  --color-plus: #3b82f6;
+  --color-minus: #ef4444;
+}

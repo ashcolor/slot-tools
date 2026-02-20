@@ -67,10 +67,10 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
             <>
               {/* 再プレイ */}
               <div>
-                <div className="text-xs font-bold text-red-900 dark:text-red-400 mb-1">再プレイ</div>
+                <div className="text-xs font-bold text-invest mb-1">再プレイ</div>
                 <StepInput
                   icon="material-symbols:replay"
-                  iconClass="text-base text-red-900 dark:text-red-400 shrink-0 w-8"
+                  iconClass="text-base text-invest shrink-0 w-8"
                   value={member.investMedals}
                   unit="枚"
                   steps={medalSteps}
@@ -82,10 +82,10 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
 
               {/* 現金投資 */}
               <div>
-                <div className="text-xs font-bold text-red-900 dark:text-red-400 mb-1">現金投資</div>
+                <div className="text-xs font-bold text-invest mb-1">現金投資</div>
                 <StepInput
                   icon="akar-icons:money"
-                  iconClass="text-base text-red-900 dark:text-red-400 shrink-0 w-8"
+                  iconClass="text-base text-invest shrink-0 w-8"
                   value={member.investCash}
                   unit="円"
                   steps={CASH_STEPS}
@@ -98,10 +98,10 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
 
               {/* 出玉 */}
               <div>
-                <div className="text-xs font-bold text-blue-900 dark:text-blue-400 mb-1">出玉</div>
+                <div className="text-xs font-bold text-collect mb-1">出玉</div>
                 <StepInput
                   icon="akar-icons:coin"
-                  iconClass="text-base text-blue-900 dark:text-blue-400 shrink-0 w-8"
+                  iconClass="text-base text-collect shrink-0 w-8"
                   value={member.collectMedals}
                   unit="枚"
                   steps={[]}
@@ -118,15 +118,15 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
               <div>
                 <div className="text-xs font-bold opacity-50 mb-2">メダル結果</div>
                 <div className="flex flex-col gap-0.5 text-sm">
-                  <div className="flex justify-between text-red-900 dark:text-red-400">
+                  <div className="flex justify-between text-invest">
                     <span className="text-xs font-bold">再プレイ</span>
                     <span>{member.investMedals.toLocaleString()} 枚</span>
                   </div>
-                  <div className="text-blue-900 dark:text-blue-400">
+                  <div className="text-collect">
                     <div className="text-xs font-bold mb-1">出玉</div>
                     <StepInput
                       icon="akar-icons:coin"
-                      iconClass="text-base text-blue-900 dark:text-blue-400 shrink-0 w-8"
+                      iconClass="text-base text-collect shrink-0 w-8"
                       value={member.collectMedals}
                       unit="枚"
                       steps={[]}
@@ -194,10 +194,10 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
 
                 {/* 貯メダル */}
                 <div className="mt-3">
-                  <div className="text-xs font-bold text-pink-600 mb-1">貯メダル</div>
+                  <div className="text-xs font-bold text-store mb-1">貯メダル</div>
                   <StepInput
                     icon="bi:piggy-bank"
-                    iconClass="text-base text-pink-600 shrink-0 w-8"
+                    iconClass="text-base text-store shrink-0 w-8"
                     value={member.storedMedals}
                     unit="枚"
                     steps={[]}
@@ -231,7 +231,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                 {/* メダル収支 */}
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-sm font-bold">メダル収支</span>
-                  <span className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                  <span className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}>
                     {member.storedMedals - member.investMedals >= 0 ? "+" : ""}{(member.storedMedals - member.investMedals).toLocaleString()} 枚
                   </span>
                 </div>
@@ -241,11 +241,11 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
               <div>
                 <div className="text-xs font-bold opacity-50 mb-2">現金結果</div>
                 <div className="text-xs flex flex-col gap-0.5">
-                  <div className="flex justify-between text-red-900 dark:text-red-400">
+                  <div className="flex justify-between text-invest">
                     <span className="font-bold">現金投資</span>
                     <span>{member.investCash.toLocaleString()} 円</span>
                   </div>
-                  <div className="flex justify-between text-blue-900 dark:text-blue-400">
+                  <div className="flex justify-between text-collect">
                     <span className="font-bold">換金</span>
                     <span className="flex items-center gap-1">{Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚 <Icon icon="fa6-solid:arrow-right" className="size-2" /> {Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate).toLocaleString()} 円</span>
                   </div>
@@ -254,7 +254,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                 {/* 現金収支 */}
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-sm font-bold">現金収支</span>
-                  <span className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                  <span className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-plus" : "text-minus"}`}>
                     {Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "+" : ""}{Math.round(Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash).toLocaleString()} 円
                   </span>
                 </div>
@@ -263,7 +263,7 @@ export function MemberForm({ member, exchangeRate, medalSteps, mode, onChange, o
                   <div>
                     <div className="flex justify-between items-center border-t border-base-300 pt-2 mt-2">
                       <span className="text-sm font-bold">合計</span>
-                      <span className={`text-base font-bold ${memberResult.profit >= 0 ? "text-blue-500" : "text-red-500"}`}>
+                      <span className={`text-base font-bold ${memberResult.profit >= 0 ? "text-plus" : "text-minus"}`}>
                         {memberResult.profit >= 0 ? "+" : ""}{Math.round(memberResult.profit).toLocaleString()} 円
                       </span>
                     </div>

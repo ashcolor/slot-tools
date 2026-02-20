@@ -6,7 +6,7 @@ import { tools } from "../tools";
 export function Header() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(
-    () => document.documentElement.dataset.theme === "dark"
+    () => document.documentElement.dataset.theme === "dracula"
   );
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,7 +40,7 @@ export function Header() {
             type="button"
             className="btn btn-square btn-ghost"
             onClick={() => {
-              const next = dark ? "light" : "dark";
+              const next = dark ? "corporate" : "dracula";
               document.documentElement.dataset.theme = next;
               localStorage.setItem("theme", next);
               setDark(!dark);

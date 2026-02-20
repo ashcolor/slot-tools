@@ -102,7 +102,7 @@ export function Noriuchi() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1 text-sm opacity-70">
           <span className="font-bold">{lendingRate === 4 ? "パチンコ" : "スロット"}</span>
           <span>貸出</span>
@@ -243,7 +243,7 @@ export function Noriuchi() {
           checked={activeTab === "playing"}
           onChange={() => setActiveTab("playing")}
         />
-        <div className="tab-content py-4">
+        <div className="tab-content py-2">
           <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
             <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
               {members.map((member, i) => (
@@ -259,9 +259,11 @@ export function Noriuchi() {
               ))}
             </div>
           </div>
-          <button type="button" className="btn btn-sm  w-full mt-2" onClick={() => setActiveTab("settlement")}>
-            精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
-          </button>
+          <div className="flex justify-end">
+            <button type="button" className="btn btn-primary btn-soft mt-2" onClick={() => setActiveTab("settlement")}>
+              精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
+            </button>
+          </div>
         </div>
 
         <input
@@ -272,7 +274,7 @@ export function Noriuchi() {
           checked={activeTab === "settlement"}
           onChange={() => setActiveTab("settlement")}
         />
-        <div className="tab-content py-2">
+        <div className="tab-content p">
           <SettlementView result={result} />
           <div className={memberCount <= 2 ? "mt-4 p-1 -m-1" : "mt-4 overflow-x-auto p-1 -m-1"}>
             <div className={memberCount <= 2 ? "grid grid-cols-2 gap-3" : "flex gap-3 w-min"}>
@@ -293,7 +295,7 @@ export function Noriuchi() {
               ))}
             </div>
           </div>
-          <button type="button" className="btn btn-sm w-full mt-2" onClick={() => setActiveTab("playing")}>
+          <button type="button" className="btn btn-soft mt-2" onClick={() => setActiveTab("playing")}>
             <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
           </button>
         </div>

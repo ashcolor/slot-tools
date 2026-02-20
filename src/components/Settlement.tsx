@@ -23,18 +23,18 @@ export function SettlementView({ result }: Props) {
           <div className="flex items-center justify-center gap-8 text-center">
             <div>
               <div className="text-xs opacity-60">全体投資</div>
-              <div className="text-lg font-bold text-red-900 dark:text-red-400">{fmt(result.displayInvest)} 円</div>
+              <div className="text-lg font-bold text-invest">{fmt(result.displayInvest)} 円</div>
               <div className="text-xs opacity-50">再プレイ <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>枚 込み</div>
             </div>
             <div>
               <div className="text-xs opacity-60">全体回収</div>
-              <div className="text-lg font-bold text-blue-900 dark:text-blue-400">{fmt(result.displayCollect)} 円</div>
+              <div className="text-lg font-bold text-collect">{fmt(result.displayCollect)} 円</div>
               <div className="text-xs opacity-50">出玉 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>枚</div>
             </div>
           </div>
           <div className="text-center">
             <div className="text-xs opacity-60">収支 / 人</div>
-            <div className={`text-xl font-bold ${perPerson >= 0 ? "text-blue-500" : "text-red-500"}`}>
+            <div className={`text-xl font-bold ${perPerson >= 0 ? "text-plus" : "text-minus"}`}>
               {perPerson >= 0 ? "+" : ""}{fmt(Math.round(perPerson))} 円
             </div>
             <div className="text-xs mt-1 opacity-60">
