@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Icon } from "@iconify/react";
-import { RateSelector } from "../components/RateSelector";
-import { MemberForm } from "../components/MemberForm";
-import { SettlementView } from "../components/Settlement";
+import { RateSelector } from "../features/noriuchi/RateSelector";
+import { MemberForm } from "../features/noriuchi/MemberForm";
+import { SettlementView } from "../features/noriuchi/Settlement";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
 import {

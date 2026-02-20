@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Icon } from "@iconify/react";
-import type { CalcResult } from "../types";
+import type { CalcResult } from "../../types";
 
 interface Props {
   result: CalcResult;
