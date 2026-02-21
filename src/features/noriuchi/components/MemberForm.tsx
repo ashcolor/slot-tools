@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { StepInput } from "../../../components/StepInput";
-import { pickRandomEmoji } from "../../../types";
+import { pickRandomEmoji } from "../constants";
 import type { Member, MemberResult, Settlement } from "../../../types";
 
 interface Props {

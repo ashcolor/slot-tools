@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { TEMPLATE_CATEGORIES } from "../../../constants/memo/template";
-import type { TemplateCategory } from "../../../constants/memo/template";
+import { TEMPLATE_CATEGORIES } from "../constants";
+import type { TemplateCategory } from "../constants";
 
 interface TemplateKeyboardProps {
   visible: boolean;

@@ -1,5 +1,6 @@
 import type { ChangeEvent, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
+import { EMPTY_MEMO_PLACEHOLDER } from "../constants";
 import { InlineCounter } from "./InlineCounter";
 import { InlineFormula } from "./InlineFormula";
 
@@ -22,9 +23,6 @@ interface MemoEditorProps {
     current: number,
   ) => void;
 }
-
-const EMPTY_PLACEHOLDER = `テンプレートにサンプルがあります（上部の「テンプレート」から読込）
-使い方: [[c:name=0]] でカウンター、[[f:name / game]] で数式`;
 
 export function Editor({
   memo,
@@ -53,7 +51,7 @@ export function Editor({
             <textarea
               ref={memoRef}
               className={`textarea textarea-bordered h-full w-full min-h-0 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
-              placeholder={EMPTY_PLACEHOLDER}
+              placeholder={EMPTY_MEMO_PLACEHOLDER}
               value={memo}
               onFocus={onMemoFocus}
               onBlur={onMemoBlur}
@@ -65,7 +63,7 @@ export function Editor({
               onClick={onFocusEditor}
             >
               {memoParts.length === 0 ? (
-                <span className="opacity-40">{EMPTY_PLACEHOLDER}</span>
+                <span className="opacity-40">{EMPTY_MEMO_PLACEHOLDER}</span>
               ) : (
                 memoParts.map((part, index) =>
                   part.type === "text" ? (

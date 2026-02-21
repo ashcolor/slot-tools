@@ -1,8 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Parser } from "expr-eval-fork";
-import type { TemplateCategory } from "../../../constants/memo/template";
+import {
+  COUNTER_NAME_PATTERN,
+  DEFAULT_FONT_SIZE_LEVEL,
+  FONT_SIZE_OPTIONS,
+  FORMULA_TOKEN,
+  MAX_COUNTER_VALUE,
+} from "../../../constants";
 import { useLocalStorage } from "../../../utils/useLocalStorage";
+import {
+  INITIAL_TEMPLATES,
+  type TemplateCategory,
+  TEMPLATE_COUNTER_ITEM_LABEL,
+  TEMPLATE_FORMULA_ITEM_LABEL,
+} from "../constants";
 
 export interface MemoDraft {
   memo: string;
@@ -35,42 +47,6 @@ export interface InlineControlSize {
   iconClass: string;
   lineHeightClass: string;
 }
-
-const FORMULA_TOKEN = "[[f:1+1]]";
-const COUNTER_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const MAX_COUNTER_VALUE = 9999;
-const DEFAULT_FONT_SIZE_LEVEL = 3 as const;
-const SAMPLE_TEMPLATE_MEMO = `■ゲーム数
-ゲーム数：[[c:game=0]]
-BIG：[[c:big=0]] [[f:big / game]]
-REG：[[c:reg=0]] [[f:reg / game]]
-
-■小役カウント
-🔔：[[c:bell=0]] [[f:bell / game]]
-🍒：[[c:cherry=0]] [[f:cherry / game]]
-🍉：[[c:suika=0]] [[f:suika / game]]
-
-■終了画面
-偶数：[[c:even=0]] [[f:even / (even + odd + high)]]
-奇数：[[c:odd=0]] [[f:odd / (even + odd + high)]]
-高設定：[[c:high=0]] [[f:high / (even + odd + high)]]`;
-const INITIAL_TEMPLATES: MemoTemplate[] = [
-  {
-    id: "default-slot-sample-template-v1",
-    memo: SAMPLE_TEMPLATE_MEMO,
-    fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
-    createdAt: "2026-02-21T00:00:00.000Z",
-  },
-];
-
-export const COUNTER_DIGIT_STEPS = [1000, 100, 10, 1] as const;
-export const FONT_SIZE_OPTIONS = [
-  { level: 1, label: "S", className: "text-sm" },
-  { level: 2, label: "M", className: "text-base" },
-  { level: 3, label: "L", className: "text-lg" },
-  { level: 4, label: "XL", className: "text-xl" },
-  { level: 5, label: "2XL", className: "text-2xl" },
-] as const;
 
 function clampCounterValue(value: number): number {
   return Math.min(MAX_COUNTER_VALUE, Math.max(0, Math.floor(value)));
@@ -248,7 +224,7 @@ export function useMemoEditor() {
   const [draft, setDraft] = useLocalStorage<MemoDraft>("slot-memo-draft", createDraft());
   const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>(
     "slot-memo-templates",
-    INITIAL_TEMPLATES,
+    INITIAL_TEMPLATES as MemoTemplate[],
   );
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -392,11 +368,11 @@ export function useMemoEditor() {
   };
 
   const insertTemplateItem = (item: string) => {
-    if (item === "カウンター") {
+    if (item === TEMPLATE_COUNTER_ITEM_LABEL) {
       insertCounterToken();
       return;
     }
-    if (item === "数式") {
+    if (item === TEMPLATE_FORMULA_ITEM_LABEL) {
       insertFormulaToken();
       return;
     }

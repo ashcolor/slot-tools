@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
-import { COUNTER_DIGIT_STEPS, toCounterDigits } from "../hooks/useMemoEditor";
+import { COUNTER_DIGIT_STEPS } from "../../../constants";
+import { toCounterDigits } from "../hooks/useMemoEditor";
 
 interface MemoCounterPopupProps {
   value: number;

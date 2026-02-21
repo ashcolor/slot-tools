@@ -3,23 +3,17 @@ import { Icon } from "@iconify/react";
 import { RateSelector } from "../features/noriuchi/components/RateSelector";
 import { MemberForm } from "../features/noriuchi/components/MemberForm";
 import { SettlementView } from "../features/noriuchi/components/Settlement";
-import { calculate } from "../utils/calculate";
-import { useLocalStorage } from "../utils/useLocalStorage";
 import {
-  ANIMAL_EMOJIS,
+  MAX_MEMBERS,
   PACHINKO_LENDING_OPTIONS,
   PACHISLOT_LENDING_OPTIONS,
   getExchangeOptions,
   pickRandomEmoji,
-} from "../types";
+  pickRandomEmojis,
+} from "../features/noriuchi/constants";
+import { calculate } from "../utils/calculate";
+import { useLocalStorage } from "../utils/useLocalStorage";
 import type { Member } from "../types";
-
-const MAX_MEMBERS = 4;
-
-function pickRandomEmojis(count: number): string[] {
-  const shuffled = [...ANIMAL_EMOJIS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
 
 function createMember(emoji: string): Member {
   return {

@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { FONT_SIZE_OPTIONS } from "../hooks/useMemoEditor";
+import { FONT_SIZE_OPTIONS } from "../../../constants";
 
 interface MemoConfigDialogProps {
   configModalRef: RefObject<HTMLDialogElement | null>;
