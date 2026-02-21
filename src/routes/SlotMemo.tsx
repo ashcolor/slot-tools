@@ -11,6 +11,13 @@ interface SlotMemoDraft {
   fontSizeLevel: number;
 }
 
+interface SlotMemoTemplate {
+  id: string;
+  memo: string;
+  fontSizeLevel: number;
+  createdAt: string;
+}
+
 const FORMULA_TOKEN = "[[f:1+1]]";
 const COUNTER_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const COUNTER_DIGIT_STEPS = [1000, 100, 10, 1] as const;
@@ -110,6 +117,33 @@ AT回数：[[c:at=57]]
   };
 }
 
+function createTemplateId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function formatTemplateDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getTemplateTitle(memo: string): string {
+  const firstLine = memo
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  return firstLine ? firstLine.slice(0, 28) : "空のメモ";
+}
+
 function parseMemoParts(memo: string): MemoPart[] {
   const parts: MemoPart[] = [];
   const matcher = /\[\[c:([^\]]+)\]\]|\[\[f:([^\]]+)\]\]/g;
@@ -169,6 +203,14 @@ function parseCounterBody(rawBody: string): { name: string | null; value: number
   return { name: null, value: 0, legacy: false };
 }
 
+function resetCounterValues(memo: string): string {
+  return memo.replace(/\[\[c:([^\]]+)\]\]/g, (_token, rawBody) => {
+    const parsed = parseCounterBody(rawBody);
+    if (parsed.name) return `[[c:${parsed.name}=0]]`;
+    return "[[c:0]]";
+  });
+}
+
 function evaluateFormula(expression: string, variables: Record<string, number>): string {
   try {
     const raw = Parser.evaluate(expression, variables);
@@ -183,13 +225,23 @@ function evaluateFormula(expression: string, variables: Record<string, number>):
 
 export function SlotMemo() {
   const [draft, setDraft] = useLocalStorage<SlotMemoDraft>("slot-memo-draft", createDraft());
+  const [templates, setTemplates] = useLocalStorage<SlotMemoTemplate[]>("slot-memo-templates", []);
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<TemplateCategory["key"] | null>(null);
+  const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
+  const templateModalRef = useRef<HTMLDialogElement>(null);
   const configModalRef = useRef<HTMLDialogElement>(null);
   const clearModalRef = useRef<HTMLDialogElement>(null);
+  const saveTemplateModalRef = useRef<HTMLDialogElement>(null);
+  const deleteTemplateModalRef = useRef<HTMLDialogElement>(null);
   const memoRef = useRef<HTMLTextAreaElement>(null);
+  const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
+  const pendingDeleteTemplate = useMemo(
+    () => templateList.find((template) => template.id === pendingDeleteTemplateId) ?? null,
+    [pendingDeleteTemplateId, templateList],
+  );
   const memoParts = useMemo(() => parseMemoParts(draft.memo), [draft.memo]);
   const formulaResults = useMemo(() => {
     const variables: Record<string, number> = {};
@@ -369,10 +421,60 @@ export function SlotMemo() {
     setCounterPopup((prev) => (prev ? { ...prev, value: nextValue } : prev));
   };
 
+  const openTemplateModal = () => {
+    saveMemoEditor();
+    templateModalRef.current?.showModal();
+  };
+
+  const applyTemplate = (template: SlotMemoTemplate) => {
+    setDraft((prev) => ({
+      ...prev,
+      memo: template.memo,
+      fontSizeLevel: normalizeFontSizeLevel(template.fontSizeLevel),
+    }));
+    setCounterPopup(null);
+    templateModalRef.current?.close();
+  };
+
+  const openSaveTemplateModal = () => {
+    templateModalRef.current?.close();
+    saveTemplateModalRef.current?.showModal();
+  };
+
+  const saveCurrentAsTemplate = () => {
+    const nextTemplate: SlotMemoTemplate = {
+      id: createTemplateId(),
+      memo: resetCounterValues(draft.memo),
+      fontSizeLevel: memoFontSizeLevel,
+      createdAt: new Date().toISOString(),
+    };
+    setTemplates((prev) => [nextTemplate, ...(Array.isArray(prev) ? prev : [])]);
+  };
+
+  const requestDeleteTemplate = (templateId: string) => {
+    setPendingDeleteTemplateId(templateId);
+    templateModalRef.current?.close();
+    deleteTemplateModalRef.current?.showModal();
+  };
+
+  const deleteTemplate = () => {
+    if (!pendingDeleteTemplateId) return;
+    setTemplates((prev) => (Array.isArray(prev) ? prev.filter((item) => item.id !== pendingDeleteTemplateId) : []));
+    setPendingDeleteTemplateId(null);
+  };
+
   return (
     <div className="relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden">
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square"
+            onClick={openTemplateModal}
+            aria-label="テンプレート"
+          >
+            <Icon icon="mdi:text-box-multiple-outline" className="size-4" />
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm btn-square"
@@ -524,6 +626,57 @@ export function SlotMemo() {
         </form>
       </dialog>
 
+      <dialog ref={templateModalRef} className="modal">
+        <div className="modal-box max-w-xl">
+          <h3 className="font-bold text-lg mb-3">テンプレート</h3>
+          <div className="flex flex-col gap-2">
+            <button type="button" className="btn btn-sm btn-primary self-start" onClick={openSaveTemplateModal}>
+              今の画面をテンプレートに登録
+            </button>
+            {templateList.length === 0 ? (
+              <p className="text-sm opacity-70">保存済みテンプレートはありません。</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {templateList.map((template) => (
+                  <li key={template.id} className="border border-base-300 rounded-lg p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{getTemplateTitle(template.memo)}</p>
+                        <p className="text-xs opacity-70">{formatTemplateDate(template.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-primary"
+                          onClick={() => applyTemplate(template)}
+                        >
+                          呼び出し
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-error btn-outline"
+                          onClick={() => requestDeleteTemplate(template.id)}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-sm">閉じる</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
       <dialog ref={clearModalRef} className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-2">クリア</h3>
@@ -544,6 +697,69 @@ export function SlotMemo() {
         </div>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
+        </form>
+      </dialog>
+
+      <dialog ref={saveTemplateModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-2">テンプレート保存</h3>
+          <p className="text-sm opacity-70">カウンタを0にして現在の画面を保存しますか？</p>
+          <div className="modal-action">
+            <form method="dialog" className="flex gap-2">
+              <button className="btn btn-sm">キャンセル</button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  saveCurrentAsTemplate();
+                }}
+              >
+                保存
+              </button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      <dialog ref={deleteTemplateModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-2">テンプレート削除</h3>
+          <p className="text-sm opacity-70">
+            {pendingDeleteTemplate
+              ? `「${getTemplateTitle(pendingDeleteTemplate.memo)}」を削除しますか？`
+              : "このテンプレートを削除しますか？"}
+          </p>
+          <div className="modal-action">
+            <form method="dialog" className="flex gap-2">
+              <button
+                className="btn btn-sm"
+                onClick={() => {
+                  setPendingDeleteTemplateId(null);
+                }}
+              >
+                キャンセル
+              </button>
+              <button
+                className="btn btn-sm btn-error"
+                onClick={() => {
+                  deleteTemplate();
+                }}
+              >
+                削除
+              </button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button
+            onClick={() => {
+              setPendingDeleteTemplateId(null);
+            }}
+          >
+            close
+          </button>
         </form>
       </dialog>
 
