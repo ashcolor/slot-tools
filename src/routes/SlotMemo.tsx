@@ -7,14 +7,22 @@ import { TemplateKeyboard } from "../features/slotMemo/TemplateKeyboard";
 import { useLocalStorage } from "../utils/useLocalStorage";
 
 interface SlotMemoDraft {
-  playedOn: string;
   memo: string;
+  fontSizeLevel: number;
 }
 
 const FORMULA_TOKEN = "[[f:1+1]]";
 const COUNTER_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const COUNTER_DIGIT_STEPS = [1000, 100, 10, 1] as const;
 const MAX_COUNTER_VALUE = 9999;
+const DEFAULT_FONT_SIZE_LEVEL = 3 as const;
+const FONT_SIZE_OPTIONS = [
+  { level: 1, label: "S", className: "text-sm" },
+  { level: 2, label: "M", className: "text-base" },
+  { level: 3, label: "L", className: "text-lg" },
+  { level: 4, label: "XL", className: "text-xl" },
+  { level: 5, label: "2XL", className: "text-2xl" },
+] as const;
 
 type MemoPart =
   | { type: "text"; value: string }
@@ -36,9 +44,66 @@ function toCounterDigits(value: number): string[] {
   return clampCounterValue(value).toString().padStart(4, "0").split("");
 }
 
+function normalizeFontSizeLevel(level: number): (typeof FONT_SIZE_OPTIONS)[number]["level"] {
+  if (!Number.isFinite(level)) return DEFAULT_FONT_SIZE_LEVEL;
+  return Math.min(5, Math.max(1, Math.round(level))) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
+}
+
+function getInlineControlSize(level: (typeof FONT_SIZE_OPTIONS)[number]["level"]): {
+  buttonClass: string;
+  formulaClass: string;
+  valueWidthClass: string;
+  iconClass: string;
+  lineHeightClass: string;
+} {
+  if (level <= 1) {
+    return {
+      buttonClass: "btn-xs",
+      formulaClass: "btn-xs",
+      valueWidthClass: "min-w-8",
+      iconClass: "size-3",
+      lineHeightClass: "leading-8",
+    };
+  }
+  if (level === 2) {
+    return {
+      buttonClass: "btn-sm",
+      formulaClass: "btn-xs",
+      valueWidthClass: "min-w-9",
+      iconClass: "size-4",
+      lineHeightClass: "leading-8",
+    };
+  }
+  if (level === 3) {
+    return {
+      buttonClass: "btn-sm",
+      formulaClass: "btn-sm",
+      valueWidthClass: "min-w-10",
+      iconClass: "size-4",
+      lineHeightClass: "leading-9",
+    };
+  }
+  if (level === 4) {
+    return {
+      buttonClass: "btn-md",
+      formulaClass: "btn-md",
+      valueWidthClass: "min-w-12",
+      iconClass: "size-5",
+      lineHeightClass: "leading-10",
+    };
+  }
+  return {
+    buttonClass: "btn-lg",
+    formulaClass: "btn-lg",
+    valueWidthClass: "min-w-14",
+    iconClass: "size-5",
+    lineHeightClass: "leading-[2.8rem]",
+  };
+}
+
 function createDraft(): SlotMemoDraft {
   return {
-    playedOn: new Date().toISOString().slice(0, 10),
+    fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     memo: `通常ゲーム数：[[c:normal=25]]
 AT回数：[[c:at=57]]
 初当たり：[[f:normal / at]]`,
@@ -143,17 +208,26 @@ export function SlotMemo() {
     });
     return results;
   }, [memoParts]);
+  const memoFontSizeLevel = normalizeFontSizeLevel(draft.fontSizeLevel);
+  const memoFontSizeClass =
+    FONT_SIZE_OPTIONS.find((option) => option.level === memoFontSizeLevel)?.className ?? "text-lg";
+  const inlineControlSize = getInlineControlSize(memoFontSizeLevel);
   const clearDraft = () => {
-    setDraft(createDraft());
+    setDraft((prev) => ({
+      ...createDraft(),
+      fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
+    }));
     setCounterPopup(null);
     setSelectedCategoryKey(null);
     setIsMemoFocused(false);
   };
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    setDraft((prev) => (prev.playedOn === today ? prev : { ...prev, playedOn: today }));
-  }, [setDraft]);
+    const normalized = normalizeFontSizeLevel(draft.fontSizeLevel);
+    if (draft.fontSizeLevel !== normalized) {
+      setDraft((prev) => ({ ...prev, fontSizeLevel: normalized }));
+    }
+  }, [draft.fontSizeLevel, setDraft]);
 
   useEffect(() => {
     if (!isMemoFocused || typeof window === "undefined" || !window.visualViewport) return;
@@ -241,6 +315,14 @@ export function SlotMemo() {
     requestAnimationFrame(() => memoRef.current?.focus());
   };
 
+  const saveMemoEditor = () => {
+    memoRef.current?.blur();
+    setIsMemoFocused(false);
+    setKeyboardInset(0);
+    setSelectedCategoryKey(null);
+    setCounterPopup(null);
+  };
+
   const updateInlineCounter = (targetIndex: number, updater: (current: number) => number) => {
     setDraft((prev) => {
       let currentIndex = 0;
@@ -288,12 +370,8 @@ export function SlotMemo() {
   };
 
   return (
-    <div className="relative left-1/2 right-1/2 -translate-x-1/2 w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm opacity-70">
-          <span className="badge badge-neutral badge-sm">{draft.playedOn}</span>
-          <span>自動保存</span>
-        </div>
+    <div className="relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden">
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -316,11 +394,11 @@ export function SlotMemo() {
 
       <div className="card flex-1 min-h-0">
         <div className="card-body p-0 flex flex-col min-h-0">
-          <label className="form-control flex-1 min-h-0">
+          <div className="form-control flex-1 min-h-0">
             {isMemoFocused ? (
               <textarea
                 ref={memoRef}
-                className="textarea textarea-bordered h-full w-full min-h-0"
+                className={`textarea textarea-bordered h-full w-full min-h-0 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
                 placeholder="挙動・示唆・反省点など"
                 value={draft.memo}
                 onFocus={() => setIsMemoFocused(true)}
@@ -333,7 +411,7 @@ export function SlotMemo() {
               />
             ) : (
               <div
-                className="textarea textarea-bordered h-full w-full min-h-0 overflow-y-auto whitespace-pre-wrap cursor-text"
+                className={`textarea textarea-bordered h-full w-full min-h-0 overflow-y-auto whitespace-pre-wrap cursor-text ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
                 onClick={focusMemoEditor}
               >
                 {memoParts.length === 0 ? (
@@ -345,11 +423,11 @@ export function SlotMemo() {
                     ) : part.type === "counter" ? (
                       <span
                         key={`counter-${part.index}`}
-                        className="inline-flex items-center gap-1 align-middle mx-1"
+                        className="join join-horizontal align-middle mx-1"
                       >
                         <button
                           type="button"
-                          className="btn btn-xs btn-ghost px-2"
+                          className={`join-item btn ${inlineControlSize.buttonClass} btn-outline px-2 text-minus`}
                           aria-label="減らす"
                           onPointerDown={(event) => event.preventDefault()}
                           onClick={(event) => {
@@ -357,11 +435,14 @@ export function SlotMemo() {
                             stepInlineCounter(part.index, -1);
                           }}
                         >
-                          <Icon icon="mdi:minus-circle-outline" className="size-4" />
+                          <Icon
+                            icon="mdi:minus-circle-outline"
+                            className={inlineControlSize.iconClass}
+                          />
                         </button>
                         <button
                           type="button"
-                          className="btn btn-xs btn-neutral min-w-10 px-2"
+                          className={`join-item btn  border-neutral z-1 ${inlineControlSize.buttonClass} ${inlineControlSize.valueWidthClass} px-2`}
                           onPointerDown={(event) => event.preventDefault()}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -372,7 +453,7 @@ export function SlotMemo() {
                         </button>
                         <button
                           type="button"
-                          className="btn btn-xs btn-ghost px-2"
+                          className={`join-item btn ${inlineControlSize.buttonClass} btn-outline px-2 text-plus`}
                           aria-label="増やす"
                           onPointerDown={(event) => event.preventDefault()}
                           onClick={(event) => {
@@ -380,14 +461,17 @@ export function SlotMemo() {
                             stepInlineCounter(part.index, 1);
                           }}
                         >
-                          <Icon icon="mdi:plus-circle-outline" className="size-4" />
+                          <Icon
+                            icon="mdi:plus-circle-outline"
+                            className={inlineControlSize.iconClass}
+                          />
                         </button>
                       </span>
                     ) : (
                       <button
                         key={`formula-${part.index}`}
                         type="button"
-                        className="btn btn-xs btn-outline align-middle mx-1"
+                        className={`btn ${inlineControlSize.formulaClass} btn-outline align-middle mx-1`}
                         title={part.expression}
                         onPointerDown={(event) => event.preventDefault()}
                         onClick={(event) => {
@@ -402,7 +486,7 @@ export function SlotMemo() {
                 )}
               </div>
             )}
-          </label>
+          </div>
         </div>
       </div>
 
@@ -410,13 +494,23 @@ export function SlotMemo() {
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-3">設定</h3>
           <div className="flex flex-col gap-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span>保存方式</span>
-              <span className="badge badge-success badge-sm">自動保存 ON</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>日付</span>
-              <span className="font-mono">{draft.playedOn}</span>
+            <div className="flex items-center justify-between gap-3">
+              <span>文字サイズ</span>
+              <div className="join">
+                {FONT_SIZE_OPTIONS.map((option) => (
+                  <input
+                    key={option.level}
+                    type="radio"
+                    name="font-size-options"
+                    className="join-item btn btn-xs"
+                    aria-label={option.label}
+                    checked={memoFontSizeLevel === option.level}
+                    onChange={() => {
+                      setDraft((prev) => ({ ...prev, fontSizeLevel: option.level }));
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <div className="modal-action">
@@ -470,21 +564,21 @@ export function SlotMemo() {
                   {COUNTER_DIGIT_STEPS.map((digitStep, index) => {
                     const digit = toCounterDigits(counterPopup.value)[index];
                     return (
-                      <div key={digitStep} className="flex flex-col items-center gap-1">
+                      <div key={digitStep} className="join join-vertical">
                         <button
                           type="button"
-                          className="btn btn-xs btn-ghost btn-square"
+                          className="join-item btn btn-xs btn-ghost btn-square text-plus"
                           aria-label={`${digitStep}増やす`}
                           onClick={() => stepPopupCounterDigit(digitStep, 1)}
                         >
                           <Icon icon="mdi:plus-circle-outline" className="size-4" />
                         </button>
-                        <div className="w-10 h-10 rounded-md border border-base-300 flex items-center justify-center font-mono text-lg">
+                        <div className="join-item w-10 h-10 border border-base-300 flex items-center justify-center font-mono text-lg">
                           {digit}
                         </div>
                         <button
                           type="button"
-                          className="btn btn-xs btn-ghost btn-square"
+                          className="join-item btn btn-xs btn-ghost btn-square text-minus"
                           aria-label={`${digitStep}減らす`}
                           onClick={() => stepPopupCounterDigit(digitStep, -1)}
                         >
@@ -529,6 +623,7 @@ export function SlotMemo() {
         selectedCategoryKey={selectedCategoryKey}
         onSelectCategoryKey={setSelectedCategoryKey}
         onInsertCategoryItem={insertTemplateItem}
+        onSave={saveMemoEditor}
       />
     </div>
   );

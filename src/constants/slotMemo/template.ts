@@ -32,7 +32,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
   },
   {
     key: "calc",
-    label: "計算",
+    label: "ウィジェット",
     items: ["カウンター", "数式"],
   },
 ];
