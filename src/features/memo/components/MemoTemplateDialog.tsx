@@ -1,21 +1,21 @@
 import type { RefObject } from "react";
-import { formatTemplateDate, getTemplateTitle, type SlotMemoTemplate } from "./useSlotMemo";
+import { formatTemplateDate, getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
-interface SlotMemoTemplateDialogProps {
+interface MemoTemplateDialogProps {
   templateModalRef: RefObject<HTMLDialogElement | null>;
-  templateList: SlotMemoTemplate[];
+  templateList: MemoTemplate[];
   onOpenSaveTemplateModal: () => void;
-  onApplyTemplate: (template: SlotMemoTemplate) => void;
+  onApplyTemplate: (template: MemoTemplate) => void;
   onRequestDeleteTemplate: (templateId: string) => void;
 }
 
-export function SlotMemoTemplateDialog({
+export function MemoTemplateDialog({
   templateModalRef,
   templateList,
   onOpenSaveTemplateModal,
   onApplyTemplate,
   onRequestDeleteTemplate,
-}: SlotMemoTemplateDialogProps) {
+}: MemoTemplateDialogProps) {
   return (
     <dialog ref={templateModalRef} className="modal">
       <div className="modal-box max-w-xl">

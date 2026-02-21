@@ -1,19 +1,19 @@
 import type { RefObject } from "react";
-import { getTemplateTitle, type SlotMemoTemplate } from "./useSlotMemo";
+import { getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
-interface SlotMemoDeleteTemplateDialogProps {
+interface MemoDeleteTemplateDialogProps {
   deleteTemplateModalRef: RefObject<HTMLDialogElement | null>;
-  pendingDeleteTemplate: SlotMemoTemplate | null;
+  pendingDeleteTemplate: MemoTemplate | null;
   onDeleteTemplate: () => void;
   onClearPendingDeleteTemplate: () => void;
 }
 
-export function SlotMemoDeleteTemplateDialog({
+export function MemoDeleteTemplateDialog({
   deleteTemplateModalRef,
   pendingDeleteTemplate,
   onDeleteTemplate,
   onClearPendingDeleteTemplate,
-}: SlotMemoDeleteTemplateDialogProps) {
+}: MemoDeleteTemplateDialogProps) {
   return (
     <dialog ref={deleteTemplateModalRef} className="modal">
       <div className="modal-box">

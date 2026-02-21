@@ -1,17 +1,17 @@
 import type { RefObject } from "react";
-import { FONT_SIZE_OPTIONS } from "./useSlotMemo";
+import { FONT_SIZE_OPTIONS } from "../hooks/useMemoEditor";
 
-interface SlotMemoConfigDialogProps {
+interface MemoConfigDialogProps {
   configModalRef: RefObject<HTMLDialogElement | null>;
   memoFontSizeLevel: number;
   onChangeFontSizeLevel: (level: number) => void;
 }
 
-export function SlotMemoConfigDialog({
+export function MemoConfigDialog({
   configModalRef,
   memoFontSizeLevel,
   onChangeFontSizeLevel,
-}: SlotMemoConfigDialogProps) {
+}: MemoConfigDialogProps) {
   return (
     <dialog ref={configModalRef} className="modal">
       <div className="modal-box">

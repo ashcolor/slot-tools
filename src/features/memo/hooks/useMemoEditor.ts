@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Parser } from "expr-eval-fork";
-import type { TemplateCategory } from "../../constants/slotMemo/template";
-import { useLocalStorage } from "../../utils/useLocalStorage";
+import type { TemplateCategory } from "../../../constants/memo/template";
+import { useLocalStorage } from "../../../utils/useLocalStorage";
 
-export interface SlotMemoDraft {
+export interface MemoDraft {
   memo: string;
   fontSizeLevel: number;
 }
 
-export interface SlotMemoTemplate {
+export interface MemoTemplate {
   id: string;
   memo: string;
   fontSizeLevel: number;
@@ -109,7 +109,7 @@ function getInlineControlSize(level: (typeof FONT_SIZE_OPTIONS)[number]["level"]
   };
 }
 
-function createDraft(): SlotMemoDraft {
+function createDraft(): MemoDraft {
   return {
     fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     memo: `通常ゲーム数：[[c:normal=25]]
@@ -224,9 +224,9 @@ export function getTemplateTitle(memo: string): string {
   return firstLine ? firstLine.slice(0, 28) : "空のメモ";
 }
 
-export function useSlotMemo() {
-  const [draft, setDraft] = useLocalStorage<SlotMemoDraft>("slot-memo-draft", createDraft());
-  const [templates, setTemplates] = useLocalStorage<SlotMemoTemplate[]>("slot-memo-templates", []);
+export function useMemoEditor() {
+  const [draft, setDraft] = useLocalStorage<MemoDraft>("slot-memo-draft", createDraft());
+  const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>("slot-memo-templates", []);
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
@@ -455,7 +455,7 @@ export function useSlotMemo() {
     templateModalRef.current?.showModal();
   };
 
-  const applyTemplate = (template: SlotMemoTemplate) => {
+  const applyTemplate = (template: MemoTemplate) => {
     setDraft((prev) => ({
       ...prev,
       memo: template.memo,
@@ -471,7 +471,7 @@ export function useSlotMemo() {
   };
 
   const saveCurrentAsTemplate = () => {
-    const nextTemplate: SlotMemoTemplate = {
+    const nextTemplate: MemoTemplate = {
       id: createTemplateId(),
       memo: resetCounterValues(draft.memo),
       fontSizeLevel: memoFontSizeLevel,

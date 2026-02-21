@@ -1,10 +1,10 @@
 import { Icon } from "@iconify/react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import type { InlineControlSize, MemoPart } from "./useSlotMemo";
+import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 
 type CounterPart = Extract<MemoPart, { type: "counter" }>;
 
-interface SlotMemoInlineCounterProps {
+interface MemoInlineCounterProps {
   part: CounterPart;
   inlineControlSize: InlineControlSize;
   onStepInlineCounter: (targetIndex: number, delta: number) => void;
@@ -15,12 +15,12 @@ interface SlotMemoInlineCounterProps {
   ) => void;
 }
 
-export function SlotMemoInlineCounter({
+export function MemoInlineCounter({
   part,
   inlineControlSize,
   onStepInlineCounter,
   onOpenCounterPopup,
-}: SlotMemoInlineCounterProps) {
+}: MemoInlineCounterProps) {
   return (
     <span className="join join-horizontal align-middle mx-1">
       <button

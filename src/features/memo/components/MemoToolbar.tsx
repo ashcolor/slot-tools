@@ -1,12 +1,12 @@
 import { Icon } from "@iconify/react";
 
-interface SlotMemoToolbarProps {
+interface MemoToolbarProps {
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
   onOpenClear: () => void;
 }
 
-export function SlotMemoToolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: SlotMemoToolbarProps) {
+export function MemoToolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolbarProps) {
   return (
     <div className="flex items-center justify-end">
       <div className="flex items-center gap-1">

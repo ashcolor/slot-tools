@@ -1,14 +1,14 @@
 import type { RefObject } from "react";
 
-interface SlotMemoSaveTemplateDialogProps {
+interface MemoSaveTemplateDialogProps {
   saveTemplateModalRef: RefObject<HTMLDialogElement | null>;
   onSaveCurrentAsTemplate: () => void;
 }
 
-export function SlotMemoSaveTemplateDialog({
+export function MemoSaveTemplateDialog({
   saveTemplateModalRef,
   onSaveCurrentAsTemplate,
-}: SlotMemoSaveTemplateDialogProps) {
+}: MemoSaveTemplateDialogProps) {
   return (
     <dialog ref={saveTemplateModalRef} className="modal">
       <div className="modal-box">

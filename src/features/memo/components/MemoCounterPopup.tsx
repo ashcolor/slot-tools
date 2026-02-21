@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
-import { COUNTER_DIGIT_STEPS, toCounterDigits } from "./useSlotMemo";
+import { COUNTER_DIGIT_STEPS, toCounterDigits } from "../hooks/useMemoEditor";
 
-interface SlotMemoCounterPopupProps {
+interface MemoCounterPopupProps {
   value: number;
   anchorX: number;
   anchorY: number;
@@ -10,14 +10,14 @@ interface SlotMemoCounterPopupProps {
   onResetToZero: () => void;
 }
 
-export function SlotMemoCounterPopup({
+export function MemoCounterPopup({
   value,
   anchorX,
   anchorY,
   onClose,
   onStepDigit,
   onResetToZero,
-}: SlotMemoCounterPopupProps) {
+}: MemoCounterPopupProps) {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />

@@ -1,9 +1,9 @@
 import type { ChangeEvent, MouseEvent as ReactMouseEvent, RefObject } from "react";
-import type { InlineControlSize, MemoPart } from "./useSlotMemo";
-import { SlotMemoInlineCounter } from "./SlotMemoInlineCounter";
-import { SlotMemoInlineFormula } from "./SlotMemoInlineFormula";
+import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
+import { MemoInlineCounter } from "./MemoInlineCounter";
+import { MemoInlineFormula } from "./MemoInlineFormula";
 
-interface SlotMemoEditorProps {
+interface MemoEditorProps {
   memo: string;
   memoRef: RefObject<HTMLTextAreaElement | null>;
   isMemoFocused: boolean;
@@ -25,7 +25,7 @@ interface SlotMemoEditorProps {
 
 const EMPTY_PLACEHOLDER = "挙動・示唆・反省点など";
 
-export function SlotMemoEditor({
+export function MemoEditor({
   memo,
   memoRef,
   isMemoFocused,
@@ -39,7 +39,7 @@ export function SlotMemoEditor({
   onFocusEditor,
   onStepInlineCounter,
   onOpenCounterPopup,
-}: SlotMemoEditorProps) {
+}: MemoEditorProps) {
   const handleMemoChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     onMemoChange(event.target.value);
   };
@@ -70,7 +70,7 @@ export function SlotMemoEditor({
                   part.type === "text" ? (
                     <span key={`text-${index}`}>{part.value}</span>
                   ) : part.type === "counter" ? (
-                    <SlotMemoInlineCounter
+                    <MemoInlineCounter
                       key={`counter-${part.index}`}
                       part={part}
                       inlineControlSize={inlineControlSize}
@@ -78,7 +78,7 @@ export function SlotMemoEditor({
                       onOpenCounterPopup={onOpenCounterPopup}
                     />
                   ) : (
-                    <SlotMemoInlineFormula
+                    <MemoInlineFormula
                       key={`formula-${part.index}`}
                       part={part}
                       result={formulaResults.get(part.index) ?? "ERR"}

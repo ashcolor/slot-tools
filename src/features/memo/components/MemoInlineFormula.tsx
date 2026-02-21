@@ -1,20 +1,20 @@
-import type { InlineControlSize, MemoPart } from "./useSlotMemo";
+import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 
 type FormulaPart = Extract<MemoPart, { type: "formula" }>;
 
-interface SlotMemoInlineFormulaProps {
+interface MemoInlineFormulaProps {
   part: FormulaPart;
   result: string;
   inlineControlSize: InlineControlSize;
   onFocusEditor: () => void;
 }
 
-export function SlotMemoInlineFormula({
+export function MemoInlineFormula({
   part,
   result,
   inlineControlSize,
   onFocusEditor,
-}: SlotMemoInlineFormulaProps) {
+}: MemoInlineFormulaProps) {
   return (
     <button
       type="button"

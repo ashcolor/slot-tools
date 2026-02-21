@@ -1,11 +1,11 @@
 import type { RefObject } from "react";
 
-interface SlotMemoClearDialogProps {
+interface MemoClearDialogProps {
   clearModalRef: RefObject<HTMLDialogElement | null>;
   onClearDraft: () => void;
 }
 
-export function SlotMemoClearDialog({ clearModalRef, onClearDraft }: SlotMemoClearDialogProps) {
+export function MemoClearDialog({ clearModalRef, onClearDraft }: MemoClearDialogProps) {
   return (
     <dialog ref={clearModalRef} className="modal">
       <div className="modal-box">
