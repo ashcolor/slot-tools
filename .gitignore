@@ -12,12 +12,18 @@ dist
 dist-ssr
 *.local
 settings.local.json
+.env*
+.claude/
+.screenshot.local/
+storybook-static
+*storybook.log
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
