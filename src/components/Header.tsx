@@ -18,7 +18,7 @@ function isIosSafariBrowser() {
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dracula");
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
   const [isMobile, setIsMobile] = useState(() => isMobileDevice());
   const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
@@ -63,7 +63,7 @@ export function Header() {
   };
 
   const toggleTheme = () => {
-    const next = dark ? "corporate" : "dracula";
+    const next = dark ? "corporate" : "dark";
     document.documentElement.dataset.theme = next;
     localStorage.setItem("theme", next);
     setDark(!dark);
@@ -93,9 +93,9 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary rounded-full"
-            title="🍺奢る"
+            title="🍺おごる"
           >
-            🍻奢る
+            🍻おごる
           </a>
         </div>
       </header>
