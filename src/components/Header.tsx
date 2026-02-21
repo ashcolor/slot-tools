@@ -30,7 +30,7 @@ export function Header() {
         </div>
         <div className="flex-1">
           <Link to="/" className="text-lg font-extrabold">
-            パチスロツール{currentTool ? ` ${currentTool.title}` : ""}
+            パチスロツール Pro{currentTool ? ` ${currentTool.title}` : ""}
           </Link>
         </div>
         <div className="flex-none">
@@ -61,7 +61,7 @@ export function Header() {
       >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-extrabold">パチスロツール</span>
+          <span className="text-lg font-extrabold">パチスロツール Pro</span>
         </div>
         <div>
           <ul className="menu w-full">
