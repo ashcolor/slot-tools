@@ -16,7 +16,7 @@ export const tools: Tool[] = [
   {
     path: "/noriuchi",
     title: "ノリ打ち精算",
-    description: "ノリ打ち精算を簡単にできるツール。再プレイ・貯玉対応。世界で一番使いやすいUIを目指しています。",
+    description: "ノリ打ち精算を簡単にできるツール。再プレイ・貯玉対応。",
     emoji: "👥",
   },
 ];

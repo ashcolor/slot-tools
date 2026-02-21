@@ -1,18 +1,72 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
+import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
+}
+
+function isIosSafariBrowser() {
+  const ua = navigator.userAgent;
+  const isIos = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+
+  return isIos && isSafari;
+}
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dracula");
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
+  const [isMobile, setIsMobile] = useState(() => isMobileDevice());
+  const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
+  const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
+  const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
+  const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
+  const isInstallActionAvailable = canInstall || isIosSafari;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const updateDeviceState = () => {
+      setIsMobile(isMobileDevice());
+      setIsIosSafari(isIosSafariBrowser());
+    };
+
+    updateDeviceState();
+    mediaQuery.addEventListener("change", updateDeviceState);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateDeviceState);
+    };
+  }, []);
 
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
+  };
+
+  const installApp = async () => {
+    if (!canInstall) {
+      if (isIosSafari) {
+        setShowIosInstallHelp((current) => !current);
+      }
+      return;
+    }
+
+    await promptInstall();
+    setShowIosInstallHelp(false);
+    setOpen(false);
+  };
+
+  const toggleTheme = () => {
+    const next = dark ? "corporate" : "dark";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("theme", next);
+    setDark(!dark);
   };
 
   return (
@@ -30,27 +84,19 @@ export function Header() {
         </div>
         <div className="flex-1">
           <Link to="/" className="text-lg font-extrabold">
-            パチスロツール{currentTool ? ` ${currentTool.title}` : ""}
+            スロツール+{currentTool ? ` ${currentTool.title}` : ""}
           </Link>
         </div>
-        <div className="flex-none">
-          <button
-            type="button"
-            className="btn btn-square btn-ghost"
-            onClick={() => {
-              const next = dark ? "corporate" : "dracula";
-              document.documentElement.dataset.theme = next;
-              localStorage.setItem("theme", next);
-              setDark(!dark);
-            }}
-            aria-label="テーマ切替"
+        <div className="flex-none flex items-center gap-1">
+          <a
+            href="https://www.buymeacoffee.com/ashcolor"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary rounded-full"
+            title="🍺おごる"
           >
-            {dark ? (
-              <Icon icon="bi:moon" className="size-5" />
-            ) : (
-              <Icon icon="bi:sun" className="size-5" />
-            )}
-          </button>
+            🍻おごる
+          </a>
         </div>
       </header>
 
@@ -61,7 +107,10 @@ export function Header() {
       >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-extrabold">パチスロツール</span>
+          <span className="text-lg font-extrabold">スロツール+</span>
+          <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
+            {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
+          </button>
         </div>
         <div>
           <ul className="menu w-full">
@@ -81,20 +130,26 @@ export function Header() {
           </ul>
         </div>
         <div className="mt-auto">
+          {!isInstalled && (
+            <div className="p-4">
+              <button
+                type="button"
+                onClick={installApp}
+                disabled={!isInstallActionAvailable}
+                className="btn btn-primary w-full"
+              >
+                <Icon icon="fa6-solid:download" className="size-4" />
+                <span>{installLabel}</span>
+              </button>
+              {isIosSafari && !canInstall && showIosInstallHelp && (
+                <p className="mt-2 text-xs leading-relaxed opacity-80">
+                  Safari下部の共有ボタンから「ホーム画面に追加」を選んで追加してください。
+                </p>
+              )}
+            </div>
+          )}
           <div className="border-t border-base-300" />
-          <div className="p-4 flex items-center justify-center gap-3">
-            <a
-              href="https://www.buymeacoffee.com/ashcolor"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Buy me a coffee"
-            >
-              <img
-                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-                alt="Buy Me A Coffee"
-                className="h-8"
-              />
-            </a>
+          <div className="p-4 flex items-center justify-center">
             <a
               href="https://x.com/ashcolor06"
               target="_blank"
