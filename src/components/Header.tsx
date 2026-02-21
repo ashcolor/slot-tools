@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
 import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
@@ -23,7 +23,6 @@ export function Header() {
   const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
-  const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
@@ -43,11 +42,6 @@ export function Header() {
       mediaQuery.removeEventListener("change", updateDeviceState);
     };
   }, []);
-
-  const go = (path: string) => {
-    setOpen(false);
-    navigate(path);
-  };
 
   const installApp = async () => {
     if (!canInstall) {
@@ -83,7 +77,7 @@ export function Header() {
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="text-lg font-extrabold">
+          <Link to="/" className="text-lg font-bold">
             スロツール+{currentTool ? ` ${currentTool.title}` : ""}
           </Link>
         </div>
@@ -107,24 +101,37 @@ export function Header() {
       >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-extrabold">スロツール+</span>
+          <span className="text-lg font-bold">スロツール+</span>
           <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
             {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
           </button>
         </div>
         <div>
-          <ul className="menu w-full">
+          <ul className="menu bg-base-100 w-full">
             <li>
-              <button type="button" onClick={() => go("/")} className="font-semibold">
-                TOP
-              </button>
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className={location.pathname === "/" ? "bg-base-200" : undefined}
+              >
+                HOME
+              </Link>
             </li>
             {tools.map((t) => (
               <li key={t.path}>
-                <button type="button" onClick={() => go(t.path)} className="font-semibold">
-                  <span>{t.emoji}</span>
+                <Link
+                  to={t.path}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-4 ${
+                    location.pathname === t.path ? "bg-base-200" : ""
+                  }`}>
+                  {t.sidebarIcon ? (
+                    <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
+                  ) : (
+                    <span>{t.emoji}</span>
+                  )}
                   <span>{t.title}</span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
