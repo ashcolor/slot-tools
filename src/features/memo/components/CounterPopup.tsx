@@ -10,7 +10,7 @@ interface MemoCounterPopupProps {
   onResetToZero: () => void;
 }
 
-export function MemoCounterPopup({
+export function CounterPopup({
   value,
   anchorX,
   anchorY,

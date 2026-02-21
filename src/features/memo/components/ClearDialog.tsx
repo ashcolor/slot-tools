@@ -5,7 +5,7 @@ interface MemoClearDialogProps {
   onClearDraft: () => void;
 }
 
-export function MemoClearDialog({ clearModalRef, onClearDraft }: MemoClearDialogProps) {
+export function ClearDialog({ clearModalRef, onClearDraft }: MemoClearDialogProps) {
   return (
     <dialog ref={clearModalRef} className="modal">
       <div className="modal-box">

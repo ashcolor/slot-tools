@@ -6,7 +6,7 @@ interface MemoToolbarProps {
   onOpenClear: () => void;
 }
 
-export function MemoToolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolbarProps) {
+export function Toolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolbarProps) {
   return (
     <div className="flex items-center justify-end">
       <div className="flex items-center gap-1">

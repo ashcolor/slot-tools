@@ -15,7 +15,7 @@ interface MemoInlineCounterProps {
   ) => void;
 }
 
-export function MemoInlineCounter({
+export function InlineCounter({
   part,
   inlineControlSize,
   onStepInlineCounter,

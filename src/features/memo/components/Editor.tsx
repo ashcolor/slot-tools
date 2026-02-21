@@ -1,7 +1,7 @@
 import type { ChangeEvent, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
-import { MemoInlineCounter } from "./MemoInlineCounter";
-import { MemoInlineFormula } from "./MemoInlineFormula";
+import { InlineCounter } from "./InlineCounter";
+import { InlineFormula } from "./InlineFormula";
 
 interface MemoEditorProps {
   memo: string;
@@ -25,7 +25,7 @@ interface MemoEditorProps {
 
 const EMPTY_PLACEHOLDER = "挙動・示唆・反省点など";
 
-export function MemoEditor({
+export function Editor({
   memo,
   memoRef,
   isMemoFocused,
@@ -70,7 +70,7 @@ export function MemoEditor({
                   part.type === "text" ? (
                     <span key={`text-${index}`}>{part.value}</span>
                   ) : part.type === "counter" ? (
-                    <MemoInlineCounter
+                    <InlineCounter
                       key={`counter-${part.index}`}
                       part={part}
                       inlineControlSize={inlineControlSize}
@@ -78,7 +78,7 @@ export function MemoEditor({
                       onOpenCounterPopup={onOpenCounterPopup}
                     />
                   ) : (
-                    <MemoInlineFormula
+                    <InlineFormula
                       key={`formula-${part.index}`}
                       part={part}
                       result={formulaResults.get(part.index) ?? "ERR"}

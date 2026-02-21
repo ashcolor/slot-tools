@@ -7,7 +7,7 @@ interface MemoConfigDialogProps {
   onChangeFontSizeLevel: (level: number) => void;
 }
 
-export function MemoConfigDialog({
+export function ConfigDialog({
   configModalRef,
   memoFontSizeLevel,
   onChangeFontSizeLevel,

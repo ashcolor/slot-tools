@@ -9,7 +9,7 @@ interface MemoTemplateDialogProps {
   onRequestDeleteTemplate: (templateId: string) => void;
 }
 
-export function MemoTemplateDialog({
+export function TemplateDialog({
   templateModalRef,
   templateList,
   onOpenSaveTemplateModal,

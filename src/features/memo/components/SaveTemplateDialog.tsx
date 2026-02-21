@@ -5,7 +5,7 @@ interface MemoSaveTemplateDialogProps {
   onSaveCurrentAsTemplate: () => void;
 }
 
-export function MemoSaveTemplateDialog({
+export function SaveTemplateDialog({
   saveTemplateModalRef,
   onSaveCurrentAsTemplate,
 }: MemoSaveTemplateDialogProps) {

@@ -8,7 +8,7 @@ interface MemoDeleteTemplateDialogProps {
   onClearPendingDeleteTemplate: () => void;
 }
 
-export function MemoDeleteTemplateDialog({
+export function DeleteTemplateDialog({
   deleteTemplateModalRef,
   pendingDeleteTemplate,
   onDeleteTemplate,

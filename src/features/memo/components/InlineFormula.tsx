@@ -9,7 +9,7 @@ interface MemoInlineFormulaProps {
   onFocusEditor: () => void;
 }
 
-export function MemoInlineFormula({
+export function InlineFormula({
   part,
   result,
   inlineControlSize,
