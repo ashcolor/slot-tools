@@ -62,6 +62,13 @@ export function Header() {
     setOpen(false);
   };
 
+  const toggleTheme = () => {
+    const next = dark ? "corporate" : "dracula";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("theme", next);
+    setDark(!dark);
+  };
+
   return (
     <>
       <header className="navbar bg-base-100 shadow-sm">
@@ -90,23 +97,6 @@ export function Header() {
           >
             🍻奢る
           </a>
-          <button
-            type="button"
-            className="btn btn-square btn-ghost"
-            onClick={() => {
-              const next = dark ? "corporate" : "dracula";
-              document.documentElement.dataset.theme = next;
-              localStorage.setItem("theme", next);
-              setDark(!dark);
-            }}
-            aria-label="テーマ切替"
-          >
-            {dark ? (
-              <Icon icon="bi:moon" className="size-5" />
-            ) : (
-              <Icon icon="bi:sun" className="size-5" />
-            )}
-          </button>
         </div>
       </header>
 
@@ -118,6 +108,9 @@ export function Header() {
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
           <span className="text-lg font-extrabold">スロツール+</span>
+          <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
+            {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
+          </button>
         </div>
         <div>
           <ul className="menu w-full">
