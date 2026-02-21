@@ -1,18 +1,65 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
+import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
+}
+
+function isIosSafariBrowser() {
+  const ua = navigator.userAgent;
+  const isIos = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+
+  return isIos && isSafari;
+}
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dracula");
+  const [isMobile, setIsMobile] = useState(() => isMobileDevice());
+  const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
+  const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
+  const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
+  const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
+  const isInstallActionAvailable = canInstall || isIosSafari;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const updateDeviceState = () => {
+      setIsMobile(isMobileDevice());
+      setIsIosSafari(isIosSafariBrowser());
+    };
+
+    updateDeviceState();
+    mediaQuery.addEventListener("change", updateDeviceState);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateDeviceState);
+    };
+  }, []);
 
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
+  };
+
+  const installApp = async () => {
+    if (!canInstall) {
+      if (isIosSafari) {
+        setShowIosInstallHelp((current) => !current);
+      }
+      return;
+    }
+
+    await promptInstall();
+    setShowIosInstallHelp(false);
+    setOpen(false);
   };
 
   return (
@@ -81,6 +128,24 @@ export function Header() {
           </ul>
         </div>
         <div className="mt-auto">
+          {!isInstalled && (
+            <div className="p-4">
+              <button
+                type="button"
+                onClick={installApp}
+                disabled={!isInstallActionAvailable}
+                className="btn btn-primary w-full"
+              >
+                <Icon icon="fa6-solid:download" className="size-4" />
+                <span>{installLabel}</span>
+              </button>
+              {isIosSafari && !canInstall && showIosInstallHelp && (
+                <p className="mt-2 text-xs leading-relaxed opacity-80">
+                  Safari下部の共有ボタンから「ホーム画面に追加」を選んで追加してください。
+                </p>
+              )}
+            </div>
+          )}
           <div className="border-t border-base-300" />
           <div className="p-4 flex items-center justify-center gap-3">
             <a
