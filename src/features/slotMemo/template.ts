@@ -14,7 +14,6 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     key: "game",
     label: "ゲーム数",
     items: ["天国", "天井", "100刻み"],
-    section: "- ゲーム数\n  - 天国、天井、100刻み\n  - \n",
   },
   {
     key: "type",
@@ -32,5 +31,3 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     items: ["低確率", "通常", "高確率", "超高確率"],
   },
 ];
-
-export const FULL_TEMPLATE = TEMPLATE_CATEGORIES.map((category) => category.section).join("");
