@@ -80,7 +80,16 @@ export function Header() {
             スロツール+{currentTool ? ` ${currentTool.title}` : ""}
           </Link>
         </div>
-        <div className="flex-none">
+        <div className="flex-none flex items-center gap-1">
+          <a
+            href="https://www.buymeacoffee.com/ashcolor"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary rounded-full"
+            title="🍺奢る"
+          >
+            🍻奢る
+          </a>
           <button
             type="button"
             className="btn btn-square btn-ghost"
@@ -147,19 +156,7 @@ export function Header() {
             </div>
           )}
           <div className="border-t border-base-300" />
-          <div className="p-4 flex items-center justify-center gap-3">
-            <a
-              href="https://www.buymeacoffee.com/ashcolor"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Buy me a coffee"
-            >
-              <img
-                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-                alt="Buy Me A Coffee"
-                className="h-8"
-              />
-            </a>
+          <div className="p-4 flex items-center justify-center">
             <a
               href="https://x.com/ashcolor06"
               target="_blank"
