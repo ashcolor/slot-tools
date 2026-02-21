@@ -14,6 +14,8 @@ dist-ssr
 settings.local.json
 .env*
 .claude/
+.claude
+.agents/
 .screenshot.local/
 storybook-static
 *storybook.log
