@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { TEMPLATE_CATEGORIES } from "../constants";
 import type { TemplateCategory } from "../constants";
 
@@ -9,6 +9,7 @@ interface TemplateKeyboardProps {
   onSelectCategoryKey: (key: TemplateCategory["key"] | null) => void;
   onInsertCategoryItem: (item: string) => void;
   onSave: () => void;
+  onHeightChange?: (height: number) => void;
 }
 
 export function TemplateKeyboard({
@@ -18,16 +19,50 @@ export function TemplateKeyboard({
   onSelectCategoryKey,
   onInsertCategoryItem,
   onSave,
+  onHeightChange,
 }: TemplateKeyboardProps) {
+  const keyboardRef = useRef<HTMLDivElement>(null);
   const selectedCategory = useMemo(() => {
     const fallback = TEMPLATE_CATEGORIES[0];
     return TEMPLATE_CATEGORIES.find((category) => category.key === selectedCategoryKey) ?? fallback;
   }, [selectedCategoryKey]);
 
+  useEffect(() => {
+    if (!onHeightChange) return;
+    if (!visible) {
+      onHeightChange(0);
+      return;
+    }
+
+    const keyboardElement = keyboardRef.current;
+    if (!keyboardElement) {
+      onHeightChange(0);
+      return;
+    }
+
+    const updateHeight = () => {
+      onHeightChange(Math.ceil(keyboardElement.getBoundingClientRect().height));
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(updateHeight);
+      observer.observe(keyboardElement);
+      return () => observer.disconnect();
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", updateHeight);
+      return () => window.removeEventListener("resize", updateHeight);
+    }
+  }, [onHeightChange, visible]);
+
   if (!visible) return null;
 
   return (
     <div
+      ref={keyboardRef}
       className="fixed inset-x-0 z-50 px-2 pb-2"
       style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px))` }}
     >

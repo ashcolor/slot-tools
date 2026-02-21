@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import { CounterPopup } from "../features/memo/components/CounterPopup";
 import { ClearDialog } from "../features/memo/components/ClearDialog";
 import { ConfigDialog } from "../features/memo/components/ConfigDialog";
@@ -11,6 +12,10 @@ import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
 
 export function Memo() {
   const memo = useMemoEditor();
+  const [templateKeyboardHeight, setTemplateKeyboardHeight] = useState(0);
+  const handleTemplateKeyboardHeightChange = useCallback((height: number) => {
+    setTemplateKeyboardHeight((current) => (current === height ? current : height));
+  }, []);
 
   return (
     <div className="relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden">
@@ -24,6 +29,7 @@ export function Memo() {
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
+        editingBottomMargin={memo.isMemoFocused ? templateKeyboardHeight : 0}
         memoParts={memo.memoParts}
         formulaResults={memo.formulaResults}
         memoFontSizeClass={memo.memoFontSizeClass}
@@ -82,6 +88,7 @@ export function Memo() {
         onSelectCategoryKey={memo.setSelectedCategoryKey}
         onInsertCategoryItem={memo.insertTemplateItem}
         onSave={memo.saveMemoEditor}
+        onHeightChange={handleTemplateKeyboardHeightChange}
       />
     </div>
   );
