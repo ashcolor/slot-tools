@@ -93,9 +93,9 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary rounded-full"
-            title="🍺奢る"
+            title="🍺おごる"
           >
-            🍻奢る
+            🍻おごる
           </a>
         </div>
       </header>
