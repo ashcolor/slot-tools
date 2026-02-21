@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 
 type FormulaPart = Extract<MemoPart, { type: "formula" }>;
@@ -18,7 +19,7 @@ export function InlineFormula({
   return (
     <button
       type="button"
-      className={`btn ${inlineControlSize.formulaClass} btn-outline align-middle mx-1`}
+      className={`btn border-neutral z-1 ${inlineControlSize.formulaClass} ${inlineControlSize.valueWidthClass} align-middle mx-1 px-2 gap-1`}
       title={part.expression}
       onPointerDown={(event) => event.preventDefault()}
       onClick={(event) => {
@@ -26,7 +27,8 @@ export function InlineFormula({
         onFocusEditor();
       }}
     >
-      = {result}
+      <Icon icon="mdi:calculator" className="size-4" />
+      <span>{result}</span>
     </button>
   );
 }

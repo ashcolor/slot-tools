@@ -192,11 +192,14 @@ function evaluateFormula(expression: string, variables: Record<string, number>):
   try {
     const raw = Parser.evaluate(expression, variables);
     const numberValue = Number(raw);
-    if (!Number.isFinite(numberValue)) return "ERR";
+    if (!Number.isFinite(numberValue)) return "--";
+    if (numberValue < 1) {
+      return `${(numberValue * 100).toFixed(3).replace(/\.?0+$/, "")}%`;
+    }
     if (Number.isInteger(numberValue)) return String(numberValue);
     return numberValue.toFixed(3).replace(/\.?0+$/, "");
   } catch {
-    return "ERR";
+    return "--";
   }
 }
 

@@ -80,7 +80,7 @@ export function Editor({
                     <InlineFormula
                       key={`formula-${part.index}`}
                       part={part}
-                      result={formulaResults.get(part.index) ?? "ERR"}
+                      result={formulaResults.get(part.index) ?? "--"}
                       inlineControlSize={inlineControlSize}
                       onFocusEditor={onFocusEditor}
                     />
