@@ -23,7 +23,8 @@ interface MemoEditorProps {
   ) => void;
 }
 
-const EMPTY_PLACEHOLDER = "挙動・示唆・反省点など";
+const EMPTY_PLACEHOLDER = `テンプレートにサンプルがあります（上部の「テンプレート」から読込）
+使い方: [[c:name=0]] でカウンター、[[f:name / game]] で数式`;
 
 export function Editor({
   memo,

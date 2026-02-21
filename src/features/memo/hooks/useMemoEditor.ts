@@ -40,6 +40,28 @@ const FORMULA_TOKEN = "[[f:1+1]]";
 const COUNTER_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const MAX_COUNTER_VALUE = 9999;
 const DEFAULT_FONT_SIZE_LEVEL = 3 as const;
+const SAMPLE_TEMPLATE_MEMO = `■ゲーム数
+ゲーム数：[[c:game=0]]
+BIG：[[c:big=0]] [[f:big / game]]
+REG：[[c:reg=0]] [[f:reg / game]]
+
+■小役カウント
+🔔：[[c:bell=0]] [[f:bell / game]]
+🍒：[[c:cherry=0]] [[f:cherry / game]]
+🍉：[[c:suika=0]] [[f:suika / game]]
+
+■終了画面
+偶数：[[c:even=0]] [[f:even / (even + odd + high)]]
+奇数：[[c:odd=0]] [[f:odd / (even + odd + high)]]
+高設定：[[c:high=0]] [[f:high / (even + odd + high)]]`;
+const INITIAL_TEMPLATES: MemoTemplate[] = [
+  {
+    id: "default-slot-sample-template-v1",
+    memo: SAMPLE_TEMPLATE_MEMO,
+    fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
+    createdAt: "2026-02-21T00:00:00.000Z",
+  },
+];
 
 export const COUNTER_DIGIT_STEPS = [1000, 100, 10, 1] as const;
 export const FONT_SIZE_OPTIONS = [
@@ -112,9 +134,7 @@ function getInlineControlSize(level: (typeof FONT_SIZE_OPTIONS)[number]["level"]
 function createDraft(): MemoDraft {
   return {
     fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
-    memo: `通常ゲーム数：[[c:normal=25]]
-AT回数：[[c:at=57]]
-初当たり：[[f:normal / at]]`,
+    memo: "",
   };
 }
 
@@ -226,7 +246,10 @@ export function getTemplateTitle(memo: string): string {
 
 export function useMemoEditor() {
   const [draft, setDraft] = useLocalStorage<MemoDraft>("slot-memo-draft", createDraft());
-  const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>("slot-memo-templates", []);
+  const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>(
+    "slot-memo-templates",
+    INITIAL_TEMPLATES,
+  );
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
