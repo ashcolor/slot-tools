@@ -28,18 +28,13 @@ export function ApplyTemplateDialog({
         <p className="text-sm opacity-70">
           現在のメモは上書きされ、未保存の内容は失われます。呼び出しますか？
         </p>
-        {pendingApplyTemplate ? (
-          <p className="mt-2 text-sm opacity-80">
-            対象: 「{getTemplateTitle(pendingApplyTemplate.memo)}」
-          </p>
-        ) : null}
         <div className="modal-action">
           <form method="dialog" className="flex gap-2">
             <button className="btn btn-sm" onClick={onCancelApplyTemplate}>
               キャンセル
             </button>
             <button className="btn btn-sm btn-primary" onClick={onConfirmApplyTemplate}>
-              呼び出す
+              上書き
             </button>
           </form>
         </div>
