@@ -12,6 +12,7 @@ interface MemoInlineCounterProps {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     current: number,
+    name: string | null,
   ) => void;
 }
 
@@ -41,7 +42,7 @@ export function InlineCounter({
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();
-          onOpenCounterPopup(event, part.index, part.value);
+          onOpenCounterPopup(event, part.index, part.value, part.name);
         }}
       >
         {part.value}

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 
 type FormulaPart = Extract<MemoPart, { type: "formula" }>;
@@ -7,14 +8,18 @@ interface MemoInlineFormulaProps {
   part: FormulaPart;
   result: string;
   inlineControlSize: InlineControlSize;
-  onFocusEditor: () => void;
+  onOpenFormulaPopup: (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    targetIndex: number,
+    expression: string,
+  ) => void;
 }
 
 export function InlineFormula({
   part,
   result,
   inlineControlSize,
-  onFocusEditor,
+  onOpenFormulaPopup,
 }: MemoInlineFormulaProps) {
   return (
     <button
@@ -24,7 +29,7 @@ export function InlineFormula({
       onPointerDown={(event) => event.preventDefault()}
       onClick={(event) => {
         event.stopPropagation();
-        onFocusEditor();
+        onOpenFormulaPopup(event, part.index, part.expression);
       }}
     >
       <Icon icon="mdi:calculator" className="size-4" />

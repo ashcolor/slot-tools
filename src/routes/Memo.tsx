@@ -4,6 +4,7 @@ import { ClearDialog } from "../features/memo/components/ClearDialog";
 import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
+import { FormulaPopup } from "../features/memo/components/FormulaPopup";
 import { SaveTemplateDialog } from "../features/memo/components/SaveTemplateDialog";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
@@ -91,6 +92,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         onSaveEditor={memo.saveMemoEditor}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
+        onOpenFormulaPopup={memo.openFormulaPopup}
       />
 
       <ConfigDialog
@@ -124,10 +126,26 @@ export function Memo({ onEditingChange }: MemoProps) {
       {memo.counterPopup ? (
         <CounterPopup
           value={memo.counterPopup.value}
+          name={memo.counterPopup.name}
+          isNameInvalid={memo.isCounterPopupNameInvalid}
           anchorX={memo.counterPopup.anchorX}
           anchorY={memo.counterPopup.anchorY}
           onClose={memo.closeCounterPopup}
           onStepDigit={memo.stepPopupCounterDigit}
+          onNameChange={memo.setCounterPopupName}
+        />
+      ) : null}
+
+      {memo.formulaPopup ? (
+        <FormulaPopup
+          expression={memo.formulaPopup.expression}
+          isExpressionInvalid={memo.isFormulaPopupExpressionInvalid}
+          anchorX={memo.formulaPopup.anchorX}
+          anchorY={memo.formulaPopup.anchorY}
+          variables={memo.formulaVariableList}
+          onExpressionChange={memo.setFormulaPopupExpression}
+          onConfirm={memo.applyFormulaPopup}
+          onClose={memo.closeFormulaPopup}
         />
       ) : null}
 

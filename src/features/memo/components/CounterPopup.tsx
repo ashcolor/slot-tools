@@ -1,23 +1,30 @@
 import { Icon } from "@iconify/react";
 import { flip, offset, shift, useFloating, type VirtualElement } from "@floating-ui/react";
+import type { ChangeEvent } from "react";
 import { useLayoutEffect, useMemo } from "react";
 import { COUNTER_DIGIT_STEPS } from "../../../constants";
 import { toCounterDigits } from "../hooks/useMemoEditor";
 
 interface MemoCounterPopupProps {
   value: number;
+  name: string;
+  isNameInvalid: boolean;
   anchorX: number;
   anchorY: number;
   onClose: () => void;
   onStepDigit: (digitStep: number, delta: 1 | -1) => void;
+  onNameChange: (name: string) => void;
 }
 
 export function CounterPopup({
   value,
+  name,
+  isNameInvalid,
   anchorX,
   anchorY,
   onClose,
   onStepDigit,
+  onNameChange,
 }: MemoCounterPopupProps) {
   const { refs, floatingStyles } = useFloating({
     open: true,
@@ -37,6 +44,10 @@ export function CounterPopup({
     setReference(virtualReference);
   }, [setReference, virtualReference]);
 
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onNameChange(event.target.value);
+  };
+
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
@@ -52,6 +63,16 @@ export function CounterPopup({
           onClick={(event) => event.stopPropagation()}
         >
           <div className="card-body min-w-64 gap-3 p-4">
+            <label className="form-control gap-1">
+              <span className="text-xs opacity-70">変数名</span>
+              <input
+                type="text"
+                className={`input input-sm w-full font-mono ${isNameInvalid ? "input-error" : "input-bordered"}`}
+                value={name}
+                placeholder="例: game"
+                onChange={handleNameChange}
+              />
+            </label>
             <div className="grid grid-cols-5 gap-2">
               {COUNTER_DIGIT_STEPS.map((digitStep, index) => {
                 const digit = toCounterDigits(value)[index];

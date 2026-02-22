@@ -26,6 +26,12 @@ interface MemoEditorProps {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     current: number,
+    name: string | null,
+  ) => void;
+  onOpenFormulaPopup: (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    targetIndex: number,
+    expression: string,
   ) => void;
 }
 
@@ -167,6 +173,7 @@ export function Editor({
   onSaveEditor,
   onStepInlineCounter,
   onOpenCounterPopup,
+  onOpenFormulaPopup,
 }: MemoEditorProps) {
   const handleMemoChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     onMemoChange(event.target.value);
@@ -255,7 +262,7 @@ export function Editor({
                         part={part}
                         result={formulaResults.get(part.index) ?? "--"}
                         inlineControlSize={inlineControlSize}
-                        onFocusEditor={onFocusEditor}
+                        onOpenFormulaPopup={onOpenFormulaPopup}
                       />
                     </span>
                   ),

@@ -38,6 +38,14 @@ export interface CounterPopupState {
   anchorX: number;
   anchorY: number;
   value: number;
+  name: string;
+}
+
+export interface FormulaPopupState {
+  targetIndex: number;
+  anchorX: number;
+  anchorY: number;
+  expression: string;
 }
 
 export interface InlineControlSize {
@@ -384,6 +392,16 @@ function evaluateFormula(expression: string, variables: Record<string, number>):
   }
 }
 
+function isValidFormulaExpression(expression: string, variables: Record<string, number>): boolean {
+  try {
+    const raw = Parser.evaluate(expression, variables);
+    const numberValue = Number(raw);
+    return Number.isFinite(numberValue);
+  } catch {
+    return false;
+  }
+}
+
 export function formatTemplateDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
@@ -413,6 +431,7 @@ export function useMemoEditor() {
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
+  const [formulaPopup, setFormulaPopup] = useState<FormulaPopupState | null>(null);
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<TemplateCategory["key"] | null>(
     null,
   );
@@ -432,14 +451,25 @@ export function useMemoEditor() {
     [pendingDeleteTemplateId, templateList],
   );
   const memoParts = useMemo(() => parseMemoParts(draft.memo), [draft.memo]);
-  const formulaResults = useMemo(() => {
-    const variables: Record<string, number> = {};
+  const formulaVariables = useMemo(() => {
+    const variables = new Map<string, number>();
     memoParts.forEach((part) => {
-      if (part.type === "counter") {
-        variables[`c${part.index}`] = part.value;
-        if (part.name) variables[part.name] = part.value;
-      }
+      if (part.type !== "counter") return;
+      variables.set(`c${part.index}`, part.value);
+      if (part.name) variables.set(part.name, part.value);
     });
+    return variables;
+  }, [memoParts]);
+  const formulaVariableList = useMemo(() => {
+    const namedVariables = new Map<string, number>();
+    memoParts.forEach((part) => {
+      if (part.type !== "counter" || !part.name) return;
+      namedVariables.set(part.name, part.value);
+    });
+    return [...namedVariables.entries()].map(([name, value]) => ({ name, value }));
+  }, [memoParts]);
+  const formulaResults = useMemo(() => {
+    const variables = Object.fromEntries(formulaVariables);
 
     const results = new Map<number, string>();
     memoParts.forEach((part) => {
@@ -448,7 +478,18 @@ export function useMemoEditor() {
       }
     });
     return results;
-  }, [memoParts]);
+  }, [memoParts, formulaVariables]);
+  const isCounterPopupNameInvalid = useMemo(() => {
+    if (!counterPopup) return false;
+    if (counterPopup.name.length === 0) return false;
+    return !COUNTER_NAME_PATTERN.test(counterPopup.name);
+  }, [counterPopup]);
+  const isFormulaPopupExpressionInvalid = useMemo(() => {
+    if (!formulaPopup) return false;
+    const expression = formulaPopup.expression.trim();
+    if (expression.length === 0) return true;
+    return !isValidFormulaExpression(expression, Object.fromEntries(formulaVariables));
+  }, [formulaPopup, formulaVariables]);
 
   const memoFontSizeLevel = normalizeFontSizeLevel(draft.fontSizeLevel);
   const memoFontSizeClass =
@@ -510,6 +551,7 @@ export function useMemoEditor() {
       fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
     }));
     setCounterPopup(null);
+    setFormulaPopup(null);
     setSelectedCategoryKey(null);
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
@@ -586,6 +628,7 @@ export function useMemoEditor() {
   const focusMemoEditor = (cursorPosition?: number) => {
     setIsMemoFocused(true);
     setCounterPopup(null);
+    setFormulaPopup(null);
     requestAnimationFrame(() => {
       const field = memoRef.current;
       if (!field) return;
@@ -610,6 +653,7 @@ export function useMemoEditor() {
     setKeyboardInset(0);
     setSelectedCategoryKey(null);
     setCounterPopup(null);
+    setFormulaPopup(null);
     pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
@@ -638,18 +682,67 @@ export function useMemoEditor() {
     updateInlineCounter(targetIndex, (current) => current + delta);
   };
 
+  const updateInlineCounterName = (targetIndex: number, nextName: string | null) => {
+    setDraft((prev) => {
+      let currentIndex = 0;
+      return {
+        ...prev,
+        memo: prev.memo.replace(/\[\[c:([^\]]+)\]\]/g, (token, rawBody) => {
+          if (currentIndex !== targetIndex) {
+            currentIndex += 1;
+            return token;
+          }
+          const parsed = parseCounterBody(rawBody);
+          currentIndex += 1;
+          if (nextName) return `[[c:${nextName}=${parsed.value}]]`;
+          return `[[c:${parsed.value}]]`;
+        }),
+      };
+    });
+  };
+
+  const updateInlineFormula = (targetIndex: number, expression: string) => {
+    setDraft((prev) => {
+      let currentIndex = 0;
+      return {
+        ...prev,
+        memo: prev.memo.replace(/\[\[f:([^\]]+)\]\]/g, (token) => {
+          if (currentIndex !== targetIndex) {
+            currentIndex += 1;
+            return token;
+          }
+          currentIndex += 1;
+          const nextExpression = expression.trim();
+          if (nextExpression.length === 0) return token;
+          return `[[f:${nextExpression}]]`;
+        }),
+      };
+    });
+  };
+
   const openCounterPopup = (
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     current: number,
+    name: string | null,
   ) => {
     const rect = event.currentTarget.getBoundingClientRect();
+    setFormulaPopup(null);
     setCounterPopup({
       targetIndex,
       anchorX: rect.left + rect.width / 2,
       anchorY: rect.bottom,
       value: clampCounterValue(current),
+      name: name ?? "",
     });
+  };
+
+  const setCounterPopupName = (name: string) => {
+    if (!counterPopup) return;
+    const normalized = name.trim();
+    setCounterPopup((prev) => (prev ? { ...prev, name: normalized } : prev));
+    if (normalized.length > 0 && !COUNTER_NAME_PATTERN.test(normalized)) return;
+    updateInlineCounterName(counterPopup.targetIndex, normalized.length > 0 ? normalized : null);
   };
 
   const stepPopupCounterDigit = (digitStep: number, delta: 1 | -1) => {
@@ -661,6 +754,35 @@ export function useMemoEditor() {
 
   const closeCounterPopup = () => {
     setCounterPopup(null);
+  };
+
+  const openFormulaPopup = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    targetIndex: number,
+    expression: string,
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setCounterPopup(null);
+    setFormulaPopup({
+      targetIndex,
+      anchorX: rect.left + rect.width / 2,
+      anchorY: rect.bottom,
+      expression,
+    });
+  };
+
+  const setFormulaPopupExpression = (expression: string) => {
+    setFormulaPopup((prev) => (prev ? { ...prev, expression } : prev));
+  };
+
+  const applyFormulaPopup = () => {
+    if (!formulaPopup) return;
+    updateInlineFormula(formulaPopup.targetIndex, formulaPopup.expression);
+    setFormulaPopup(null);
+  };
+
+  const closeFormulaPopup = () => {
+    setFormulaPopup(null);
   };
 
   const openTemplateModal = () => {
@@ -675,6 +797,7 @@ export function useMemoEditor() {
       fontSizeLevel: normalizeFontSizeLevel(template.fontSizeLevel),
     }));
     setCounterPopup(null);
+    setFormulaPopup(null);
     templateModalRef.current?.close();
   };
 
@@ -725,8 +848,12 @@ export function useMemoEditor() {
     templateList,
     pendingDeleteTemplate,
     counterPopup,
+    isCounterPopupNameInvalid,
+    formulaPopup,
+    isFormulaPopupExpressionInvalid,
     memoParts,
     formulaResults,
+    formulaVariableList,
     memoFontSizeLevel,
     memoFontSizeClass,
     inlineControlSize,
@@ -741,8 +868,13 @@ export function useMemoEditor() {
     saveMemoEditor,
     stepInlineCounter,
     openCounterPopup,
+    openFormulaPopup,
+    setCounterPopupName,
     stepPopupCounterDigit,
     closeCounterPopup,
+    setFormulaPopupExpression,
+    applyFormulaPopup,
+    closeFormulaPopup,
     openTemplateModal,
     applyTemplate,
     openSaveTemplateModal,
