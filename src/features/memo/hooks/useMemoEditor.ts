@@ -19,6 +19,7 @@ import {
 export interface MemoDraft {
   memo: string;
   fontSizeLevel: number;
+  formulaRoundDecimalPlaces: number;
 }
 
 export interface MemoTemplate {
@@ -66,6 +67,10 @@ function clampNumber(value: number, min: number, max: number): number {
 
 const textareaScrollAnimationFrameMap = new WeakMap<HTMLTextAreaElement, number>();
 const TEMPLATE_KEYBOARD_ROOT_SELECTOR = "[data-template-keyboard-root='true']";
+const FORMULA_ROUND_DECIMAL_PLACES_MIN = 0;
+const FORMULA_ROUND_DECIMAL_PLACES_MAX = 3;
+const FORMULA_ROUND_DECIMAL_PLACES_DEFAULT = 1;
+const FORMULA_CEIL_OPTION_PATTERN = /^(.*);ceil=(\d+)$/;
 
 function easeOutCubic(progress: number): number {
   const inverse = 1 - progress;
@@ -292,10 +297,17 @@ function getInlineControlSize(
   };
 }
 
+function normalizeFormulaRoundDecimalPlaces(value: number): number {
+  if (!Number.isFinite(value)) return FORMULA_ROUND_DECIMAL_PLACES_DEFAULT;
+  const integer = Math.trunc(value);
+  return clampNumber(integer, FORMULA_ROUND_DECIMAL_PLACES_MIN, FORMULA_ROUND_DECIMAL_PLACES_MAX);
+}
+
 function createDraft(): MemoDraft {
   return {
     fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     memo: "",
+    formulaRoundDecimalPlaces: FORMULA_ROUND_DECIMAL_PLACES_DEFAULT,
   };
 }
 
@@ -304,6 +316,33 @@ function createTemplateId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function parseFormulaBody(rawBody: string): { expression: string } {
+  const body = rawBody.trim();
+  const optionMatch = body.match(FORMULA_CEIL_OPTION_PATTERN);
+  if (!optionMatch) {
+    return { expression: body };
+  }
+
+  const expression = optionMatch[1].trim();
+  if (expression.length === 0) {
+    return { expression: body };
+  }
+  return { expression };
+}
+
+function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
+  const factor = 10 ** decimalPlaces;
+  if (!Number.isFinite(factor) || factor <= 0) return Math.round(value);
+  return Math.round(value * factor) / factor;
+}
+
+function formatFormulaNumber(value: number, roundDecimalPlaces: number): string {
+  const normalizedRoundDecimalPlaces = normalizeFormulaRoundDecimalPlaces(roundDecimalPlaces);
+  const roundedValue = roundToDecimalPlaces(value, normalizedRoundDecimalPlaces);
+  if (Number.isInteger(roundedValue)) return String(roundedValue);
+  return roundedValue.toFixed(normalizedRoundDecimalPlaces).replace(/\.?0+$/, "");
 }
 
 function parseMemoParts(memo: string): MemoPart[] {
@@ -329,7 +368,12 @@ function parseMemoParts(memo: string): MemoPart[] {
       });
       counterIndex += 1;
     } else {
-      parts.push({ type: "formula", expression: match[2], index: formulaIndex });
+      const parsed = parseFormulaBody(match[2]);
+      parts.push({
+        type: "formula",
+        expression: parsed.expression,
+        index: formulaIndex,
+      });
       formulaIndex += 1;
     }
     lastIndex = matcher.lastIndex;
@@ -377,16 +421,19 @@ function resetCounterValues(memo: string): string {
   });
 }
 
-function evaluateFormula(expression: string, variables: Record<string, number>): string {
+function evaluateFormula(
+  expression: string,
+  variables: Record<string, number>,
+  roundDecimalPlaces: number,
+): string {
   try {
     const raw = Parser.evaluate(expression, variables);
     const numberValue = Number(raw);
     if (!Number.isFinite(numberValue)) return "--";
     if (numberValue < 1) {
-      return `${(numberValue * 100).toFixed(3).replace(/\.?0+$/, "")}%`;
+      return `${formatFormulaNumber(numberValue * 100, roundDecimalPlaces)}%`;
     }
-    if (Number.isInteger(numberValue)) return String(numberValue);
-    return numberValue.toFixed(3).replace(/\.?0+$/, "");
+    return formatFormulaNumber(numberValue, roundDecimalPlaces);
   } catch {
     return "--";
   }
@@ -470,15 +517,21 @@ export function useMemoEditor() {
   }, [memoParts]);
   const formulaResults = useMemo(() => {
     const variables = Object.fromEntries(formulaVariables);
+    const normalizedRoundDecimalPlaces = normalizeFormulaRoundDecimalPlaces(
+      draft.formulaRoundDecimalPlaces,
+    );
 
     const results = new Map<number, string>();
     memoParts.forEach((part) => {
       if (part.type === "formula") {
-        results.set(part.index, evaluateFormula(part.expression, variables));
+        results.set(
+          part.index,
+          evaluateFormula(part.expression, variables, normalizedRoundDecimalPlaces),
+        );
       }
     });
     return results;
-  }, [memoParts, formulaVariables]);
+  }, [draft.formulaRoundDecimalPlaces, memoParts, formulaVariables]);
   const isCounterPopupNameInvalid = useMemo(() => {
     if (!counterPopup) return false;
     if (counterPopup.name.length === 0) return false;
@@ -502,6 +555,13 @@ export function useMemoEditor() {
       setDraft((prev) => ({ ...prev, fontSizeLevel: normalized }));
     }
   }, [draft.fontSizeLevel, setDraft]);
+
+  useEffect(() => {
+    const normalized = normalizeFormulaRoundDecimalPlaces(draft.formulaRoundDecimalPlaces);
+    if (draft.formulaRoundDecimalPlaces !== normalized) {
+      setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
+    }
+  }, [draft.formulaRoundDecimalPlaces, setDraft]);
 
   useEffect(() => {
     if (!isMemoFocused || typeof window === "undefined" || !window.visualViewport) return;
@@ -545,10 +605,16 @@ export function useMemoEditor() {
     setDraft((prev) => ({ ...prev, fontSizeLevel: level }));
   };
 
+  const setFormulaRoundDecimalPlaces = (roundDecimalPlaces: number) => {
+    const normalized = normalizeFormulaRoundDecimalPlaces(roundDecimalPlaces);
+    setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
+  };
+
   const clearDraft = () => {
     setDraft((prev) => ({
       ...createDraft(),
       fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
+      formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(prev.formulaRoundDecimalPlaces),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -855,10 +921,12 @@ export function useMemoEditor() {
     formulaResults,
     formulaVariableList,
     memoFontSizeLevel,
+    formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(draft.formulaRoundDecimalPlaces),
     memoFontSizeClass,
     inlineControlSize,
     setMemo,
     setFontSizeLevel,
+    setFormulaRoundDecimalPlaces,
     setSelectedCategoryKey,
     setIsMemoFocused,
     clearDraft,

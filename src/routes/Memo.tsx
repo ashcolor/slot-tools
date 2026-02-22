@@ -98,7 +98,9 @@ export function Memo({ onEditingChange }: MemoProps) {
       <ConfigDialog
         configModalRef={memo.configModalRef}
         memoFontSizeLevel={memo.memoFontSizeLevel}
+        formulaRoundDecimalPlaces={memo.formulaRoundDecimalPlaces}
         onChangeFontSizeLevel={memo.setFontSizeLevel}
+        onChangeFormulaRoundDecimalPlaces={memo.setFormulaRoundDecimalPlaces}
       />
 
       <TemplateDialog
