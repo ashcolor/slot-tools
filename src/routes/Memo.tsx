@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApplyTemplateDialog } from "../features/memo/components/ApplyTemplateDialog";
 import { CounterPopup } from "../features/memo/components/CounterPopup";
 import { ClearDialog } from "../features/memo/components/ClearDialog";
@@ -18,6 +18,9 @@ interface MemoProps {
 export function Memo({ onEditingChange }: MemoProps) {
   const floatingGap = 8;
   const memo = useMemoEditor();
+  const saveEditorRef = useRef(memo.saveMemoEditor);
+  const memoBackGuardActiveRef = useRef(false);
+  const memoBackGuardConsumedRef = useRef(false);
   const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
   const rootStyle =
     memo.isMemoFocused && memo.keyboardInset > 0
@@ -43,6 +46,10 @@ export function Memo({ onEditingChange }: MemoProps) {
   }, [onEditingChange]);
 
   useEffect(() => {
+    saveEditorRef.current = memo.saveMemoEditor;
+  }, [memo.saveMemoEditor]);
+
+  useEffect(() => {
     if (!memo.isMemoFocused || typeof document === "undefined") return;
 
     const html = document.documentElement;
@@ -62,6 +69,45 @@ export function Memo({ onEditingChange }: MemoProps) {
       body.style.overflow = prevBodyOverflow;
       html.style.overscrollBehaviorY = prevHtmlOverscrollBehaviorY;
       body.style.overscrollBehaviorY = prevBodyOverscrollBehaviorY;
+    };
+  }, [memo.isMemoFocused]);
+
+  useEffect(() => {
+    if (!memo.isMemoFocused || typeof window === "undefined") return;
+
+    const currentState =
+      window.history.state && typeof window.history.state === "object" ? window.history.state : {};
+    const hasMemoGuard = (currentState as Record<string, unknown>).__memoEditBackGuard === true;
+
+    if (!hasMemoGuard) {
+      window.history.pushState(
+        {
+          ...currentState,
+          __memoEditBackGuard: true,
+        },
+        "",
+        window.location.href,
+      );
+    }
+
+    memoBackGuardActiveRef.current = true;
+    memoBackGuardConsumedRef.current = false;
+
+    const handlePopState = () => {
+      if (!memoBackGuardActiveRef.current) return;
+      memoBackGuardConsumedRef.current = true;
+      memoBackGuardActiveRef.current = false;
+      saveEditorRef.current();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (memoBackGuardConsumedRef.current) {
+        memoBackGuardConsumedRef.current = false;
+      }
+      memoBackGuardActiveRef.current = false;
     };
   }, [memo.isMemoFocused]);
 

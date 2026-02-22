@@ -65,6 +65,7 @@ export function ShareDialog({
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box">
         <h3 className="mb-1 text-lg font-bold">共有</h3>
+        <p className="mb-4 text-sm opacity-70">共有方法を選んでください</p>
 
         <div className="flex flex-col gap-4">
           <section className="flex flex-col gap-2">
@@ -78,7 +79,7 @@ export function ShareDialog({
               onClick={() => void runShareAction(onCopyResolvedMemo, "resolved")}
             >
               <Icon icon={copyIcon("resolved")} className="size-4" />
-              <span>結果コピー</span>
+              <span>カウンター・数式を値でコピー</span>
             </button>
             <button
               type="button"
@@ -86,7 +87,15 @@ export function ShareDialog({
               onClick={() => void runShareAction(onCopyRawMemo, "raw")}
             >
               <Icon icon={copyIcon("raw")} className="size-4" />
-              <span>数式のままコピー</span>
+              <span>メモ記法のままコピー</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-soft justify-start"
+              onClick={() => void runShareAction(onCopyTemplateMemo, "template")}
+            >
+              <Icon icon={copyIcon("template")} className="size-4" />
+              <span>テンプレートコピー（カウンター初期化）</span>
             </button>
           </section>
 
@@ -101,7 +110,7 @@ export function ShareDialog({
               onClick={() => void runShareAction(onCopyResolvedMemoImage, "image")}
             >
               <Icon icon={copyIcon("image")} className="size-4" />
-              <span>コピー</span>
+              <span>画像としてコピー（値置換）</span>
             </button>
             <button
               type="button"
@@ -109,7 +118,7 @@ export function ShareDialog({
               onClick={() => void runShareAction(onDownloadResolvedMemoImage)}
             >
               <Icon icon="fa6-solid:download" className="size-4" />
-              <span>ダウンロード</span>
+              <span>画像としてダウンロード（値置換）</span>
             </button>
           </section>
         </div>
