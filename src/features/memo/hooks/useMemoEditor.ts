@@ -555,9 +555,11 @@ function evaluateFormula(
 
 function isValidFormulaExpression(expression: string, variables: Record<string, number>): boolean {
   try {
-    const raw = Parser.evaluate(expression, variables);
-    const numberValue = Number(raw);
-    return Number.isFinite(numberValue);
+    const parsed = Parser.parse(expression);
+    const referencedVariables = parsed.variables();
+    return referencedVariables.every((name) =>
+      Object.prototype.hasOwnProperty.call(variables, name),
+    );
   } catch {
     return false;
   }
