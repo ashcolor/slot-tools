@@ -78,7 +78,8 @@ function buildPreviewParts(memo: string, memoParts: MemoPart[]): PreviewPart[] {
 
 function getPreviewPartElement(node: Node | null, container: HTMLElement): HTMLElement | null {
   if (!node) return null;
-  const sourceElement = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  const sourceElement =
+    node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
   if (!sourceElement) return null;
 
   const target = sourceElement.closest<HTMLElement>("[data-memo-start][data-memo-end]");
@@ -131,7 +132,8 @@ function getCursorPositionFromPreviewClick(
     if (range) {
       const partElement = getPreviewPartElement(range.startContainer, container);
       if (partElement) {
-        const textOffset = range.startContainer.nodeType === Node.TEXT_NODE ? range.startOffset : null;
+        const textOffset =
+          range.startContainer.nodeType === Node.TEXT_NODE ? range.startOffset : null;
         const position = getPositionFromPartElement(partElement, event.clientX, textOffset);
         if (typeof position === "number") return position;
       }

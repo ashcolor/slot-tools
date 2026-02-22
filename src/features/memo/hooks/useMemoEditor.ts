@@ -186,8 +186,9 @@ function getKeyboardInsetInPixels(textarea: HTMLTextAreaElement): number {
 }
 
 function getTemplateKeyboardTop(textarea: HTMLTextAreaElement, fallbackBottom: number): number {
-  const keyboardElement =
-    textarea.ownerDocument.querySelector<HTMLElement>(TEMPLATE_KEYBOARD_ROOT_SELECTOR);
+  const keyboardElement = textarea.ownerDocument.querySelector<HTMLElement>(
+    TEMPLATE_KEYBOARD_ROOT_SELECTOR,
+  );
   if (!keyboardElement) return fallbackBottom;
 
   const rect = keyboardElement.getBoundingClientRect();
@@ -207,8 +208,7 @@ function scrollCaretAboveTemplateKeyboard(textarea: HTMLTextAreaElement, positio
   const paddingTop = Number.parseFloat(style.paddingTop) || 0;
   const rect = textarea.getBoundingClientRect();
   const lineHeightPx = getTextareaLineHeightPx(textarea);
-  const caretBottom =
-    rect.top + paddingTop + targetTop - textarea.scrollTop + lineHeightPx;
+  const caretBottom = rect.top + paddingTop + targetTop - textarea.scrollTop + lineHeightPx;
   const viewportBottom = getViewportBottomInDocument(textarea);
   const templateKeyboardTop = getTemplateKeyboardTop(textarea, viewportBottom);
   if (caretBottom <= templateKeyboardTop) return;
@@ -236,7 +236,9 @@ function normalizeFontSizeLevel(level: number): (typeof FONT_SIZE_OPTIONS)[numbe
   return Math.min(5, Math.max(1, Math.round(level))) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
 }
 
-function getInlineControlSize(level: (typeof FONT_SIZE_OPTIONS)[number]["level"]): InlineControlSize {
+function getInlineControlSize(
+  level: (typeof FONT_SIZE_OPTIONS)[number]["level"],
+): InlineControlSize {
   if (level <= 1) {
     return {
       buttonClass: "btn-xs",
@@ -332,7 +334,11 @@ function parseMemoParts(memo: string): MemoPart[] {
   return parts;
 }
 
-function parseCounterBody(rawBody: string): { name: string | null; value: number; legacy: boolean } {
+function parseCounterBody(rawBody: string): {
+  name: string | null;
+  value: number;
+  legacy: boolean;
+} {
   const body = rawBody.trim();
 
   if (/^\d+$/.test(body)) {
@@ -407,7 +413,9 @@ export function useMemoEditor() {
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState<TemplateCategory["key"] | null>(null);
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<TemplateCategory["key"] | null>(
+    null,
+  );
   const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
 
   const memoRef = useRef<HTMLTextAreaElement>(null);
@@ -585,7 +593,10 @@ export function useMemoEditor() {
       field.focus();
       let nextPosition = field.selectionStart ?? field.value.length;
       if (typeof cursorPosition === "number") {
-        const boundedPosition = Math.min(field.value.length, Math.max(0, Math.floor(cursorPosition)));
+        const boundedPosition = Math.min(
+          field.value.length,
+          Math.max(0, Math.floor(cursorPosition)),
+        );
         field.setSelectionRange(boundedPosition, boundedPosition);
         nextPosition = boundedPosition;
       }
@@ -700,7 +711,9 @@ export function useMemoEditor() {
 
   const deleteTemplate = () => {
     if (!pendingDeleteTemplateId) return;
-    setTemplates((prev) => (Array.isArray(prev) ? prev.filter((item) => item.id !== pendingDeleteTemplateId) : []));
+    setTemplates((prev) =>
+      Array.isArray(prev) ? prev.filter((item) => item.id !== pendingDeleteTemplateId) : [],
+    );
     setPendingDeleteTemplateId(null);
   };
 
@@ -746,4 +759,3 @@ export function useMemoEditor() {
     deleteTemplate,
   };
 }
-

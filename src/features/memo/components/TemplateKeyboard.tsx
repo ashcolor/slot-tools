@@ -73,7 +73,9 @@ export function TemplateKeyboard({
       ref={keyboardRef}
       data-template-keyboard-root="true"
       className="fixed inset-x-0 z-50 px-2 pb-2"
-      style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)` }}
+      style={{
+        bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)`,
+      }}
     >
       <div className="mx-auto max-w-4xl">
         <div className="border-base-300 bg-base-100/95 rounded-xl border p-2 shadow-lg backdrop-blur">

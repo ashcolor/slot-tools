@@ -19,11 +19,15 @@ export function Memo({ onEditingChange }: MemoProps) {
   const memo = useMemoEditor();
   const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
   const rootStyle =
-    memo.isMemoFocused && memo.keyboardInset > 0 ? { height: `calc(100svh - ${memo.keyboardInset}px)` } : undefined;
+    memo.isMemoFocused && memo.keyboardInset > 0
+      ? { height: `calc(100svh - ${memo.keyboardInset}px)` }
+      : undefined;
   const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
   const editingBottomMargin = memo.isMemoFocused ? templateKeyboardOccupiedHeight + floatingGap : 0;
   const handleTemplateKeyboardOccupiedHeightChange = useCallback((occupiedHeight: number) => {
-    setTemplateKeyboardOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
+    setTemplateKeyboardOccupiedHeight((current) =>
+      current === occupiedHeight ? current : occupiedHeight,
+    );
   }, []);
   const rootClassName = memo.isMemoFocused
     ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"

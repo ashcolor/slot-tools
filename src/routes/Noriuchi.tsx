@@ -354,7 +354,13 @@ export function Noriuchi() {
                       onChange={(updated) => updateMember(i, updated)}
                       otherMembers={members
                         .filter((_, j) => j !== i)
-                        .map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals, storedMedals: m.storedMedals, collectMedals: m.collectMedals }))}
+                        .map((m) => ({
+                          id: m.id,
+                          name: m.name,
+                          investMedals: m.investMedals,
+                          storedMedals: m.storedMedals,
+                          collectMedals: m.collectMedals,
+                        }))}
                       onTransfer={(targetId, amount, setStoredMedals) =>
                         handleTransfer(i, targetId, amount, setStoredMedals)
                       }

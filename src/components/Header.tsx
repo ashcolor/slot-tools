@@ -6,7 +6,10 @@ import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
 import { IosInstallGuideModal } from "./IosInstallGuideModal";
 
 function isMobileDevice() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
+  return (
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    window.matchMedia("(max-width: 768px)").matches
+  );
 }
 
 function isIosBrowser() {
@@ -70,7 +73,12 @@ export function Header() {
     <>
       <header className="navbar bg-base-100 shadow-sm">
         <div className="flex-none">
-          <button type="button" className="btn btn-square btn-ghost" onClick={() => setOpen(!open)} aria-label="メニュー">
+          <button
+            type="button"
+            className="btn btn-square btn-ghost"
+            onClick={() => setOpen(!open)}
+            aria-label="メニュー"
+          >
             <Icon icon="fa6-solid:bars" className="size-4" />
           </button>
         </div>
@@ -105,15 +113,28 @@ export function Header() {
             <span>{brandText}</span>
             <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
           </span>
-          <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
-            {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
+          <button
+            type="button"
+            className="btn btn-square btn-ghost btn-sm ml-auto"
+            onClick={toggleTheme}
+            aria-label="テーマ切替"
+          >
+            {dark ? (
+              <Icon icon="bi:moon" className="size-5" />
+            ) : (
+              <Icon icon="bi:sun" className="size-5" />
+            )}
           </button>
         </div>
 
         <div>
           <ul className="menu bg-base-100 w-full">
             <li>
-              <Link to="/" onClick={() => setOpen(false)} className={location.pathname === "/" ? "bg-base-200" : undefined}>
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className={location.pathname === "/" ? "bg-base-200" : undefined}
+              >
                 HOME
               </Link>
             </li>
@@ -169,7 +190,10 @@ export function Header() {
         </div>
       </div>
 
-      <IosInstallGuideModal open={showIosInstallHelp} onClose={() => setShowIosInstallHelp(false)} />
+      <IosInstallGuideModal
+        open={showIosInstallHelp}
+        onClose={() => setShowIosInstallHelp(false)}
+      />
     </>
   );
 }

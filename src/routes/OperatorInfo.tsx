@@ -14,7 +14,9 @@ export function OperatorInfo() {
           <div className="mt-6 space-y-2 text-sm leading-relaxed opacity-80">
             <h2 className="text-base font-bold opacity-100">サイトのコンセプト</h2>
             <p>このサイトではパチスロユーザ向けのツールを提供しています。</p>
-            <p>「ユーザ目線で使いやすさと機能性にこだわったツールを提供する」をコンセプトとしています。</p>
+            <p>
+              「ユーザ目線で使いやすさと機能性にこだわったツールを提供する」をコンセプトとしています。
+            </p>
           </div>
         </div>
       </div>

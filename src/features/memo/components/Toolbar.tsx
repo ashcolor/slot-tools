@@ -38,4 +38,3 @@ export function Toolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolb
     </div>
   );
 }
-

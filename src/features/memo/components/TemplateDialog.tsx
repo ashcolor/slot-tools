@@ -21,7 +21,11 @@ export function TemplateDialog({
       <div className="modal-box max-w-xl">
         <h3 className="mb-3 text-lg font-bold">テンプレート</h3>
         <div className="flex flex-col gap-2">
-          <button type="button" className="btn btn-sm btn-primary self-start" onClick={onOpenSaveTemplateModal}>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary self-start"
+            onClick={onOpenSaveTemplateModal}
+          >
             今の画面をテンプレートに登録
           </button>
           {templateList.length === 0 ? (
@@ -36,7 +40,11 @@ export function TemplateDialog({
                       <p className="text-xs opacity-70">{formatTemplateDate(template.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" className="btn btn-xs btn-primary" onClick={() => onApplyTemplate(template)}>
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-primary"
+                        onClick={() => onApplyTemplate(template)}
+                      >
                         呼び出し
                       </button>
                       <button

@@ -10,7 +10,13 @@ interface Props {
   medalSteps: number[];
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
-  otherMembers?: { id: string; name: string; investMedals: number; storedMedals: number; collectMedals: number }[];
+  otherMembers?: {
+    id: string;
+    name: string;
+    investMedals: number;
+    storedMedals: number;
+    collectMedals: number;
+  }[];
   onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
@@ -194,7 +200,10 @@ export function MemberForm({
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
-                                const amount = Math.max(target.investMedals - target.collectMedals, 0);
+                                const amount = Math.max(
+                                  target.investMedals - target.collectMedals,
+                                  0,
+                                );
                                 onTransfer(transferTarget, amount, true);
                                 setTransferOpen(false);
                               }
@@ -204,7 +213,10 @@ export function MemberForm({
                             <br />（
                             {(() => {
                               const t = otherMembers.find((m) => m.id === transferTarget);
-                              return Math.max((t?.investMedals ?? 0) - (t?.collectMedals ?? 0), 0).toLocaleString();
+                              return Math.max(
+                                (t?.investMedals ?? 0) - (t?.collectMedals ?? 0),
+                                0,
+                              ).toLocaleString();
                             })()}
                             枚）
                           </button>

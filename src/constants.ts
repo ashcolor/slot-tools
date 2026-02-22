@@ -11,4 +11,3 @@ export const FONT_SIZE_OPTIONS = [
   { level: 4, label: "XL", className: "text-xl" },
   { level: 5, label: "2XL", className: "text-2xl" },
 ] as const;
-

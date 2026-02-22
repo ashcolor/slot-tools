@@ -22,8 +22,14 @@ export function CounterPopup({
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="fixed z-50 -translate-x-1/2" style={{ left: `${anchorX}px`, top: `${anchorY}px` }}>
-        <div className="card bg-base-100 border-base-300 border shadow-lg" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="fixed z-50 -translate-x-1/2"
+        style={{ left: `${anchorX}px`, top: `${anchorY}px` }}
+      >
+        <div
+          className="card bg-base-100 border-base-300 border shadow-lg"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="card-body min-w-52 gap-2 p-3">
             <div className="text-xs font-semibold opacity-70">4桁カウンター</div>
             <div className="grid grid-cols-4 gap-1">
@@ -69,4 +75,3 @@ export function CounterPopup({
     </>
   );
 }
-
