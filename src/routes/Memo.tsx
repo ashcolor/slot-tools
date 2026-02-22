@@ -128,7 +128,6 @@ export function Memo({ onEditingChange }: MemoProps) {
           anchorY={memo.counterPopup.anchorY}
           onClose={memo.closeCounterPopup}
           onStepDigit={memo.stepPopupCounterDigit}
-          onResetToZero={memo.resetPopupCounterToZero}
         />
       ) : null}
 

@@ -228,7 +228,7 @@ function scrollCaretAboveTemplateKeyboard(textarea: HTMLTextAreaElement, positio
 }
 
 export function toCounterDigits(value: number): string[] {
-  return clampCounterValue(value).toString().padStart(4, "0").split("");
+  return clampCounterValue(value).toString().padStart(5, "0").split("");
 }
 
 function normalizeFontSizeLevel(level: number): (typeof FONT_SIZE_OPTIONS)[number]["level"] {
@@ -647,7 +647,7 @@ export function useMemoEditor() {
     setCounterPopup({
       targetIndex,
       anchorX: rect.left + rect.width / 2,
-      anchorY: rect.bottom + 8,
+      anchorY: rect.bottom,
       value: clampCounterValue(current),
     });
   };
@@ -657,12 +657,6 @@ export function useMemoEditor() {
     const nextValue = clampCounterValue(counterPopup.value + digitStep * delta);
     updateInlineCounter(counterPopup.targetIndex, () => nextValue);
     setCounterPopup((prev) => (prev ? { ...prev, value: nextValue } : prev));
-  };
-
-  const resetPopupCounterToZero = () => {
-    if (!counterPopup) return;
-    updateInlineCounter(counterPopup.targetIndex, () => 0);
-    setCounterPopup((prev) => (prev ? { ...prev, value: 0 } : prev));
   };
 
   const closeCounterPopup = () => {
@@ -748,7 +742,6 @@ export function useMemoEditor() {
     stepInlineCounter,
     openCounterPopup,
     stepPopupCounterDigit,
-    resetPopupCounterToZero,
     closeCounterPopup,
     openTemplateModal,
     applyTemplate,
