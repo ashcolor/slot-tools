@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import { ApplyTemplateDialog } from "../features/memo/components/ApplyTemplateDialog";
 import { CounterPopup } from "../features/memo/components/CounterPopup";
 import { ClearDialog } from "../features/memo/components/ClearDialog";
 import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
 import { FormulaPopup } from "../features/memo/components/FormulaPopup";
-import { SaveTemplateDialog } from "../features/memo/components/SaveTemplateDialog";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
 import { TemplateKeyboard } from "../features/memo/components/TemplateKeyboard";
@@ -69,6 +69,11 @@ export function Memo({ onEditingChange }: MemoProps) {
     <div className={rootClassName} style={rootStyle}>
       {!memo.isMemoFocused ? (
         <Toolbar
+          onCopyRawMemo={memo.copyRawMemoToClipboard}
+          onCopyResolvedMemo={memo.copyResolvedMemoToClipboard}
+          onCopyTemplateMemo={memo.copyTemplateMemoToClipboard}
+          onCopyResolvedMemoImage={memo.copyResolvedMemoImageToClipboard}
+          onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}
           onOpenClear={() => memo.clearModalRef.current?.showModal()}
@@ -106,23 +111,25 @@ export function Memo({ onEditingChange }: MemoProps) {
       <TemplateDialog
         templateModalRef={memo.templateModalRef}
         templateList={memo.templateList}
-        onOpenSaveTemplateModal={memo.openSaveTemplateModal}
+        onSaveCurrentAsTemplate={memo.saveCurrentAsTemplate}
         onApplyTemplate={memo.applyTemplate}
         onRequestDeleteTemplate={memo.requestDeleteTemplate}
       />
 
       <ClearDialog clearModalRef={memo.clearModalRef} onClearDraft={memo.clearDraft} />
 
-      <SaveTemplateDialog
-        saveTemplateModalRef={memo.saveTemplateModalRef}
-        onSaveCurrentAsTemplate={memo.saveCurrentAsTemplate}
-      />
-
       <DeleteTemplateDialog
         deleteTemplateModalRef={memo.deleteTemplateModalRef}
         pendingDeleteTemplate={memo.pendingDeleteTemplate}
         onDeleteTemplate={memo.deleteTemplate}
         onClearPendingDeleteTemplate={memo.clearPendingDeleteTemplate}
+      />
+
+      <ApplyTemplateDialog
+        applyTemplateModalRef={memo.applyTemplateModalRef}
+        pendingApplyTemplate={memo.pendingApplyTemplate}
+        onConfirmApplyTemplate={memo.confirmApplyTemplate}
+        onCancelApplyTemplate={memo.cancelApplyTemplate}
       />
 
       {memo.counterPopup ? (

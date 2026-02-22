@@ -1,10 +1,11 @@
+import { Icon } from "@iconify/react";
 import type { RefObject } from "react";
 import { formatTemplateDate, getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
 interface MemoTemplateDialogProps {
   templateModalRef: RefObject<HTMLDialogElement | null>;
   templateList: MemoTemplate[];
-  onOpenSaveTemplateModal: () => void;
+  onSaveCurrentAsTemplate: () => void;
   onApplyTemplate: (template: MemoTemplate) => void;
   onRequestDeleteTemplate: (templateId: string) => void;
 }
@@ -12,7 +13,7 @@ interface MemoTemplateDialogProps {
 export function TemplateDialog({
   templateModalRef,
   templateList,
-  onOpenSaveTemplateModal,
+  onSaveCurrentAsTemplate,
   onApplyTemplate,
   onRequestDeleteTemplate,
 }: MemoTemplateDialogProps) {
@@ -24,9 +25,10 @@ export function TemplateDialog({
           <button
             type="button"
             className="btn btn-sm btn-primary self-start"
-            onClick={onOpenSaveTemplateModal}
+            onClick={onSaveCurrentAsTemplate}
           >
-            今の画面をテンプレートに登録
+            <Icon icon="mdi:content-save-outline" className="size-4 shrink-0" aria-hidden />
+            現在のメモをテンプレートに保存
           </button>
           {templateList.length === 0 ? (
             <p className="text-sm opacity-70">保存済みテンプレートはありません。</p>
@@ -45,7 +47,7 @@ export function TemplateDialog({
                         className="btn btn-xs btn-primary"
                         onClick={() => onApplyTemplate(template)}
                       >
-                        呼び出し
+                        読み込み
                       </button>
                       <button
                         type="button"

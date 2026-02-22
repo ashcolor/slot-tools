@@ -71,6 +71,9 @@ const FORMULA_ROUND_DECIMAL_PLACES_MIN = 0;
 const FORMULA_ROUND_DECIMAL_PLACES_MAX = 3;
 const FORMULA_ROUND_DECIMAL_PLACES_DEFAULT = 1;
 const FORMULA_CEIL_OPTION_PATTERN = /^(.*);ceil=(\d+)$/;
+const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
+const MEMO_IMAGE_PADDING = 24;
+const MEMO_IMAGE_MIN_HEIGHT = 120;
 
 function easeOutCubic(progress: number): number {
   const inverse = 1 - progress;
@@ -421,6 +424,117 @@ function resetCounterValues(memo: string): string {
   });
 }
 
+function buildResolvedMemoText(memoParts: MemoPart[], formulaResults: Map<number, string>): string {
+  return memoParts
+    .map((part) => {
+      if (part.type === "text") return part.value;
+      if (part.type === "counter") return String(clampCounterValue(part.value));
+      return formulaResults.get(part.index) ?? "--";
+    })
+    .join("");
+}
+
+function getMemoImageFontSize(fontSizeLevel: number): number {
+  if (fontSizeLevel <= 1) return 16;
+  if (fontSizeLevel === 2) return 18;
+  if (fontSizeLevel === 3) return 20;
+  if (fontSizeLevel === 4) return 22;
+  return 24;
+}
+
+function wrapLineToWidth(
+  context: CanvasRenderingContext2D,
+  line: string,
+  maxWidth: number,
+): string[] {
+  if (line.length === 0) return [""];
+
+  const lines: string[] = [];
+  let current = "";
+
+  for (const char of line) {
+    const next = `${current}${char}`;
+    if (current.length > 0 && context.measureText(next).width > maxWidth) {
+      lines.push(current);
+      current = char;
+      continue;
+    }
+    current = next;
+  }
+
+  if (current.length > 0) {
+    lines.push(current);
+  }
+
+  return lines;
+}
+
+async function renderMemoTextImage(text: string, fontSizeLevel: number): Promise<Blob> {
+  if (typeof document === "undefined") {
+    throw new Error("画像生成に失敗しました。");
+  }
+
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("画像生成に失敗しました。");
+  }
+
+  const fontSize = getMemoImageFontSize(fontSizeLevel);
+  const lineHeight = Math.round(fontSize * 1.6);
+  const fontFamily = "'Noto Sans JP', 'Yu Gothic', sans-serif";
+  context.font = `400 ${fontSize}px ${fontFamily}`;
+
+  const sourceLines = text.split(/\r?\n/);
+  const wrappedLines = sourceLines.flatMap((line) =>
+    wrapLineToWidth(context, line, MEMO_IMAGE_MAX_TEXT_WIDTH),
+  );
+  const printableLines = wrappedLines.length > 0 ? wrappedLines : [""];
+  const widestLineWidth = printableLines.reduce(
+    (max, line) => Math.max(max, context.measureText(line).width),
+    0,
+  );
+
+  const width = Math.ceil(Math.max(240, widestLineWidth + MEMO_IMAGE_PADDING * 2));
+  const height = Math.ceil(
+    Math.max(
+      MEMO_IMAGE_MIN_HEIGHT,
+      printableLines.length * lineHeight + MEMO_IMAGE_PADDING * 2,
+    ),
+  );
+  const devicePixelRatio =
+    typeof window === "undefined" ? 1 : Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+
+  canvas.width = Math.ceil(width * devicePixelRatio);
+  canvas.height = Math.ceil(height * devicePixelRatio);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  const drawingContext = canvas.getContext("2d");
+  if (!drawingContext) {
+    throw new Error("画像生成に失敗しました。");
+  }
+
+  drawingContext.scale(devicePixelRatio, devicePixelRatio);
+  drawingContext.fillStyle = "#ffffff";
+  drawingContext.fillRect(0, 0, width, height);
+  drawingContext.fillStyle = "#111827";
+  drawingContext.font = `400 ${fontSize}px ${fontFamily}`;
+  drawingContext.textBaseline = "top";
+
+  printableLines.forEach((line, index) => {
+    drawingContext.fillText(line, MEMO_IMAGE_PADDING, MEMO_IMAGE_PADDING + index * lineHeight);
+  });
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((nextBlob) => resolve(nextBlob), "image/png");
+  });
+  if (!blob) {
+    throw new Error("画像生成に失敗しました。");
+  }
+  return blob;
+}
+
 function evaluateFormula(
   expression: string,
   variables: Record<string, number>,
@@ -482,17 +596,22 @@ export function useMemoEditor() {
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<TemplateCategory["key"] | null>(
     null,
   );
+  const [pendingApplyTemplateId, setPendingApplyTemplateId] = useState<string | null>(null);
   const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
 
   const memoRef = useRef<HTMLTextAreaElement>(null);
   const templateModalRef = useRef<HTMLDialogElement>(null);
+  const applyTemplateModalRef = useRef<HTMLDialogElement>(null);
   const configModalRef = useRef<HTMLDialogElement>(null);
   const clearModalRef = useRef<HTMLDialogElement>(null);
-  const saveTemplateModalRef = useRef<HTMLDialogElement>(null);
   const deleteTemplateModalRef = useRef<HTMLDialogElement>(null);
   const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
+  const pendingApplyTemplate = useMemo(
+    () => templateList.find((template) => template.id === pendingApplyTemplateId) ?? null,
+    [pendingApplyTemplateId, templateList],
+  );
   const pendingDeleteTemplate = useMemo(
     () => templateList.find((template) => template.id === pendingDeleteTemplateId) ?? null,
     [pendingDeleteTemplateId, templateList],
@@ -532,6 +651,10 @@ export function useMemoEditor() {
     });
     return results;
   }, [draft.formulaRoundDecimalPlaces, memoParts, formulaVariables]);
+  const resolvedMemoText = useMemo(
+    () => buildResolvedMemoText(memoParts, formulaResults),
+    [memoParts, formulaResults],
+  );
   const isCounterPopupNameInvalid = useMemo(() => {
     if (!counterPopup) return false;
     if (counterPopup.name.length === 0) return false;
@@ -851,12 +974,64 @@ export function useMemoEditor() {
     setFormulaPopup(null);
   };
 
+  const copyRawMemoToClipboard = async () => {
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+    }
+    await navigator.clipboard.writeText(draft.memo);
+  };
+
+  const copyResolvedMemoToClipboard = async () => {
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+    }
+    await navigator.clipboard.writeText(resolvedMemoText);
+  };
+
+  const copyTemplateMemoToClipboard = async () => {
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+    }
+    await navigator.clipboard.writeText(resetCounterValues(draft.memo));
+  };
+
+  const copyResolvedMemoImageToClipboard = async () => {
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.write !== "function") {
+      throw new Error("このブラウザでは画像コピーに対応していません。");
+    }
+    if (typeof ClipboardItem === "undefined") {
+      throw new Error("このブラウザでは画像コピーに対応していません。");
+    }
+
+    const blob = await renderMemoTextImage(resolvedMemoText, memoFontSizeLevel);
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  };
+
+  const downloadResolvedMemoImage = async () => {
+    const blob = await renderMemoTextImage(resolvedMemoText, memoFontSizeLevel);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const fileTimestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    link.href = url;
+    link.download = `memo-${fileTimestamp}.png`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const openTemplateModal = () => {
     saveMemoEditor();
     templateModalRef.current?.showModal();
   };
 
   const applyTemplate = (template: MemoTemplate) => {
+    if (draft.memo.trim().length > 0) {
+      setPendingApplyTemplateId(template.id);
+      templateModalRef.current?.close();
+      applyTemplateModalRef.current?.showModal();
+      return;
+    }
+
     setDraft((prev) => ({
       ...prev,
       memo: template.memo,
@@ -867,9 +1042,23 @@ export function useMemoEditor() {
     templateModalRef.current?.close();
   };
 
-  const openSaveTemplateModal = () => {
-    templateModalRef.current?.close();
-    saveTemplateModalRef.current?.showModal();
+  const confirmApplyTemplate = () => {
+    if (!pendingApplyTemplate) return;
+    setDraft((prev) => ({
+      ...prev,
+      memo: pendingApplyTemplate.memo,
+      fontSizeLevel: normalizeFontSizeLevel(pendingApplyTemplate.fontSizeLevel),
+    }));
+    setCounterPopup(null);
+    setFormulaPopup(null);
+    setPendingApplyTemplateId(null);
+    applyTemplateModalRef.current?.close();
+  };
+
+  const cancelApplyTemplate = () => {
+    setPendingApplyTemplateId(null);
+    applyTemplateModalRef.current?.close();
+    templateModalRef.current?.showModal();
   };
 
   const saveCurrentAsTemplate = () => {
@@ -890,6 +1079,8 @@ export function useMemoEditor() {
 
   const clearPendingDeleteTemplate = () => {
     setPendingDeleteTemplateId(null);
+    deleteTemplateModalRef.current?.close();
+    templateModalRef.current?.showModal();
   };
 
   const deleteTemplate = () => {
@@ -907,11 +1098,12 @@ export function useMemoEditor() {
     selectedCategoryKey,
     memoRef,
     templateModalRef,
+    applyTemplateModalRef,
     configModalRef,
     clearModalRef,
-    saveTemplateModalRef,
     deleteTemplateModalRef,
     templateList,
+    pendingApplyTemplate,
     pendingDeleteTemplate,
     counterPopup,
     isCounterPopupNameInvalid,
@@ -943,9 +1135,15 @@ export function useMemoEditor() {
     setFormulaPopupExpression,
     applyFormulaPopup,
     closeFormulaPopup,
+    copyRawMemoToClipboard,
+    copyResolvedMemoToClipboard,
+    copyTemplateMemoToClipboard,
+    copyResolvedMemoImageToClipboard,
+    downloadResolvedMemoImage,
     openTemplateModal,
     applyTemplate,
-    openSaveTemplateModal,
+    confirmApplyTemplate,
+    cancelApplyTemplate,
     saveCurrentAsTemplate,
     requestDeleteTemplate,
     clearPendingDeleteTemplate,

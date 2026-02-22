@@ -22,7 +22,7 @@ export function IosInstallGuideModal({ open, onClose }: IosInstallGuideModalProp
           <li className="step step-primary py-1">
             <div className="text-left text-sm leading-relaxed">
               <kbd className="kbd kbd-sm inline-flex items-center gap-1">
-                <Icon icon="bi:share" className="size-3" />
+                <Icon icon="lucide:share" className="size-3" />
                 <span>共有アイコン</span>
               </kbd>
               <span className="ml-2">(共有)をクリック</span>

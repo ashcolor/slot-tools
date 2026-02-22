@@ -1,15 +1,41 @@
 import { Icon } from "@iconify/react";
+import { useRef } from "react";
+import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
+  onCopyRawMemo: () => Promise<void>;
+  onCopyResolvedMemo: () => Promise<void>;
+  onCopyTemplateMemo: () => Promise<void>;
+  onCopyResolvedMemoImage: () => Promise<void>;
+  onDownloadResolvedMemoImage: () => Promise<void>;
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
   onOpenClear: () => void;
 }
 
-export function Toolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolbarProps) {
+export function Toolbar({
+  onCopyRawMemo,
+  onCopyResolvedMemo,
+  onCopyTemplateMemo,
+  onCopyResolvedMemoImage,
+  onDownloadResolvedMemoImage,
+  onOpenTemplate,
+  onOpenConfig,
+  onOpenClear,
+}: MemoToolbarProps) {
+  const shareDialogRef = useRef<HTMLDialogElement>(null);
+
   return (
     <div className="flex items-center justify-end">
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm btn-square"
+          onClick={() => shareDialogRef.current?.showModal()}
+          aria-label="共有"
+        >
+          <Icon icon="lucide:share" className="size-4" />
+        </button>
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
@@ -35,6 +61,15 @@ export function Toolbar({ onOpenTemplate, onOpenConfig, onOpenClear }: MemoToolb
           <Icon icon="fa6-regular:trash-can" className="size-4" />
         </button>
       </div>
+
+      <ShareDialog
+        dialogRef={shareDialogRef}
+        onCopyRawMemo={onCopyRawMemo}
+        onCopyResolvedMemo={onCopyResolvedMemo}
+        onCopyTemplateMemo={onCopyTemplateMemo}
+        onCopyResolvedMemoImage={onCopyResolvedMemoImage}
+        onDownloadResolvedMemoImage={onDownloadResolvedMemoImage}
+      />
     </div>
   );
 }
