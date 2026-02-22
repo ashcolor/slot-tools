@@ -202,7 +202,7 @@ export function Editor({
               <div className="pointer-events-none absolute inset-0">
                 <button
                   type="button"
-                  className="btn btn-primary btn-sm btn-circle shadow-lg pointer-events-auto absolute right-3 bottom-3"
+                  className="btn btn-primary btn-lg btn-circle shadow-lg pointer-events-auto absolute right-3 bottom-3"
                   onClick={onSaveEditor}
                   aria-label="save"
                 >
