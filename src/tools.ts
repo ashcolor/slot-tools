@@ -8,7 +8,7 @@ export interface Tool {
 
 export const tools: Tool[] = [
   // {
-  //   path: "/slot-memo",
+  //   path: "/memo",
   //   title: "実戦メモ",
   //   description:
   //     "ホール・機種・収支・示唆を1画面で記録。タグ管理と検索で振り返りしやすいメモアプリです。",

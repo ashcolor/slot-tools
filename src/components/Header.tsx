@@ -26,7 +26,7 @@ export function Header() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
-  const sidebarTools = tools.filter((t) => t.path !== "/slot-memo");
+  const sidebarTools = tools.filter((t) => t.path !== "/memo");
   const brandText = "スロツール";
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
   const isInstallActionAvailable = canInstall || isIos;
