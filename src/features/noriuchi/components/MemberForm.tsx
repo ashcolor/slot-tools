@@ -242,17 +242,19 @@ export function MemberForm({
                   <div className="flex gap-1 mt-1">
                     <button
                       type="button"
-                      className="btn btn-xs flex-1 min-w-0"
+                      className="btn btn-xs flex-1 min-w-0 h-auto py-1"
                       onClick={() => update("storedMedals", member.investMedals)}
                     >
-                      投資枚数分
+                      再プレイ補填
+                      <br />（{member.investMedals.toLocaleString()}枚）
                     </button>
                     <button
                       type="button"
-                      className="btn btn-xs flex-1 min-w-0"
+                      className="btn btn-xs flex-1 min-w-0 h-auto py-1"
                       onClick={() => update("storedMedals", member.collectMedals)}
                     >
                       全て
+                      <br />（{member.collectMedals.toLocaleString()}枚）
                     </button>
                   </div>
                   {member.storedMedals > member.collectMedals && (
