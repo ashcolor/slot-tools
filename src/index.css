@@ -5,6 +5,10 @@
     dark --prefersdark;
 }
 
+body {
+  font-family: "Roboto", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+}
+
 @theme {
   --color-invest: #7f1d1d;
   --color-collect: #1e3a5f;

@@ -1,39 +1,41 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
 import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
+import { IosInstallGuideModal } from "./IosInstallGuideModal";
 
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
 }
 
-function isIosSafariBrowser() {
+function isIosBrowser() {
   const ua = navigator.userAgent;
-  const isIos = /iPhone|iPad|iPod/i.test(ua);
-  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  const isIosDevice = /iPhone|iPad|iPod/i.test(ua);
+  const isIpadOsDesktopMode = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
 
-  return isIos && isSafari;
+  return isIosDevice || isIpadOsDesktopMode;
 }
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
   const [isMobile, setIsMobile] = useState(() => isMobileDevice());
-  const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
+  const [isIos, setIsIos] = useState(() => isIosBrowser());
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
-  const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
+  const sidebarTools = tools.filter((t) => t.path !== "/slot-memo");
+  const brandText = "スロツール";
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
-  const isInstallActionAvailable = canInstall || isIosSafari;
+  const isInstallActionAvailable = canInstall || isIos;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const updateDeviceState = () => {
       setIsMobile(isMobileDevice());
-      setIsIosSafari(isIosSafariBrowser());
+      setIsIos(isIosBrowser());
     };
 
     updateDeviceState();
@@ -44,15 +46,10 @@ export function Header() {
     };
   }, []);
 
-  const go = (path: string) => {
-    setOpen(false);
-    navigate(path);
-  };
-
   const installApp = async () => {
     if (!canInstall) {
-      if (isIosSafari) {
-        setShowIosInstallHelp((current) => !current);
+      if (isIos) {
+        setShowIosInstallHelp(true);
       }
       return;
     }
@@ -73,18 +70,15 @@ export function Header() {
     <>
       <header className="navbar bg-base-100 shadow-sm">
         <div className="flex-none">
-          <button
-            type="button"
-            className="btn btn-square btn-ghost"
-            onClick={() => setOpen(!open)}
-            aria-label="メニュー"
-          >
+          <button type="button" className="btn btn-square btn-ghost" onClick={() => setOpen(!open)} aria-label="メニュー">
             <Icon icon="fa6-solid:bars" className="size-4" />
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="text-lg font-extrabold">
-            スロツール+{currentTool ? ` ${currentTool.title}` : ""}
+          <Link to="/" className="text-lg font-bold inline-flex items-center">
+            <span>{brandText}</span>
+            <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
+            {currentTool ? <span>{currentTool.title}</span> : null}
           </Link>
         </div>
         <div className="flex-none flex items-center gap-1">
@@ -107,28 +101,41 @@ export function Header() {
       >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-extrabold">スロツール+</span>
+          <span className="text-lg font-bold inline-flex items-center">
+            <span>{brandText}</span>
+            <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
+          </span>
           <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
             {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
           </button>
         </div>
+
         <div>
-          <ul className="menu w-full">
+          <ul className="menu bg-base-100 w-full">
             <li>
-              <button type="button" onClick={() => go("/")} className="font-semibold">
-                TOP
-              </button>
+              <Link to="/" onClick={() => setOpen(false)} className={location.pathname === "/" ? "bg-base-200" : undefined}>
+                HOME
+              </Link>
             </li>
-            {tools.map((t) => (
+            {sidebarTools.map((t) => (
               <li key={t.path}>
-                <button type="button" onClick={() => go(t.path)} className="font-semibold">
-                  <span>{t.emoji}</span>
+                <Link
+                  to={t.path}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-4 ${location.pathname === t.path ? "bg-base-200" : ""}`}
+                >
+                  {t.sidebarIcon ? (
+                    <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
+                  ) : (
+                    <span>{t.emoji}</span>
+                  )}
                   <span>{t.title}</span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
         </div>
+
         <div className="mt-auto">
           {!isInstalled && (
             <div className="p-4">
@@ -141,27 +148,28 @@ export function Header() {
                 <Icon icon="fa6-solid:download" className="size-4" />
                 <span>{installLabel}</span>
               </button>
-              {isIosSafari && !canInstall && showIosInstallHelp && (
-                <p className="mt-2 text-xs leading-relaxed opacity-80">
-                  Safari下部の共有ボタンから「ホーム画面に追加」を選んで追加してください。
-                </p>
-              )}
             </div>
           )}
+
           <div className="border-t border-base-300" />
-          <div className="p-4 flex items-center justify-center">
-            <a
-              href="https://x.com/ashcolor06"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-sm btn-ghost btn-square"
-              title="X (Twitter)"
-            >
-              <Icon icon="fa6-brands:x-twitter" className="size-4" />
-            </a>
+          <div className="p-4 text-xs">
+            <div className="flex flex-col gap-1">
+              <Link to="/operator" onClick={() => setOpen(false)} className="link link-hover">
+                運営者情報
+              </Link>
+              <Link to="/contact" onClick={() => setOpen(false)} className="link link-hover">
+                お問い合わせ
+              </Link>
+              <Link to="/privacy" onClick={() => setOpen(false)} className="link link-hover">
+                プライバシーポリシー
+              </Link>
+            </div>
+            <div className="mt-3 opacity-60">© {new Date().getFullYear()} スロツール+</div>
           </div>
         </div>
       </div>
+
+      <IosInstallGuideModal open={showIosInstallHelp} onClose={() => setShowIosInstallHelp(false)} />
     </>
   );
 }

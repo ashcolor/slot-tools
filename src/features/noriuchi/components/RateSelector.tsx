@@ -1,4 +1,4 @@
-import type { RateOption } from "../../types";
+import type { RateOption } from "../../../types";
 
 interface Props {
   rate: number;
