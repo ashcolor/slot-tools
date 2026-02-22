@@ -75,13 +75,13 @@ export function Header() {
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="text-lg font-bold inline-flex items-center">
+          <Link to="/" className="inline-flex items-center text-lg font-bold">
             <span>{brandText}</span>
             <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
             {currentTool ? <span>{currentTool.title}</span> : null}
           </Link>
         </div>
-        <div className="flex-none flex items-center gap-1">
+        <div className="flex flex-none items-center gap-1">
           <a
             href="https://www.buymeacoffee.com/ashcolor"
             target="_blank"
@@ -94,14 +94,14 @@ export function Header() {
         </div>
       </header>
 
-      {open && <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />}
+      {open && <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setOpen(false)} />}
 
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`bg-base-100 fixed top-0 left-0 z-50 flex h-full w-64 flex-col shadow-xl transition-transform duration-200 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        <div className="border-base-300 flex items-center gap-2 border-b px-4 py-3">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-bold inline-flex items-center">
+          <span className="inline-flex items-center text-lg font-bold">
             <span>{brandText}</span>
             <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
           </span>
@@ -151,7 +151,7 @@ export function Header() {
             </div>
           )}
 
-          <div className="border-t border-base-300" />
+          <div className="border-base-300 border-t" />
           <div className="p-4 text-xs">
             <div className="flex flex-col gap-1">
               <Link to="/operator" onClick={() => setOpen(false)} className="link link-hover">

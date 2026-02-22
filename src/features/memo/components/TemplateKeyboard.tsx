@@ -76,13 +76,13 @@ export function TemplateKeyboard({
       style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)` }}
     >
       <div className="mx-auto max-w-4xl">
-        <div className="border border-base-300 bg-base-100/95 backdrop-blur rounded-xl shadow-lg p-2">
+        <div className="border-base-300 bg-base-100/95 rounded-xl border p-2 shadow-lg backdrop-blur">
           <div className="flex items-center gap-1 overflow-x-auto">
             {TEMPLATE_CATEGORIES.map((category) => (
               <button
                 key={category.key}
                 type="button"
-                className={`btn btn-sm px-1 shrink-0 ${selectedCategory.key === category.key ? "btn-neutral" : "btn-ghost"}`}
+                className={`btn btn-sm shrink-0 px-1 ${selectedCategory.key === category.key ? "btn-neutral" : "btn-ghost"}`}
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => onSelectCategoryKey(category.key)}
               >
@@ -90,12 +90,12 @@ export function TemplateKeyboard({
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 overflow-x-auto mt-2">
+          <div className="mt-2 flex items-center gap-1 overflow-x-auto">
             {selectedCategory.items.map((item) => (
               <button
                 key={item}
                 type="button"
-                className="btn btn-sm btn-ghost px-1.5 shrink-0"
+                className="btn btn-sm btn-ghost shrink-0 px-1.5"
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => onInsertCategoryItem(item)}
               >

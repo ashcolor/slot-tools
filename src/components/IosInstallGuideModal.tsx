@@ -13,10 +13,10 @@ export function IosInstallGuideModal({ open, onClose }: IosInstallGuideModalProp
   return (
     <div className="modal modal-open">
       <div className="modal-box">
-        <h3 className="font-bold text-lg">ホーム画面に追加</h3>
+        <h3 className="text-lg font-bold">ホーム画面に追加</h3>
         <p className="mt-2 text-sm leading-relaxed opacity-80">iOS/iPadOS は次の手順で追加できます。</p>
 
-        <ul className="steps steps-vertical w-full mt-3">
+        <ul className="steps steps-vertical mt-3 w-full">
           <li className="step step-primary py-1">
             <div className="text-left text-sm leading-relaxed">
               <kbd className="kbd kbd-sm inline-flex items-center gap-1">

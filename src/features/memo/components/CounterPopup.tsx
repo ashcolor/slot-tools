@@ -23,8 +23,8 @@ export function CounterPopup({
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="fixed z-50 -translate-x-1/2" style={{ left: `${anchorX}px`, top: `${anchorY}px` }}>
-        <div className="card bg-base-100 border border-base-300 shadow-lg" onClick={(event) => event.stopPropagation()}>
-          <div className="card-body p-3 min-w-52 gap-2">
+        <div className="card bg-base-100 border-base-300 border shadow-lg" onClick={(event) => event.stopPropagation()}>
+          <div className="card-body min-w-52 gap-2 p-3">
             <div className="text-xs font-semibold opacity-70">4桁カウンター</div>
             <div className="grid grid-cols-4 gap-1">
               {COUNTER_DIGIT_STEPS.map((digitStep, index) => {
@@ -39,7 +39,7 @@ export function CounterPopup({
                     >
                       <Icon icon="mdi:plus-circle-outline" className="size-4" />
                     </button>
-                    <div className="join-item w-10 h-10 border border-base-300 flex items-center justify-center font-mono text-lg">
+                    <div className="join-item border-base-300 flex h-10 w-10 items-center justify-center border font-mono text-lg">
                       {digit}
                     </div>
                     <button

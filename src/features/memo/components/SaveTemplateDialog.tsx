@@ -12,7 +12,7 @@ export function SaveTemplateDialog({
   return (
     <dialog ref={saveTemplateModalRef} className="modal">
       <div className="modal-box">
-        <h3 className="font-bold text-lg mb-2">テンプレート保存</h3>
+        <h3 className="mb-2 text-lg font-bold">テンプレート保存</h3>
         <p className="text-sm opacity-70">カウンタを0にして現在の画面を保存しますか？</p>
         <div className="modal-action">
           <form method="dialog" className="flex gap-2">

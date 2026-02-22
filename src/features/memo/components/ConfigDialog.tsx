@@ -15,7 +15,7 @@ export function ConfigDialog({
   return (
     <dialog ref={configModalRef} className="modal">
       <div className="modal-box">
-        <h3 className="font-bold text-lg mb-3">設定</h3>
+        <h3 className="mb-3 text-lg font-bold">設定</h3>
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex items-center justify-between gap-3">
             <span>文字サイズ</span>

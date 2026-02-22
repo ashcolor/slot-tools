@@ -19,7 +19,7 @@ export function InlineFormula({
   return (
     <button
       type="button"
-      className={`btn border-neutral z-1 ${inlineControlSize.formulaClass} ${inlineControlSize.valueWidthClass} align-middle mx-1 px-2 gap-1`}
+      className={`btn border-neutral z-1 ${inlineControlSize.formulaClass} ${inlineControlSize.valueWidthClass} mx-1 gap-1 px-2 align-middle`}
       title={part.expression}
       onPointerDown={(event) => event.preventDefault()}
       onClick={(event) => {

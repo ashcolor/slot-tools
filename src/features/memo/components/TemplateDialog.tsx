@@ -19,7 +19,7 @@ export function TemplateDialog({
   return (
     <dialog ref={templateModalRef} className="modal">
       <div className="modal-box max-w-xl">
-        <h3 className="font-bold text-lg mb-3">テンプレート</h3>
+        <h3 className="mb-3 text-lg font-bold">テンプレート</h3>
         <div className="flex flex-col gap-2">
           <button type="button" className="btn btn-sm btn-primary self-start" onClick={onOpenSaveTemplateModal}>
             今の画面をテンプレートに登録
@@ -29,10 +29,10 @@ export function TemplateDialog({
           ) : (
             <ul className="flex flex-col gap-2">
               {templateList.map((template) => (
-                <li key={template.id} className="border border-base-300 rounded-lg p-3">
+                <li key={template.id} className="border-base-300 rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold truncate">{getTemplateTitle(template.memo)}</p>
+                      <p className="truncate font-semibold">{getTemplateTitle(template.memo)}</p>
                       <p className="text-xs opacity-70">{formatTemplateDate(template.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2">

@@ -185,14 +185,14 @@ export function Editor({
       : undefined;
 
   return (
-    <div className="card flex-1 min-h-0" style={editingMarginStyle}>
-      <div className="card-body p-0 flex flex-col min-h-0">
-        <div className="form-control flex-1 min-h-0 relative">
+    <div className="card min-h-0 flex-1" style={editingMarginStyle}>
+      <div className="card-body flex min-h-0 flex-col p-0">
+        <div className="form-control relative min-h-0 flex-1">
           {isMemoFocused ? (
             <>
               <textarea
                 ref={memoRef}
-                className={`textarea textarea-bordered h-full w-full min-h-0 overscroll-y-contain pr-20 pb-16 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
+                className={`textarea textarea-bordered h-full min-h-0 w-full overscroll-y-contain pr-20 pb-16 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
                 placeholder={EMPTY_MEMO_PLACEHOLDER}
                 value={memo}
                 onFocus={onMemoFocus}
@@ -202,7 +202,7 @@ export function Editor({
               <div className="pointer-events-none absolute inset-0">
                 <button
                   type="button"
-                  className="btn btn-primary btn-lg btn-circle shadow-lg pointer-events-auto absolute right-3 bottom-3"
+                  className="btn btn-primary btn-lg btn-circle pointer-events-auto absolute right-3 bottom-3 shadow-lg"
                   onClick={onSaveEditor}
                   aria-label="save"
                 >
@@ -212,7 +212,7 @@ export function Editor({
             </>
           ) : (
             <div
-              className={`textarea textarea-bordered h-full w-full min-h-0 overflow-y-auto whitespace-pre-wrap cursor-text ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
+              className={`textarea textarea-bordered h-full min-h-0 w-full cursor-text overflow-y-auto whitespace-pre-wrap ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
               onClick={handlePreviewClick}
             >
               {memoParts.length === 0 ? (

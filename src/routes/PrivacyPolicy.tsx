@@ -5,7 +5,7 @@ export function PrivacyPolicy() {
         <div className="card-body p-4 sm:p-6">
           <h1 className="text-xl font-bold">プライバシーポリシー・免責事項</h1>
 
-          <section className="mt-6 text-sm leading-relaxed opacity-80 space-y-2">
+          <section className="mt-6 space-y-2 text-sm leading-relaxed opacity-80">
             <h2 className="text-base font-bold opacity-100">プライバシーポリシー</h2>
 
             <h3 className="font-bold opacity-100">個人情報の利用目的</h3>
@@ -15,7 +15,7 @@ export function PrivacyPolicy() {
             <p>本サイトでは、アクセス解析などの外部サービスを利用する場合があります。</p>
           </section>
 
-          <section className="mt-6 text-sm leading-relaxed opacity-80 space-y-2">
+          <section className="mt-6 space-y-2 text-sm leading-relaxed opacity-80">
             <h2 className="text-base font-bold opacity-100">免責事項</h2>
 
             <h3 className="font-bold opacity-100">内容の正確性について</h3>
