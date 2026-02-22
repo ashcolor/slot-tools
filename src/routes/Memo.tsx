@@ -17,9 +17,10 @@ interface MemoProps {
 export function Memo({ onEditingChange }: MemoProps) {
   const floatingGap = 8;
   const memo = useMemoEditor();
-  const [saveButtonBottom, setSaveButtonBottom] = useState(0);
   const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
-  const editingTopMargin = memo.isMemoFocused ? saveButtonBottom + floatingGap : 0;
+  const rootStyle =
+    memo.isMemoFocused && memo.keyboardInset > 0 ? { height: `calc(100svh - ${memo.keyboardInset}px)` } : undefined;
+  const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
   const editingBottomMargin = memo.isMemoFocused ? templateKeyboardOccupiedHeight + floatingGap : 0;
   const handleTemplateKeyboardOccupiedHeightChange = useCallback((occupiedHeight: number) => {
     setTemplateKeyboardOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
@@ -37,55 +38,36 @@ export function Memo({ onEditingChange }: MemoProps) {
   }, [onEditingChange]);
 
   useEffect(() => {
-    if (!memo.isMemoFocused || typeof window === "undefined") return;
+    if (!memo.isMemoFocused || typeof document === "undefined") return;
 
-    const saveButtonElement = document.getElementById("memo-save-floating");
-    if (!saveButtonElement) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
+    const prevBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
 
-    const updateBottom = () => {
-      const rect = saveButtonElement.getBoundingClientRect();
-      const next = Math.ceil(rect.bottom);
-      setSaveButtonBottom((current) => (current === next ? current : next));
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overscrollBehaviorY = "none";
+    body.style.overscrollBehaviorY = "none";
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehaviorY = prevHtmlOverscrollBehaviorY;
+      body.style.overscrollBehaviorY = prevBodyOverscrollBehaviorY;
     };
-
-    updateBottom();
-
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(updateBottom);
-      observer.observe(saveButtonElement);
-      window.addEventListener("resize", updateBottom);
-      return () => {
-        observer.disconnect();
-        window.removeEventListener("resize", updateBottom);
-      };
-    }
-
-    window.addEventListener("resize", updateBottom);
-    return () => window.removeEventListener("resize", updateBottom);
   }, [memo.isMemoFocused]);
 
   return (
-    <div className={rootClassName}>
+    <div className={rootClassName} style={rootStyle}>
       {!memo.isMemoFocused ? (
         <Toolbar
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}
           onOpenClear={() => memo.clearModalRef.current?.showModal()}
         />
-      ) : null}
-
-      {memo.isMemoFocused ? (
-        <div
-          id="memo-save-floating"
-          className="fixed inset-x-0 z-50 px-2"
-          style={{ top: `calc(env(safe-area-inset-top, 0px) + ${floatingGap}px)` }}
-        >
-          <div className="mx-auto max-w-4xl flex justify-center">
-            <button type="button" className="btn btn-primary btn-sm" onClick={memo.saveMemoEditor}>
-              保存
-            </button>
-          </div>
-        </div>
       ) : null}
 
       <Editor
@@ -102,6 +84,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoBlur={memo.handleMemoBlur}
         onMemoChange={memo.setMemo}
         onFocusEditor={memo.focusMemoEditor}
+        onSaveEditor={memo.saveMemoEditor}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
       />

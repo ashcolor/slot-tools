@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import { useMemo } from "react";
 import type { ChangeEvent, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
@@ -19,6 +20,7 @@ interface MemoEditorProps {
   onMemoBlur: () => void;
   onMemoChange: (memo: string) => void;
   onFocusEditor: (cursorPosition?: number) => void;
+  onSaveEditor: () => void;
   onStepInlineCounter: (targetIndex: number, delta: number) => void;
   onOpenCounterPopup: (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -160,6 +162,7 @@ export function Editor({
   onMemoBlur,
   onMemoChange,
   onFocusEditor,
+  onSaveEditor,
   onStepInlineCounter,
   onOpenCounterPopup,
 }: MemoEditorProps) {
@@ -184,17 +187,29 @@ export function Editor({
   return (
     <div className="card flex-1 min-h-0" style={editingMarginStyle}>
       <div className="card-body p-0 flex flex-col min-h-0">
-        <div className="form-control flex-1 min-h-0">
+        <div className="form-control flex-1 min-h-0 relative">
           {isMemoFocused ? (
-            <textarea
-              ref={memoRef}
-              className={`textarea textarea-bordered h-full w-full min-h-0 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
-              placeholder={EMPTY_MEMO_PLACEHOLDER}
-              value={memo}
-              onFocus={onMemoFocus}
-              onBlur={onMemoBlur}
-              onChange={handleMemoChange}
-            />
+            <>
+              <textarea
+                ref={memoRef}
+                className={`textarea textarea-bordered h-full w-full min-h-0 overscroll-y-contain pr-20 pb-16 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
+                placeholder={EMPTY_MEMO_PLACEHOLDER}
+                value={memo}
+                onFocus={onMemoFocus}
+                onBlur={onMemoBlur}
+                onChange={handleMemoChange}
+              />
+              <div className="pointer-events-none absolute inset-0">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm btn-circle shadow-lg pointer-events-auto absolute right-3 bottom-3"
+                  onClick={onSaveEditor}
+                  aria-label="save"
+                >
+                  <Icon icon="fa6-solid:check" className="size-4" aria-hidden />
+                </button>
+              </div>
+            </>
           ) : (
             <div
               className={`textarea textarea-bordered h-full w-full min-h-0 overflow-y-auto whitespace-pre-wrap cursor-text ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
