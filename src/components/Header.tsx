@@ -3,37 +3,38 @@ import { Link, useNavigate, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
 import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
+import { IosInstallGuideModal } from "./IosInstallGuideModal";
 
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
 }
 
-function isIosSafariBrowser() {
+function isIosBrowser() {
   const ua = navigator.userAgent;
-  const isIos = /iPhone|iPad|iPod/i.test(ua);
-  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  const isIosDevice = /iPhone|iPad|iPod/i.test(ua);
+  const isIpadOsDesktopMode = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
 
-  return isIos && isSafari;
+  return isIosDevice || isIpadOsDesktopMode;
 }
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
   const [isMobile, setIsMobile] = useState(() => isMobileDevice());
-  const [isIosSafari, setIsIosSafari] = useState(() => isIosSafariBrowser());
+  const [isIos, setIsIos] = useState(() => isIosBrowser());
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const navigate = useNavigate();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
-  const isInstallActionAvailable = canInstall || isIosSafari;
+  const isInstallActionAvailable = canInstall || isIos;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const updateDeviceState = () => {
       setIsMobile(isMobileDevice());
-      setIsIosSafari(isIosSafariBrowser());
+      setIsIos(isIosBrowser());
     };
 
     updateDeviceState();
@@ -51,8 +52,8 @@ export function Header() {
 
   const installApp = async () => {
     if (!canInstall) {
-      if (isIosSafari) {
-        setShowIosInstallHelp((current) => !current);
+      if (isIos) {
+        setShowIosInstallHelp(true);
       }
       return;
     }
@@ -141,11 +142,6 @@ export function Header() {
                 <Icon icon="fa6-solid:download" className="size-4" />
                 <span>{installLabel}</span>
               </button>
-              {isIosSafari && !canInstall && showIosInstallHelp && (
-                <p className="mt-2 text-xs leading-relaxed opacity-80">
-                  Safari下部の共有ボタンから「ホーム画面に追加」を選んで追加してください。
-                </p>
-              )}
             </div>
           )}
           <div className="border-t border-base-300" />
@@ -162,6 +158,8 @@ export function Header() {
           </div>
         </div>
       </div>
+
+      <IosInstallGuideModal open={showIosInstallHelp} onClose={() => setShowIosInstallHelp(false)} />
     </>
   );
 }
