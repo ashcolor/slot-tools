@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { tools } from "../tools";
@@ -27,6 +27,7 @@ export function Header() {
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
   const sidebarTools = tools.filter((t) => t.path !== "/slot-memo");
+  const brandText = "スロツール";
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
   const isInstallActionAvailable = canInstall || isIos;
 
@@ -74,8 +75,10 @@ export function Header() {
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="text-lg font-bold">
-            スロツール+{currentTool ? ` ${currentTool.title}` : ""}
+          <Link to="/" className="text-lg font-bold inline-flex items-center">
+            <span>{brandText}</span>
+            <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
+            {currentTool ? <span>{currentTool.title}</span> : null}
           </Link>
         </div>
         <div className="flex-none flex items-center gap-1">
@@ -98,7 +101,10 @@ export function Header() {
       >
         <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-bold">スロツール+</span>
+          <span className="text-lg font-bold inline-flex items-center">
+            <span>{brandText}</span>
+            <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
+          </span>
           <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
             {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
           </button>
