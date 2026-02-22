@@ -5,21 +5,21 @@ import type { TemplateCategory } from "../constants";
 interface TemplateKeyboardProps {
   visible: boolean;
   keyboardInset: number;
+  floatingGap: number;
   selectedCategoryKey: TemplateCategory["key"] | null;
   onSelectCategoryKey: (key: TemplateCategory["key"] | null) => void;
   onInsertCategoryItem: (item: string) => void;
-  onSave: () => void;
-  onHeightChange?: (height: number) => void;
+  onOccupiedHeightChange?: (occupiedHeight: number) => void;
 }
 
 export function TemplateKeyboard({
   visible,
   keyboardInset,
+  floatingGap,
   selectedCategoryKey,
   onSelectCategoryKey,
   onInsertCategoryItem,
-  onSave,
-  onHeightChange,
+  onOccupiedHeightChange,
 }: TemplateKeyboardProps) {
   const keyboardRef = useRef<HTMLDivElement>(null);
   const selectedCategory = useMemo(() => {
@@ -28,35 +28,43 @@ export function TemplateKeyboard({
   }, [selectedCategoryKey]);
 
   useEffect(() => {
-    if (!onHeightChange) return;
+    if (!onOccupiedHeightChange) return;
     if (!visible) {
-      onHeightChange(0);
+      onOccupiedHeightChange(0);
       return;
     }
 
     const keyboardElement = keyboardRef.current;
     if (!keyboardElement) {
-      onHeightChange(0);
+      onOccupiedHeightChange(0);
       return;
     }
 
-    const updateHeight = () => {
-      onHeightChange(Math.ceil(keyboardElement.getBoundingClientRect().height));
+    const updateLayout = () => {
+      const rect = keyboardElement.getBoundingClientRect();
+      const viewportBottom = window.visualViewport
+        ? window.visualViewport.height + window.visualViewport.offsetTop
+        : window.innerHeight;
+      onOccupiedHeightChange(Math.max(0, Math.ceil(viewportBottom - rect.top)));
     };
 
-    updateHeight();
+    updateLayout();
 
     if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(updateHeight);
+      const observer = new ResizeObserver(updateLayout);
       observer.observe(keyboardElement);
-      return () => observer.disconnect();
+      window.addEventListener("resize", updateLayout);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener("resize", updateLayout);
+      };
     }
 
     if (typeof window !== "undefined") {
-      window.addEventListener("resize", updateHeight);
-      return () => window.removeEventListener("resize", updateHeight);
+      window.addEventListener("resize", updateLayout);
+      return () => window.removeEventListener("resize", updateLayout);
     }
-  }, [onHeightChange, visible]);
+  }, [onOccupiedHeightChange, visible]);
 
   if (!visible) return null;
 
@@ -64,14 +72,9 @@ export function TemplateKeyboard({
     <div
       ref={keyboardRef}
       className="fixed inset-x-0 z-50 px-2 pb-2"
-      style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px))` }}
+      style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)` }}
     >
       <div className="mx-auto max-w-4xl">
-        <div className="mb-2 px-2 flex justify-center">
-          <button type="button" className="btn btn-primary btn-sm" onClick={onSave}>
-            保存
-          </button>
-        </div>
         <div className="border border-base-300 bg-base-100/95 backdrop-blur rounded-xl shadow-lg p-2">
           <div className="flex items-center gap-1 overflow-x-auto">
             {TEMPLATE_CATEGORIES.map((category) => (

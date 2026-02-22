@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CounterPopup } from "../features/memo/components/CounterPopup";
 import { ClearDialog } from "../features/memo/components/ClearDialog";
 import { ConfigDialog } from "../features/memo/components/ConfigDialog";
@@ -10,26 +10,90 @@ import { Toolbar } from "../features/memo/components/Toolbar";
 import { TemplateKeyboard } from "../features/memo/components/TemplateKeyboard";
 import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
 
-export function Memo() {
+interface MemoProps {
+  onEditingChange?: (isEditing: boolean) => void;
+}
+
+export function Memo({ onEditingChange }: MemoProps) {
+  const floatingGap = 8;
   const memo = useMemoEditor();
-  const [templateKeyboardHeight, setTemplateKeyboardHeight] = useState(0);
-  const handleTemplateKeyboardHeightChange = useCallback((height: number) => {
-    setTemplateKeyboardHeight((current) => (current === height ? current : height));
+  const [saveButtonBottom, setSaveButtonBottom] = useState(0);
+  const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
+  const editingTopMargin = memo.isMemoFocused ? saveButtonBottom + floatingGap : 0;
+  const editingBottomMargin = memo.isMemoFocused ? templateKeyboardOccupiedHeight + floatingGap : 0;
+  const handleTemplateKeyboardOccupiedHeightChange = useCallback((occupiedHeight: number) => {
+    setTemplateKeyboardOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
   }, []);
+  const rootClassName = memo.isMemoFocused
+    ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"
+    : "relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden";
+
+  useEffect(() => {
+    onEditingChange?.(memo.isMemoFocused);
+  }, [memo.isMemoFocused, onEditingChange]);
+
+  useEffect(() => {
+    return () => onEditingChange?.(false);
+  }, [onEditingChange]);
+
+  useEffect(() => {
+    if (!memo.isMemoFocused || typeof window === "undefined") return;
+
+    const saveButtonElement = document.getElementById("memo-save-floating");
+    if (!saveButtonElement) return;
+
+    const updateBottom = () => {
+      const rect = saveButtonElement.getBoundingClientRect();
+      const next = Math.ceil(rect.bottom);
+      setSaveButtonBottom((current) => (current === next ? current : next));
+    };
+
+    updateBottom();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(updateBottom);
+      observer.observe(saveButtonElement);
+      window.addEventListener("resize", updateBottom);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener("resize", updateBottom);
+      };
+    }
+
+    window.addEventListener("resize", updateBottom);
+    return () => window.removeEventListener("resize", updateBottom);
+  }, [memo.isMemoFocused]);
 
   return (
-    <div className="relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden">
-      <Toolbar
-        onOpenTemplate={memo.openTemplateModal}
-        onOpenConfig={() => memo.configModalRef.current?.showModal()}
-        onOpenClear={() => memo.clearModalRef.current?.showModal()}
-      />
+    <div className={rootClassName}>
+      {!memo.isMemoFocused ? (
+        <Toolbar
+          onOpenTemplate={memo.openTemplateModal}
+          onOpenConfig={() => memo.configModalRef.current?.showModal()}
+          onOpenClear={() => memo.clearModalRef.current?.showModal()}
+        />
+      ) : null}
+
+      {memo.isMemoFocused ? (
+        <div
+          id="memo-save-floating"
+          className="fixed inset-x-0 z-50 px-2"
+          style={{ top: `calc(env(safe-area-inset-top, 0px) + ${floatingGap}px)` }}
+        >
+          <div className="mx-auto max-w-4xl flex justify-center">
+            <button type="button" className="btn btn-primary btn-sm" onClick={memo.saveMemoEditor}>
+              保存
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <Editor
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
-        editingBottomMargin={memo.isMemoFocused ? templateKeyboardHeight : 0}
+        editingTopMargin={editingTopMargin}
+        editingBottomMargin={editingBottomMargin}
         memoParts={memo.memoParts}
         formulaResults={memo.formulaResults}
         memoFontSizeClass={memo.memoFontSizeClass}
@@ -84,11 +148,11 @@ export function Memo() {
       <TemplateKeyboard
         visible={memo.isMemoFocused}
         keyboardInset={memo.keyboardInset}
+        floatingGap={floatingGap}
         selectedCategoryKey={memo.selectedCategoryKey}
         onSelectCategoryKey={memo.setSelectedCategoryKey}
         onInsertCategoryItem={memo.insertTemplateItem}
-        onSave={memo.saveMemoEditor}
-        onHeightChange={handleTemplateKeyboardHeightChange}
+        onOccupiedHeightChange={handleTemplateKeyboardOccupiedHeightChange}
       />
     </div>
   );

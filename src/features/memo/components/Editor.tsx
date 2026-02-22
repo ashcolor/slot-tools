@@ -8,6 +8,7 @@ interface MemoEditorProps {
   memo: string;
   memoRef: RefObject<HTMLTextAreaElement | null>;
   isMemoFocused: boolean;
+  editingTopMargin: number;
   editingBottomMargin: number;
   memoParts: MemoPart[];
   formulaResults: Map<number, string>;
@@ -29,6 +30,7 @@ export function Editor({
   memo,
   memoRef,
   isMemoFocused,
+  editingTopMargin,
   editingBottomMargin,
   memoParts,
   formulaResults,
@@ -45,7 +47,12 @@ export function Editor({
     onMemoChange(event.target.value);
   };
   const editingMarginStyle =
-    isMemoFocused && editingBottomMargin > 0 ? { marginBottom: `${editingBottomMargin}px` } : undefined;
+    isMemoFocused && (editingTopMargin > 0 || editingBottomMargin > 0)
+      ? {
+          marginTop: `${editingTopMargin}px`,
+          marginBottom: `${editingBottomMargin}px`,
+        }
+      : undefined;
 
   return (
     <div className="card flex-1 min-h-0" style={editingMarginStyle}>
