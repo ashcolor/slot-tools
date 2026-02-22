@@ -57,6 +57,7 @@ function clampNumber(value: number, min: number, max: number): number {
 }
 
 const textareaScrollAnimationFrameMap = new WeakMap<HTMLTextAreaElement, number>();
+const TEMPLATE_KEYBOARD_ROOT_SELECTOR = "[data-template-keyboard-root='true']";
 
 function easeOutCubic(progress: number): number {
   const inverse = 1 - progress;
@@ -165,14 +166,56 @@ function getTextareaLineHeightPx(textarea: HTMLTextAreaElement): number {
   return 20;
 }
 
-function scrollCaretToTop(textarea: HTMLTextAreaElement, position: number): void {
+function getViewportBottomInDocument(textarea: HTMLTextAreaElement): number {
+  const ownerWindow = textarea.ownerDocument.defaultView;
+  if (!ownerWindow) return textarea.ownerDocument.documentElement.clientHeight;
+
+  const viewport = ownerWindow.visualViewport;
+  if (viewport) return viewport.height + viewport.offsetTop;
+  return ownerWindow.innerHeight;
+}
+
+function getKeyboardInsetInPixels(textarea: HTMLTextAreaElement): number {
+  const ownerWindow = textarea.ownerDocument.defaultView;
+  if (!ownerWindow) return 0;
+
+  const viewport = ownerWindow.visualViewport;
+  if (!viewport) return 0;
+
+  return Math.max(0, ownerWindow.innerHeight - viewport.height - viewport.offsetTop);
+}
+
+function getTemplateKeyboardTop(textarea: HTMLTextAreaElement, fallbackBottom: number): number {
+  const keyboardElement =
+    textarea.ownerDocument.querySelector<HTMLElement>(TEMPLATE_KEYBOARD_ROOT_SELECTOR);
+  if (!keyboardElement) return fallbackBottom;
+
+  const rect = keyboardElement.getBoundingClientRect();
+  return Number.isFinite(rect.top) ? rect.top : fallbackBottom;
+}
+
+function scrollCaretAboveTemplateKeyboard(textarea: HTMLTextAreaElement, position: number): void {
+  if (getKeyboardInsetInPixels(textarea) <= 0) return;
+
   const targetTop = measureCaretTopInTextarea(textarea, position);
   if (targetTop === null) return;
 
-  const maxScrollTop = Math.max(0, textarea.scrollHeight - textarea.clientHeight);
-  const lineHeightPx = getTextareaLineHeightPx(textarea);
-  const nextScrollTop = clampNumber(targetTop - lineHeightPx, 0, maxScrollTop);
   const ownerWindow = textarea.ownerDocument.defaultView;
+  if (!ownerWindow) return;
+
+  const style = ownerWindow.getComputedStyle(textarea);
+  const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+  const rect = textarea.getBoundingClientRect();
+  const lineHeightPx = getTextareaLineHeightPx(textarea);
+  const caretBottom =
+    rect.top + paddingTop + targetTop - textarea.scrollTop + lineHeightPx;
+  const viewportBottom = getViewportBottomInDocument(textarea);
+  const templateKeyboardTop = getTemplateKeyboardTop(textarea, viewportBottom);
+  if (caretBottom <= templateKeyboardTop) return;
+
+  const requiredDelta = caretBottom - templateKeyboardTop;
+  const maxScrollTop = Math.max(0, textarea.scrollHeight - textarea.clientHeight);
+  const nextScrollTop = clampNumber(textarea.scrollTop + requiredDelta, 0, maxScrollTop);
   const prefersReducedMotion =
     ownerWindow?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -373,6 +416,7 @@ export function useMemoEditor() {
   const clearModalRef = useRef<HTMLDialogElement>(null);
   const saveTemplateModalRef = useRef<HTMLDialogElement>(null);
   const deleteTemplateModalRef = useRef<HTMLDialogElement>(null);
+  const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
   const pendingDeleteTemplate = useMemo(
@@ -429,6 +473,21 @@ export function useMemoEditor() {
     };
   }, [isMemoFocused]);
 
+  useEffect(() => {
+    if (!isMemoFocused || keyboardInset <= 0) return;
+
+    const pendingPosition = pendingKeyboardAvoidCaretPositionRef.current;
+    if (typeof pendingPosition !== "number") return;
+
+    const field = memoRef.current;
+    if (!field) return;
+
+    requestAnimationFrame(() => {
+      scrollCaretAboveTemplateKeyboard(field, pendingPosition);
+      pendingKeyboardAvoidCaretPositionRef.current = null;
+    });
+  }, [isMemoFocused, keyboardInset]);
+
   const setMemo = (memo: string) => {
     setDraft((prev) => ({ ...prev, memo }));
   };
@@ -445,12 +504,14 @@ export function useMemoEditor() {
     setCounterPopup(null);
     setSelectedCategoryKey(null);
     setIsMemoFocused(false);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
   const handleMemoBlur = () => {
     setIsMemoFocused(false);
     setKeyboardInset(0);
     setSelectedCategoryKey(null);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
   const insertTextAtCursor = (text: string) => {
@@ -522,13 +583,13 @@ export function useMemoEditor() {
       if (!field) return;
 
       field.focus();
-      if (typeof cursorPosition !== "number") return;
-
-      const boundedPosition = Math.min(field.value.length, Math.max(0, Math.floor(cursorPosition)));
-      field.setSelectionRange(boundedPosition, boundedPosition);
-      requestAnimationFrame(() => {
-        scrollCaretToTop(field, boundedPosition);
-      });
+      let nextPosition = field.selectionStart ?? field.value.length;
+      if (typeof cursorPosition === "number") {
+        const boundedPosition = Math.min(field.value.length, Math.max(0, Math.floor(cursorPosition)));
+        field.setSelectionRange(boundedPosition, boundedPosition);
+        nextPosition = boundedPosition;
+      }
+      pendingKeyboardAvoidCaretPositionRef.current = nextPosition;
     });
   };
 
@@ -538,6 +599,7 @@ export function useMemoEditor() {
     setKeyboardInset(0);
     setSelectedCategoryKey(null);
     setCounterPopup(null);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
   const updateInlineCounter = (targetIndex: number, updater: (current: number) => number) => {
