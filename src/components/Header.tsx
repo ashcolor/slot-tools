@@ -26,6 +26,7 @@ export function Header() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
+  const sidebarTools = tools.filter((t) => t.path !== "/slot-memo");
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
   const isInstallActionAvailable = canInstall || isIos;
 
@@ -68,12 +69,7 @@ export function Header() {
     <>
       <header className="navbar bg-base-100 shadow-sm">
         <div className="flex-none">
-          <button
-            type="button"
-            className="btn btn-square btn-ghost"
-            onClick={() => setOpen(!open)}
-            aria-label="メニュー"
-          >
+          <button type="button" className="btn btn-square btn-ghost" onClick={() => setOpen(!open)} aria-label="メニュー">
             <Icon icon="fa6-solid:bars" className="size-4" />
           </button>
         </div>
@@ -107,25 +103,21 @@ export function Header() {
             {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
           </button>
         </div>
+
         <div>
           <ul className="menu bg-base-100 w-full">
             <li>
-              <Link
-                to="/"
-                onClick={() => setOpen(false)}
-                className={location.pathname === "/" ? "bg-base-200" : undefined}
-              >
+              <Link to="/" onClick={() => setOpen(false)} className={location.pathname === "/" ? "bg-base-200" : undefined}>
                 HOME
               </Link>
             </li>
-            {tools.map((t) => (
+            {sidebarTools.map((t) => (
               <li key={t.path}>
                 <Link
                   to={t.path}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-4 ${
-                    location.pathname === t.path ? "bg-base-200" : ""
-                  }`}>
+                  className={`flex items-center gap-4 ${location.pathname === t.path ? "bg-base-200" : ""}`}
+                >
                   {t.sidebarIcon ? (
                     <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
                   ) : (
@@ -137,6 +129,7 @@ export function Header() {
             ))}
           </ul>
         </div>
+
         <div className="mt-auto">
           {!isInstalled && (
             <div className="p-4">
@@ -151,17 +144,21 @@ export function Header() {
               </button>
             </div>
           )}
+
           <div className="border-t border-base-300" />
-          <div className="p-4 flex items-center justify-center">
-            <a
-              href="https://x.com/ashcolor06"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-sm btn-ghost btn-square"
-              title="X (Twitter)"
-            >
-              <Icon icon="fa6-brands:x-twitter" className="size-4" />
-            </a>
+          <div className="p-4 text-xs">
+            <div className="flex flex-col gap-1">
+              <Link to="/operator" onClick={() => setOpen(false)} className="link link-hover">
+                運営者情報
+              </Link>
+              <Link to="/contact" onClick={() => setOpen(false)} className="link link-hover">
+                お問い合わせ
+              </Link>
+              <Link to="/privacy" onClick={() => setOpen(false)} className="link link-hover">
+                プライバシーポリシー
+              </Link>
+            </div>
+            <div className="mt-3 opacity-60">© {new Date().getFullYear()} スロツール+</div>
           </div>
         </div>
       </div>
