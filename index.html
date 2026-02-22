@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="スロツール+" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- OGP -->
@@ -29,8 +30,9 @@
     <meta name="twitter:image" content="https://pachi-slot.ashcolor.jp/ogp.jpg" />
   </head>
   <body>
-    <script>
-      document.documentElement.dataset.theme = localStorage.getItem("theme") || "corporate";
+    <script type="module">
+      import { initThemeColor } from "/src/utils/initThemeColor.ts";
+      initThemeColor();
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
