@@ -21,6 +21,7 @@ export function Memo({ onEditingChange }: MemoProps) {
   const saveEditorRef = useRef(memo.saveMemoEditor);
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
+  const [isTemplateKeyboardVisible, setIsTemplateKeyboardVisible] = useState(true);
   const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
   const rootStyle =
     memo.isMemoFocused && memo.keyboardInset > 0
@@ -130,6 +131,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
+        isTemplateKeyboardVisible={isTemplateKeyboardVisible}
         editingTopMargin={editingTopMargin}
         editingBottomMargin={editingBottomMargin}
         memoParts={memo.memoParts}
@@ -141,6 +143,9 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoChange={memo.setMemo}
         onFocusEditor={memo.focusMemoEditor}
         onSaveEditor={memo.saveMemoEditor}
+        onToggleTemplateKeyboard={() =>
+          setIsTemplateKeyboardVisible((current) => !current)
+        }
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
         onOpenFormulaPopup={memo.openFormulaPopup}
@@ -205,7 +210,7 @@ export function Memo({ onEditingChange }: MemoProps) {
       ) : null}
 
       <TemplateKeyboard
-        visible={memo.isMemoFocused}
+        visible={memo.isMemoFocused && isTemplateKeyboardVisible}
         keyboardInset={memo.keyboardInset}
         floatingGap={floatingGap}
         selectedCategoryKey={memo.selectedCategoryKey}

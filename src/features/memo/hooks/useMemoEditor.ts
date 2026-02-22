@@ -743,7 +743,6 @@ export function useMemoEditor() {
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
-    setSelectedCategoryKey(null);
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
   };
@@ -751,7 +750,6 @@ export function useMemoEditor() {
   const handleMemoBlur = () => {
     setIsMemoFocused(false);
     setKeyboardInset(0);
-    setSelectedCategoryKey(null);
     pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
@@ -842,7 +840,6 @@ export function useMemoEditor() {
     memoRef.current?.blur();
     setIsMemoFocused(false);
     setKeyboardInset(0);
-    setSelectedCategoryKey(null);
     setCounterPopup(null);
     setFormulaPopup(null);
     pendingKeyboardAvoidCaretPositionRef.current = null;

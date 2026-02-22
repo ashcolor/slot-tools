@@ -10,6 +10,7 @@ interface MemoEditorProps {
   memo: string;
   memoRef: RefObject<HTMLTextAreaElement | null>;
   isMemoFocused: boolean;
+  isTemplateKeyboardVisible: boolean;
   editingTopMargin: number;
   editingBottomMargin: number;
   memoParts: MemoPart[];
@@ -21,6 +22,7 @@ interface MemoEditorProps {
   onMemoChange: (memo: string) => void;
   onFocusEditor: (cursorPosition?: number) => void;
   onSaveEditor: () => void;
+  onToggleTemplateKeyboard: () => void;
   onStepInlineCounter: (targetIndex: number, delta: number) => void;
   onOpenCounterPopup: (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -160,6 +162,7 @@ export function Editor({
   memo,
   memoRef,
   isMemoFocused,
+  isTemplateKeyboardVisible,
   editingTopMargin,
   editingBottomMargin,
   memoParts,
@@ -171,6 +174,7 @@ export function Editor({
   onMemoChange,
   onFocusEditor,
   onSaveEditor,
+  onToggleTemplateKeyboard,
   onStepInlineCounter,
   onOpenCounterPopup,
   onOpenFormulaPopup,
@@ -209,14 +213,29 @@ export function Editor({
                 onChange={handleMemoChange}
               />
               <div className="pointer-events-none absolute inset-0">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-lg btn-circle pointer-events-auto absolute right-3 bottom-3 shadow-lg"
-                  onClick={onSaveEditor}
-                  aria-label="save"
-                >
-                  <Icon icon="fa6-solid:check" className="size-4" aria-hidden />
-                </button>
+                <div className="pointer-events-auto absolute right-3 bottom-3 flex flex-col items-end gap-2">
+                  <button
+                    type="button"
+                    className={`btn btn-circle btn-lg shadow-lg ${isTemplateKeyboardVisible ? "btn-info" : "btn-ghost bg-base-100"}`}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={onToggleTemplateKeyboard}
+                    aria-label={
+                      isTemplateKeyboardVisible
+                        ? "テンプレートキーボードをオフ"
+                        : "テンプレートキーボードをオン"
+                    }
+                  >
+                    <Icon icon="mdi:text-box-multiple-outline" className="size-4" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg btn-circle shadow-lg"
+                    onClick={onSaveEditor}
+                    aria-label="save"
+                  >
+                    <Icon icon="fa6-solid:check" className="size-4" aria-hidden />
+                  </button>
+                </div>
               </div>
             </>
           ) : (
