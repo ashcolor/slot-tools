@@ -52,6 +52,138 @@ function clampCounterValue(value: number): number {
   return Math.min(MAX_COUNTER_VALUE, Math.max(0, Math.floor(value)));
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+const textareaScrollAnimationFrameMap = new WeakMap<HTMLTextAreaElement, number>();
+
+function easeOutCubic(progress: number): number {
+  const inverse = 1 - progress;
+  return 1 - inverse * inverse * inverse;
+}
+
+function animateTextareaScrollTop(
+  textarea: HTMLTextAreaElement,
+  targetScrollTop: number,
+  durationMs: number,
+): void {
+  const ownerWindow = textarea.ownerDocument.defaultView;
+  if (!ownerWindow || durationMs <= 0) {
+    textarea.scrollTop = targetScrollTop;
+    return;
+  }
+
+  const existingFrame = textareaScrollAnimationFrameMap.get(textarea);
+  if (typeof existingFrame === "number") {
+    ownerWindow.cancelAnimationFrame(existingFrame);
+    textareaScrollAnimationFrameMap.delete(textarea);
+  }
+
+  const startScrollTop = textarea.scrollTop;
+  const delta = targetScrollTop - startScrollTop;
+  if (Math.abs(delta) < 1) {
+    textarea.scrollTop = targetScrollTop;
+    return;
+  }
+
+  const startTime = ownerWindow.performance.now();
+  const step = (now: number) => {
+    const elapsed = now - startTime;
+    const progress = clampNumber(elapsed / durationMs, 0, 1);
+    const eased = easeOutCubic(progress);
+    textarea.scrollTop = startScrollTop + delta * eased;
+
+    if (progress < 1) {
+      const frame = ownerWindow.requestAnimationFrame(step);
+      textareaScrollAnimationFrameMap.set(textarea, frame);
+      return;
+    }
+
+    textarea.scrollTop = targetScrollTop;
+    textareaScrollAnimationFrameMap.delete(textarea);
+  };
+
+  const frame = ownerWindow.requestAnimationFrame(step);
+  textareaScrollAnimationFrameMap.set(textarea, frame);
+}
+
+function measureCaretTopInTextarea(textarea: HTMLTextAreaElement, position: number): number | null {
+  const ownerDocument = textarea.ownerDocument;
+  const ownerWindow = ownerDocument.defaultView;
+  if (!ownerWindow || !ownerDocument.body) return null;
+
+  const style = ownerWindow.getComputedStyle(textarea);
+  const mirror = ownerDocument.createElement("div");
+  mirror.style.position = "absolute";
+  mirror.style.top = "0";
+  mirror.style.left = "-9999px";
+  mirror.style.visibility = "hidden";
+  mirror.style.pointerEvents = "none";
+  mirror.style.whiteSpace = "pre-wrap";
+  mirror.style.wordBreak = "break-word";
+  mirror.style.overflowWrap = "break-word";
+  mirror.style.boxSizing = style.boxSizing;
+  mirror.style.width = `${textarea.clientWidth}px`;
+  mirror.style.font = style.font;
+  mirror.style.letterSpacing = style.letterSpacing;
+  mirror.style.lineHeight = style.lineHeight;
+  mirror.style.padding = style.padding;
+  mirror.style.border = style.border;
+  mirror.style.textIndent = style.textIndent;
+  mirror.style.textTransform = style.textTransform;
+  mirror.style.setProperty("tab-size", style.getPropertyValue("tab-size") || "8");
+
+  const caretMarker = ownerDocument.createElement("span");
+  mirror.textContent = textarea.value.slice(0, position);
+  caretMarker.textContent = "\u200b";
+  mirror.appendChild(caretMarker);
+
+  ownerDocument.body.appendChild(mirror);
+  const markerRect = caretMarker.getBoundingClientRect();
+  const mirrorRect = mirror.getBoundingClientRect();
+  mirror.remove();
+
+  const markerTop = markerRect.top - mirrorRect.top;
+  if (!Number.isFinite(markerTop)) return null;
+
+  const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+  return Math.max(0, markerTop - paddingTop);
+}
+
+function getTextareaLineHeightPx(textarea: HTMLTextAreaElement): number {
+  const ownerWindow = textarea.ownerDocument.defaultView;
+  if (!ownerWindow) return 20;
+
+  const style = ownerWindow.getComputedStyle(textarea);
+  const parsedLineHeight = Number.parseFloat(style.lineHeight);
+  if (Number.isFinite(parsedLineHeight) && parsedLineHeight > 0) return parsedLineHeight;
+
+  const parsedFontSize = Number.parseFloat(style.fontSize);
+  if (Number.isFinite(parsedFontSize) && parsedFontSize > 0) return parsedFontSize * 1.2;
+
+  return 20;
+}
+
+function scrollCaretToTop(textarea: HTMLTextAreaElement, position: number): void {
+  const targetTop = measureCaretTopInTextarea(textarea, position);
+  if (targetTop === null) return;
+
+  const maxScrollTop = Math.max(0, textarea.scrollHeight - textarea.clientHeight);
+  const lineHeightPx = getTextareaLineHeightPx(textarea);
+  const nextScrollTop = clampNumber(targetTop - lineHeightPx, 0, maxScrollTop);
+  const ownerWindow = textarea.ownerDocument.defaultView;
+  const prefersReducedMotion =
+    ownerWindow?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+  if (prefersReducedMotion) {
+    textarea.scrollTop = nextScrollTop;
+    return;
+  }
+
+  animateTextareaScrollTop(textarea, nextScrollTop, 180);
+}
+
 export function toCounterDigits(value: number): string[] {
   return clampCounterValue(value).toString().padStart(4, "0").split("");
 }
@@ -382,10 +514,22 @@ export function useMemoEditor() {
     insertTextAtCursor(`${item} `);
   };
 
-  const focusMemoEditor = () => {
+  const focusMemoEditor = (cursorPosition?: number) => {
     setIsMemoFocused(true);
     setCounterPopup(null);
-    requestAnimationFrame(() => memoRef.current?.focus());
+    requestAnimationFrame(() => {
+      const field = memoRef.current;
+      if (!field) return;
+
+      field.focus();
+      if (typeof cursorPosition !== "number") return;
+
+      const boundedPosition = Math.min(field.value.length, Math.max(0, Math.floor(cursorPosition)));
+      field.setSelectionRange(boundedPosition, boundedPosition);
+      requestAnimationFrame(() => {
+        scrollCaretToTop(field, boundedPosition);
+      });
+    });
   };
 
   const saveMemoEditor = () => {
