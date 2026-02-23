@@ -46,20 +46,6 @@ body {
   }
 }
 
-@keyframes memo-lock-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-  }
-  35% {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-  }
-}
-
-.memo-lock-feedback {
-  animation:
-    memo-lock-shake 280ms ease-in-out,
-    memo-lock-ring 320ms ease-out;
+.memo-lock-shake {
+  animation: memo-lock-shake 280ms ease-in-out;
 }

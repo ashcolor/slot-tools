@@ -228,9 +228,7 @@ export function Editor({
                     className={`btn btn-circle btn-lg shadow-lg ${isStampVisible ? "btn-info" : "btn-ghost bg-base-100"}`}
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={onToggleStamp}
-                    aria-label={
-                      isStampVisible ? "スタンプをオフ" : "スタンプをオン"
-                    }
+                    aria-label={isStampVisible ? "スタンプをオフ" : "スタンプをオン"}
                   >
                     <Icon icon="fa-solid:stamp" className="size-4" aria-hidden />
                   </button>
