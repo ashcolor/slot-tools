@@ -13,7 +13,6 @@ interface MemoToolbarProps {
   onToggleMemoLock: () => void;
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
-  onOpenClear: () => void;
 }
 
 const LLM_MEMO_GUIDE_TEXT = `パチスロ用メモアプリのためのメモを出力して。
@@ -56,7 +55,6 @@ export function Toolbar({
   onToggleMemoLock,
   onOpenTemplate,
   onOpenConfig,
-  onOpenClear,
 }: MemoToolbarProps) {
   const shareDialogRef = useRef<HTMLDialogElement>(null);
   const notationDialogRef = useRef<HTMLDialogElement>(null);
@@ -103,7 +101,7 @@ export function Toolbar({
   };
 
   return (
-    <div className="flex items-center justify-end">
+    <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -114,6 +112,17 @@ export function Toolbar({
         >
           <Icon icon="bi:info-circle" className="size-4" />
         </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm btn-square"
+          onClick={onOpenTemplate}
+          aria-label="Template"
+        >
+          <Icon icon="mdi:text-box-multiple-outline" className="size-4" />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-1">
         <button
           key={`memo-lock-feedback-${lockFeedbackNonce}`}
           type="button"
@@ -138,26 +147,10 @@ export function Toolbar({
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
-          onClick={onOpenTemplate}
-          aria-label="Template"
-        >
-          <Icon icon="mdi:text-box-multiple-outline" className="size-4" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
           onClick={onOpenConfig}
           aria-label="Config"
         >
           <Icon icon="fa6-solid:gear" className="size-4" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={onOpenClear}
-          aria-label="Clear"
-        >
-          <Icon icon="fa6-regular:trash-can" className="size-4" />
         </button>
       </div>
 

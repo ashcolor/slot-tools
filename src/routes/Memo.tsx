@@ -157,7 +157,6 @@ export function Memo({ onEditingChange }: MemoProps) {
           onToggleMemoLock={handleToggleMemoLock}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}
-          onOpenClear={() => memo.clearModalRef.current?.showModal()}
         />
       ) : null}
 
