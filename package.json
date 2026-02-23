@@ -18,6 +18,7 @@
     "@tailwindcss/vite": "^4.2.0",
     "daisyui": "^5.5.18",
     "expr-eval-fork": "^3.0.3",
+    "pako": "^2.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.13.0",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
+    "@types/pako": "^2.0.4",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/react-router": "^5.1.20",

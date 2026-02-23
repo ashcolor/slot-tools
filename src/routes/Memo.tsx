@@ -6,6 +6,7 @@ import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
 import { FormulaPopup } from "../features/memo/components/FormulaPopup";
+import { LoadUrlMemoDialog } from "../features/memo/components/LoadUrlMemoDialog";
 import { Stamp } from "../features/memo/components/Stamp";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
@@ -179,6 +180,13 @@ export function Memo({ onEditingChange }: MemoProps) {
         pendingApplyTemplate={memo.pendingApplyTemplate}
         onConfirmApplyTemplate={memo.confirmApplyTemplate}
         onCancelApplyTemplate={memo.cancelApplyTemplate}
+      />
+
+      <LoadUrlMemoDialog
+        dialogRef={memo.urlMemoConfirmModalRef}
+        pendingUrlMemo={memo.pendingUrlMemo}
+        onConfirmOverwrite={memo.confirmUrlMemoOverwrite}
+        onKeepCurrentMemo={memo.cancelUrlMemoOverwrite}
       />
 
       {memo.counterPopup ? (

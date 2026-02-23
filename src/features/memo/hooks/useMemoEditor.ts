@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Parser } from "expr-eval-fork";
+import { deflate, inflate } from "pako";
 import {
   COUNTER_NAME_PATTERN,
   DEFAULT_FONT_SIZE_LEVEL,
@@ -79,6 +80,70 @@ const FORMULA_PERCENT_DISPLAY_MAX = 0.99;
 const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
 const MEMO_IMAGE_PADDING = 24;
 const MEMO_IMAGE_MIN_HEIGHT = 120;
+const MEMO_QUERY_KEY = "m";
+
+function bytesToBase64Url(bytes: Uint8Array): string | null {
+  if (typeof btoa !== "function") return null;
+
+  try {
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let index = 0; index < bytes.length; index += chunkSize) {
+      const chunk = bytes.subarray(index, index + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  } catch {
+    return null;
+  }
+}
+
+function base64UrlToBytes(encoded: string): Uint8Array | null {
+  if (typeof atob !== "function" || typeof Uint8Array === "undefined") return null;
+
+  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
+
+  try {
+    const binary = atob(`${normalized}${padding}`);
+    return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}
+
+function encodeMemoForUrl(memo: string): string | null {
+  if (memo.length === 0) return "";
+  if (typeof TextEncoder === "undefined") return null;
+
+  try {
+    const inputBytes = new TextEncoder().encode(memo);
+    const compressedBytes = deflate(inputBytes);
+    return bytesToBase64Url(compressedBytes);
+  } catch {
+    return null;
+  }
+}
+
+function decodeMemoFromUrl(encoded: string): string | null {
+  if (encoded.length === 0 || typeof TextDecoder === "undefined") return null;
+
+  const bytes = base64UrlToBytes(encoded);
+  if (!bytes) return null;
+
+  try {
+    return new TextDecoder().decode(inflate(bytes));
+  } catch {
+    return null;
+  }
+}
+
+function readMemoFromLocationSearch(search: string): string | null {
+  const params = new URLSearchParams(search);
+  const encoded = params.get(MEMO_QUERY_KEY);
+  if (!encoded) return null;
+  return decodeMemoFromUrl(encoded);
+}
 
 function easeOutCubic(progress: number): number {
   const inverse = 1 - progress;
@@ -636,6 +701,8 @@ export function useMemoEditor() {
     "slot-memo-templates",
     INITIAL_TEMPLATES as MemoTemplate[],
   );
+  const [isUrlMemoHydrated, setIsUrlMemoHydrated] = useState(false);
+  const [pendingUrlMemo, setPendingUrlMemo] = useState<string | null>(null);
   const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [counterPopup, setCounterPopup] = useState<CounterPopupState | null>(null);
@@ -652,7 +719,9 @@ export function useMemoEditor() {
   const configModalRef = useRef<HTMLDialogElement>(null);
   const clearModalRef = useRef<HTMLDialogElement>(null);
   const deleteTemplateModalRef = useRef<HTMLDialogElement>(null);
+  const urlMemoConfirmModalRef = useRef<HTMLDialogElement>(null);
   const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
+  const didInitUrlMemoRef = useRef(false);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
   const pendingApplyTemplate = useMemo(
@@ -737,6 +806,66 @@ export function useMemoEditor() {
       setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
     }
   }, [draft.formulaRoundDecimalPlaces, setDraft]);
+
+  useEffect(() => {
+    if (didInitUrlMemoRef.current) return;
+    didInitUrlMemoRef.current = true;
+
+    if (typeof window === "undefined") {
+      setIsUrlMemoHydrated(true);
+      return;
+    }
+
+    const memoFromUrl = readMemoFromLocationSearch(window.location.search);
+    if (typeof memoFromUrl !== "string") {
+      setIsUrlMemoHydrated(true);
+      return;
+    }
+
+    if (draft.memo === memoFromUrl) {
+      setIsUrlMemoHydrated(true);
+      return;
+    }
+
+    if (draft.memo.trim().length > 0) {
+      setPendingUrlMemo(memoFromUrl);
+      return;
+    }
+
+    setDraft((prev) => (prev.memo === memoFromUrl ? prev : { ...prev, memo: memoFromUrl }));
+    setIsUrlMemoHydrated(true);
+  }, [draft.memo, setDraft]);
+
+  useEffect(() => {
+    if (!pendingUrlMemo) return;
+    const modal = urlMemoConfirmModalRef.current;
+    if (!modal || modal.open) return;
+    try {
+      modal.showModal();
+    } catch {
+      return;
+    }
+  }, [pendingUrlMemo]);
+
+  useEffect(() => {
+    if (!isUrlMemoHydrated || typeof window === "undefined") return;
+
+    const encodedMemo = encodeMemoForUrl(draft.memo);
+    if (encodedMemo === null) return;
+
+    const url = new URL(window.location.href);
+    if (encodedMemo.length > 0) {
+      url.searchParams.set(MEMO_QUERY_KEY, encodedMemo);
+    } else {
+      url.searchParams.delete(MEMO_QUERY_KEY);
+    }
+
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextUrl === currentUrl) return;
+
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [draft.memo, isUrlMemoHydrated]);
 
   useEffect(() => {
     if (!isMemoFocused || typeof window === "undefined" || !window.visualViewport) return;
@@ -1124,6 +1253,21 @@ export function useMemoEditor() {
     templateModalRef.current?.showModal();
   };
 
+  const confirmUrlMemoOverwrite = () => {
+    if (pendingUrlMemo) {
+      setDraft((prev) => (prev.memo === pendingUrlMemo ? prev : { ...prev, memo: pendingUrlMemo }));
+    }
+    setPendingUrlMemo(null);
+    setIsUrlMemoHydrated(true);
+    urlMemoConfirmModalRef.current?.close();
+  };
+
+  const cancelUrlMemoOverwrite = () => {
+    setPendingUrlMemo(null);
+    setIsUrlMemoHydrated(true);
+    urlMemoConfirmModalRef.current?.close();
+  };
+
   const saveCurrentAsTemplate = () => {
     const nextTemplate: MemoTemplate = {
       id: createTemplateId(),
@@ -1165,7 +1309,9 @@ export function useMemoEditor() {
     configModalRef,
     clearModalRef,
     deleteTemplateModalRef,
+    urlMemoConfirmModalRef,
     templateList,
+    pendingUrlMemo,
     pendingApplyTemplate,
     pendingDeleteTemplate,
     counterPopup,
@@ -1208,6 +1354,8 @@ export function useMemoEditor() {
     applyTemplate,
     confirmApplyTemplate,
     cancelApplyTemplate,
+    confirmUrlMemoOverwrite,
+    cancelUrlMemoOverwrite,
     saveCurrentAsTemplate,
     requestDeleteTemplate,
     clearPendingDeleteTemplate,
