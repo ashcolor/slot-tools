@@ -1,16 +1,13 @@
 import type { RefObject } from "react";
-import { getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
 interface MemoApplyTemplateDialogProps {
   applyTemplateModalRef: RefObject<HTMLDialogElement | null>;
-  pendingApplyTemplate: MemoTemplate | null;
   onConfirmApplyTemplate: () => void;
   onCancelApplyTemplate: () => void;
 }
 
 export function ApplyTemplateDialog({
   applyTemplateModalRef,
-  pendingApplyTemplate,
   onConfirmApplyTemplate,
   onCancelApplyTemplate,
 }: MemoApplyTemplateDialogProps) {
