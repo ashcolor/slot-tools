@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 
