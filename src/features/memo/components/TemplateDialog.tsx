@@ -1,10 +1,11 @@
+import { Icon } from "@iconify/react";
 import type { RefObject } from "react";
 import { formatTemplateDate, getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
 interface MemoTemplateDialogProps {
   templateModalRef: RefObject<HTMLDialogElement | null>;
   templateList: MemoTemplate[];
-  onOpenSaveTemplateModal: () => void;
+  onSaveCurrentAsTemplate: () => void;
   onApplyTemplate: (template: MemoTemplate) => void;
   onRequestDeleteTemplate: (templateId: string) => void;
 }
@@ -12,32 +13,41 @@ interface MemoTemplateDialogProps {
 export function TemplateDialog({
   templateModalRef,
   templateList,
-  onOpenSaveTemplateModal,
+  onSaveCurrentAsTemplate,
   onApplyTemplate,
   onRequestDeleteTemplate,
 }: MemoTemplateDialogProps) {
   return (
     <dialog ref={templateModalRef} className="modal">
       <div className="modal-box max-w-xl">
-        <h3 className="font-bold text-lg mb-3">テンプレート</h3>
+        <h3 className="mb-3 text-lg font-bold">テンプレート</h3>
         <div className="flex flex-col gap-2">
-          <button type="button" className="btn btn-sm btn-primary self-start" onClick={onOpenSaveTemplateModal}>
-            今の画面をテンプレートに登録
+          <button
+            type="button"
+            className="btn btn-sm btn-primary self-start"
+            onClick={onSaveCurrentAsTemplate}
+          >
+            <Icon icon="mdi:content-save-outline" className="size-4 shrink-0" aria-hidden />
+            現在のメモをテンプレートに保存
           </button>
           {templateList.length === 0 ? (
             <p className="text-sm opacity-70">保存済みテンプレートはありません。</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {templateList.map((template) => (
-                <li key={template.id} className="border border-base-300 rounded-lg p-3">
+                <li key={template.id} className="border-base-300 rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold truncate">{getTemplateTitle(template.memo)}</p>
+                      <p className="truncate font-semibold">{getTemplateTitle(template.memo)}</p>
                       <p className="text-xs opacity-70">{formatTemplateDate(template.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" className="btn btn-xs btn-primary" onClick={() => onApplyTemplate(template)}>
-                        呼び出し
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-primary"
+                        onClick={() => onApplyTemplate(template)}
+                      >
+                        読み込み
                       </button>
                       <button
                         type="button"

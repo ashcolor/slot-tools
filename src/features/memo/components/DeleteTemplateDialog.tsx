@@ -17,7 +17,7 @@ export function DeleteTemplateDialog({
   return (
     <dialog ref={deleteTemplateModalRef} className="modal">
       <div className="modal-box">
-        <h3 className="font-bold text-lg mb-2">テンプレート削除</h3>
+        <h3 className="mb-2 text-lg font-bold">テンプレート削除</h3>
         <p className="text-sm opacity-70">
           {pendingDeleteTemplate
             ? `「${getTemplateTitle(pendingDeleteTemplate.memo)}」を削除しますか？`

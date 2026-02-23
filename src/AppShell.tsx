@@ -11,7 +11,7 @@ import { PrivacyPolicy } from "./routes/PrivacyPolicy";
 export function AppShell() {
   const location = useLocation();
   const [isMemoEditing, setIsMemoEditing] = useState(false);
-  const shouldHideHeader = location.pathname === "/slot-memo" && isMemoEditing;
+  const shouldHideHeader = location.pathname === "/memo" && isMemoEditing;
   const routeContainerClass = shouldHideHeader ? "p-0" : "max-w-4xl mx-auto p-2 sm:p-4";
 
   return (
@@ -20,7 +20,7 @@ export function AppShell() {
       <div className={routeContainerClass}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/slot-memo" element={<Memo onEditingChange={setIsMemoEditing} />} />
+          <Route path="/memo" element={<Memo onEditingChange={setIsMemoEditing} />} />
           <Route path="/noriuchi" element={<Noriuchi />} />
           <Route path="/operator" element={<OperatorInfo />} />
           <Route path="/contact" element={<Contact />} />

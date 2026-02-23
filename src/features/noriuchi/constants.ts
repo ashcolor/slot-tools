@@ -89,4 +89,3 @@ export function getExchangeOptions(lendingRate: number): RateOption[] {
     { label: "5.2枚", value: 100 / 5.2 },
   ];
 }
-

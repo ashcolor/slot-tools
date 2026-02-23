@@ -9,7 +9,7 @@ export function ClearDialog({ clearModalRef, onClearDraft }: MemoClearDialogProp
   return (
     <dialog ref={clearModalRef} className="modal">
       <div className="modal-box">
-        <h3 className="font-bold text-lg mb-2">クリア</h3>
+        <h3 className="mb-2 text-lg font-bold">クリア</h3>
         <p className="text-sm opacity-70">現在のメモを消去しますか？</p>
         <div className="modal-action">
           <form method="dialog" className="flex gap-2">

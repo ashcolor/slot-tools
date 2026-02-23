@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ApplyTemplateDialog } from "../features/memo/components/ApplyTemplateDialog";
 import { CounterPopup } from "../features/memo/components/CounterPopup";
 import { ClearDialog } from "../features/memo/components/ClearDialog";
 import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
-import { SaveTemplateDialog } from "../features/memo/components/SaveTemplateDialog";
+import { FormulaPopup } from "../features/memo/components/FormulaPopup";
+import { LoadUrlMemoDialog } from "../features/memo/components/LoadUrlMemoDialog";
+import { Stamp } from "../features/memo/components/Stamp";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
-import { TemplateKeyboard } from "../features/memo/components/TemplateKeyboard";
 import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
 
 interface MemoProps {
@@ -17,12 +19,21 @@ interface MemoProps {
 export function Memo({ onEditingChange }: MemoProps) {
   const floatingGap = 8;
   const memo = useMemoEditor();
-  const [saveButtonBottom, setSaveButtonBottom] = useState(0);
-  const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
-  const editingTopMargin = memo.isMemoFocused ? saveButtonBottom + floatingGap : 0;
-  const editingBottomMargin = memo.isMemoFocused ? templateKeyboardOccupiedHeight + floatingGap : 0;
-  const handleTemplateKeyboardOccupiedHeightChange = useCallback((occupiedHeight: number) => {
-    setTemplateKeyboardOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
+  const saveEditorRef = useRef(memo.saveMemoEditor);
+  const memoBackGuardActiveRef = useRef(false);
+  const memoBackGuardConsumedRef = useRef(false);
+  const [isStampVisible, setIsStampVisible] = useState(true);
+  const [stampOccupiedHeight, setStampOccupiedHeight] = useState(0);
+  const rootStyle =
+    memo.isMemoFocused && memo.keyboardInset > 0
+      ? { height: `calc(100svh - ${memo.keyboardInset}px)` }
+      : undefined;
+  const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
+  const editingBottomMargin = memo.isMemoFocused ? stampOccupiedHeight + floatingGap : 0;
+  const handleStampOccupiedHeightChange = useCallback((occupiedHeight: number) => {
+    setStampOccupiedHeight((current) =>
+      current === occupiedHeight ? current : occupiedHeight,
+    );
   }, []);
   const rootClassName = memo.isMemoFocused
     ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"
@@ -37,61 +48,91 @@ export function Memo({ onEditingChange }: MemoProps) {
   }, [onEditingChange]);
 
   useEffect(() => {
+    saveEditorRef.current = memo.saveMemoEditor;
+  }, [memo.saveMemoEditor]);
+
+  useEffect(() => {
+    if (!memo.isMemoFocused || typeof document === "undefined") return;
+
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
+    const prevBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
+
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overscrollBehaviorY = "none";
+    body.style.overscrollBehaviorY = "none";
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehaviorY = prevHtmlOverscrollBehaviorY;
+      body.style.overscrollBehaviorY = prevBodyOverscrollBehaviorY;
+    };
+  }, [memo.isMemoFocused]);
+
+  useEffect(() => {
     if (!memo.isMemoFocused || typeof window === "undefined") return;
 
-    const saveButtonElement = document.getElementById("memo-save-floating");
-    if (!saveButtonElement) return;
+    const currentState =
+      window.history.state && typeof window.history.state === "object" ? window.history.state : {};
+    const hasMemoGuard = (currentState as Record<string, unknown>).__memoEditBackGuard === true;
 
-    const updateBottom = () => {
-      const rect = saveButtonElement.getBoundingClientRect();
-      const next = Math.ceil(rect.bottom);
-      setSaveButtonBottom((current) => (current === next ? current : next));
-    };
-
-    updateBottom();
-
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(updateBottom);
-      observer.observe(saveButtonElement);
-      window.addEventListener("resize", updateBottom);
-      return () => {
-        observer.disconnect();
-        window.removeEventListener("resize", updateBottom);
-      };
+    if (!hasMemoGuard) {
+      window.history.pushState(
+        {
+          ...currentState,
+          __memoEditBackGuard: true,
+        },
+        "",
+        window.location.href,
+      );
     }
 
-    window.addEventListener("resize", updateBottom);
-    return () => window.removeEventListener("resize", updateBottom);
+    memoBackGuardActiveRef.current = true;
+    memoBackGuardConsumedRef.current = false;
+
+    const handlePopState = () => {
+      if (!memoBackGuardActiveRef.current) return;
+      memoBackGuardConsumedRef.current = true;
+      memoBackGuardActiveRef.current = false;
+      saveEditorRef.current();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (memoBackGuardConsumedRef.current) {
+        memoBackGuardConsumedRef.current = false;
+      }
+      memoBackGuardActiveRef.current = false;
+    };
   }, [memo.isMemoFocused]);
 
   return (
-    <div className={rootClassName}>
+    <div className={rootClassName} style={rootStyle}>
       {!memo.isMemoFocused ? (
         <Toolbar
+          onCopyRawMemo={memo.copyRawMemoToClipboard}
+          onCopyResolvedMemo={memo.copyResolvedMemoToClipboard}
+          onCopyTemplateMemo={memo.copyTemplateMemoToClipboard}
+          onCopyResolvedMemoImage={memo.copyResolvedMemoImageToClipboard}
+          onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}
           onOpenClear={() => memo.clearModalRef.current?.showModal()}
         />
       ) : null}
 
-      {memo.isMemoFocused ? (
-        <div
-          id="memo-save-floating"
-          className="fixed inset-x-0 z-50 px-2"
-          style={{ top: `calc(env(safe-area-inset-top, 0px) + ${floatingGap}px)` }}
-        >
-          <div className="mx-auto max-w-4xl flex justify-center">
-            <button type="button" className="btn btn-primary btn-sm" onClick={memo.saveMemoEditor}>
-              保存
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       <Editor
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
+        isStampVisible={isStampVisible}
         editingTopMargin={editingTopMargin}
         editingBottomMargin={editingBottomMargin}
         memoParts={memo.memoParts}
@@ -102,30 +143,30 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoBlur={memo.handleMemoBlur}
         onMemoChange={memo.setMemo}
         onFocusEditor={memo.focusMemoEditor}
+        onSaveEditor={memo.saveMemoEditor}
+        onToggleStamp={() => setIsStampVisible((current) => !current)}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
+        onOpenFormulaPopup={memo.openFormulaPopup}
       />
 
       <ConfigDialog
         configModalRef={memo.configModalRef}
         memoFontSizeLevel={memo.memoFontSizeLevel}
+        formulaRoundDecimalPlaces={memo.formulaRoundDecimalPlaces}
         onChangeFontSizeLevel={memo.setFontSizeLevel}
+        onChangeFormulaRoundDecimalPlaces={memo.setFormulaRoundDecimalPlaces}
       />
 
       <TemplateDialog
         templateModalRef={memo.templateModalRef}
         templateList={memo.templateList}
-        onOpenSaveTemplateModal={memo.openSaveTemplateModal}
+        onSaveCurrentAsTemplate={memo.saveCurrentAsTemplate}
         onApplyTemplate={memo.applyTemplate}
         onRequestDeleteTemplate={memo.requestDeleteTemplate}
       />
 
       <ClearDialog clearModalRef={memo.clearModalRef} onClearDraft={memo.clearDraft} />
-
-      <SaveTemplateDialog
-        saveTemplateModalRef={memo.saveTemplateModalRef}
-        onSaveCurrentAsTemplate={memo.saveCurrentAsTemplate}
-      />
 
       <DeleteTemplateDialog
         deleteTemplateModalRef={memo.deleteTemplateModalRef}
@@ -134,25 +175,56 @@ export function Memo({ onEditingChange }: MemoProps) {
         onClearPendingDeleteTemplate={memo.clearPendingDeleteTemplate}
       />
 
+      <ApplyTemplateDialog
+        applyTemplateModalRef={memo.applyTemplateModalRef}
+        pendingApplyTemplate={memo.pendingApplyTemplate}
+        onConfirmApplyTemplate={memo.confirmApplyTemplate}
+        onCancelApplyTemplate={memo.cancelApplyTemplate}
+      />
+
+      <LoadUrlMemoDialog
+        dialogRef={memo.urlMemoConfirmModalRef}
+        pendingUrlMemo={memo.pendingUrlMemo}
+        onConfirmOverwrite={memo.confirmUrlMemoOverwrite}
+        onKeepCurrentMemo={memo.cancelUrlMemoOverwrite}
+      />
+
       {memo.counterPopup ? (
         <CounterPopup
           value={memo.counterPopup.value}
+          name={memo.counterPopup.name}
+          isNameInvalid={memo.isCounterPopupNameInvalid}
           anchorX={memo.counterPopup.anchorX}
           anchorY={memo.counterPopup.anchorY}
           onClose={memo.closeCounterPopup}
           onStepDigit={memo.stepPopupCounterDigit}
-          onResetToZero={memo.resetPopupCounterToZero}
+          onNameChange={memo.setCounterPopupName}
         />
       ) : null}
 
-      <TemplateKeyboard
-        visible={memo.isMemoFocused}
+      {memo.formulaPopup ? (
+        <FormulaPopup
+          expression={memo.formulaPopup.expression}
+          displayMode={memo.formulaPopup.displayMode}
+          isExpressionInvalid={memo.isFormulaPopupExpressionInvalid}
+          anchorX={memo.formulaPopup.anchorX}
+          anchorY={memo.formulaPopup.anchorY}
+          variables={memo.formulaVariableList}
+          onExpressionChange={memo.setFormulaPopupExpression}
+          onDisplayModeChange={memo.setFormulaPopupDisplayMode}
+          onConfirm={memo.applyFormulaPopup}
+          onClose={memo.closeFormulaPopup}
+        />
+      ) : null}
+
+      <Stamp
+        visible={memo.isMemoFocused && isStampVisible}
         keyboardInset={memo.keyboardInset}
         floatingGap={floatingGap}
         selectedCategoryKey={memo.selectedCategoryKey}
         onSelectCategoryKey={memo.setSelectedCategoryKey}
         onInsertCategoryItem={memo.insertTemplateItem}
-        onOccupiedHeightChange={handleTemplateKeyboardOccupiedHeightChange}
+        onOccupiedHeightChange={handleStampOccupiedHeightChange}
       />
     </div>
   );

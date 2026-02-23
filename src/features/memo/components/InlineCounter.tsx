@@ -12,6 +12,7 @@ interface MemoInlineCounterProps {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     current: number,
+    name: string | null,
   ) => void;
 }
 
@@ -22,10 +23,10 @@ export function InlineCounter({
   onOpenCounterPopup,
 }: MemoInlineCounterProps) {
   return (
-    <span className="join join-horizontal align-middle mx-1">
+    <span className="join join-horizontal mx-1 align-middle">
       <button
         type="button"
-        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline px-2 text-minus`}
+        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-minus px-2`}
         aria-label="減らす"
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
@@ -41,14 +42,14 @@ export function InlineCounter({
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();
-          onOpenCounterPopup(event, part.index, part.value);
+          onOpenCounterPopup(event, part.index, part.value, part.name);
         }}
       >
         {part.value}
       </button>
       <button
         type="button"
-        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline px-2 text-plus`}
+        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-plus px-2`}
         aria-label="増やす"
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {

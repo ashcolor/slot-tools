@@ -13,14 +13,16 @@ export function IosInstallGuideModal({ open, onClose }: IosInstallGuideModalProp
   return (
     <div className="modal modal-open">
       <div className="modal-box">
-        <h3 className="font-bold text-lg">ホーム画面に追加</h3>
-        <p className="mt-2 text-sm leading-relaxed opacity-80">iOS/iPadOS は次の手順で追加できます。</p>
+        <h3 className="text-lg font-bold">ホーム画面に追加</h3>
+        <p className="mt-2 text-sm leading-relaxed opacity-80">
+          iOS/iPadOS は次の手順で追加できます。
+        </p>
 
-        <ul className="steps steps-vertical w-full mt-3">
+        <ul className="steps steps-vertical mt-3 w-full">
           <li className="step step-primary py-1">
             <div className="text-left text-sm leading-relaxed">
               <kbd className="kbd kbd-sm inline-flex items-center gap-1">
-                <Icon icon="bi:share" className="size-3" />
+                <Icon icon="lucide:share" className="size-3" />
                 <span>共有アイコン</span>
               </kbd>
               <span className="ml-2">(共有)をクリック</span>
@@ -65,7 +67,12 @@ export function IosInstallGuideModal({ open, onClose }: IosInstallGuideModalProp
         </div>
       </div>
 
-      <button type="button" className="modal-backdrop" aria-label="インストール案内を閉じる" onClick={onClose} />
+      <button
+        type="button"
+        className="modal-backdrop"
+        aria-label="インストール案内を閉じる"
+        onClick={onClose}
+      />
     </div>
   );
 }

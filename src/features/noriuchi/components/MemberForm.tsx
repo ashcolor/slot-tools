@@ -10,7 +10,13 @@ interface Props {
   medalSteps: number[];
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
-  otherMembers?: { id: string; name: string; investMedals: number; storedMedals: number; collectMedals: number }[];
+  otherMembers?: {
+    id: string;
+    name: string;
+    investMedals: number;
+    storedMedals: number;
+    collectMedals: number;
+  }[];
   onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
@@ -55,7 +61,7 @@ export function MemberForm({
             <input
               ref={inputRef}
               type="text"
-              className="input input-bordered input-sm w-full font-semibold text-center"
+              className="input input-bordered input-sm w-full text-center font-semibold"
               maxLength={5}
               value={member.name}
               onChange={(e) => update("name", e.target.value)}
@@ -67,7 +73,7 @@ export function MemberForm({
             />
           ) : (
             <div
-              className="text-lg text-center cursor-pointer py-1 hover:opacity-70 transition-opacity"
+              className="cursor-pointer py-1 text-center text-lg transition-opacity hover:opacity-70"
               onClick={() => setEditing(true)}
             >
               {member.name}
@@ -80,7 +86,7 @@ export function MemberForm({
             <>
               {/* 再プレイ */}
               <div>
-                <div className="text-xs font-bold text-invest mb-1">再プレイ</div>
+                <div className="text-invest mb-1 text-xs font-bold">再プレイ</div>
                 <StepInput
                   icon="material-symbols:replay"
                   iconClass="text-base text-invest shrink-0 w-8"
@@ -95,7 +101,7 @@ export function MemberForm({
 
               {/* 現金投資 */}
               <div>
-                <div className="text-xs font-bold text-invest mb-1">現金投資</div>
+                <div className="text-invest mb-1 text-xs font-bold">現金投資</div>
                 <StepInput
                   icon="akar-icons:money"
                   iconClass="text-base text-invest shrink-0 w-8"
@@ -111,7 +117,7 @@ export function MemberForm({
 
               {/* 出玉 */}
               <div>
-                <div className="text-xs font-bold text-collect mb-1">出玉</div>
+                <div className="text-collect mb-1 text-xs font-bold">出玉</div>
                 <StepInput
                   icon="akar-icons:coin"
                   iconClass="text-base text-collect shrink-0 w-8"
@@ -129,14 +135,14 @@ export function MemberForm({
             <>
               {/* メダル */}
               <div>
-                <div className="text-xs font-bold opacity-50 mb-2">メダル結果</div>
+                <div className="mb-2 text-xs font-bold opacity-50">メダル結果</div>
                 <div className="flex flex-col gap-0.5 text-sm">
-                  <div className="flex justify-between text-invest">
+                  <div className="text-invest flex justify-between">
                     <span className="text-xs font-bold">再プレイ</span>
                     <span>{member.investMedals.toLocaleString()} 枚</span>
                   </div>
                   <div className="text-collect">
-                    <div className="text-xs font-bold mb-1">出玉</div>
+                    <div className="mb-1 text-xs font-bold">出玉</div>
                     <StepInput
                       icon="akar-icons:coin"
                       iconClass="text-base text-collect shrink-0 w-8"
@@ -165,9 +171,9 @@ export function MemberForm({
                       />
                     </button>
                     {transferOpen && (
-                      <div className="mt-2 p-2 rounded-lg bg-base-200 flex items-center gap-1">
+                      <div className="bg-base-200 mt-2 flex items-center gap-1 rounded-lg p-2">
                         <select
-                          className="select select-bordered select-xs flex-1 min-w-0"
+                          className="select select-bordered select-xs min-w-0 flex-1"
                           value={transferTarget}
                           onChange={(e) => setTransferTarget(e.target.value)}
                         >
@@ -177,11 +183,11 @@ export function MemberForm({
                             </option>
                           ))}
                         </select>
-                        <span className="text-xs opacity-60 shrink-0 leading-6">へ</span>
-                        <div className="flex flex-col gap-1 shrink-0">
+                        <span className="shrink-0 text-xs leading-6 opacity-60">へ</span>
+                        <div className="flex shrink-0 flex-col gap-1">
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary w-full h-auto py-1"
+                            className="btn btn-xs btn-primary h-auto w-full py-1"
                             disabled={
                               !transferTarget ||
                               (() => {
@@ -194,7 +200,10 @@ export function MemberForm({
                             onClick={() => {
                               const target = otherMembers.find((m) => m.id === transferTarget);
                               if (target) {
-                                const amount = Math.max(target.investMedals - target.collectMedals, 0);
+                                const amount = Math.max(
+                                  target.investMedals - target.collectMedals,
+                                  0,
+                                );
                                 onTransfer(transferTarget, amount, true);
                                 setTransferOpen(false);
                               }
@@ -204,13 +213,16 @@ export function MemberForm({
                             <br />（
                             {(() => {
                               const t = otherMembers.find((m) => m.id === transferTarget);
-                              return Math.max((t?.investMedals ?? 0) - (t?.collectMedals ?? 0), 0).toLocaleString();
+                              return Math.max(
+                                (t?.investMedals ?? 0) - (t?.collectMedals ?? 0),
+                                0,
+                              ).toLocaleString();
                             })()}
                             枚）
                           </button>
                           <button
                             type="button"
-                            className="btn btn-xs btn-primary w-full h-auto py-1"
+                            className="btn btn-xs btn-primary h-auto w-full py-1"
                             disabled={!transferTarget || !member.collectMedals}
                             onClick={() => {
                               onTransfer(transferTarget, member.collectMedals, false);
@@ -228,7 +240,7 @@ export function MemberForm({
 
                 {/* 貯メダル */}
                 <div className="mt-3">
-                  <div className="text-xs font-bold text-store mb-1">貯メダル</div>
+                  <div className="text-store mb-1 text-xs font-bold">貯メダル</div>
                   <StepInput
                     icon="bi:piggy-bank"
                     iconClass="text-base text-store shrink-0 w-8"
@@ -239,10 +251,10 @@ export function MemberForm({
                     onAdd={() => {}}
                     error={member.storedMedals > member.collectMedals}
                   />
-                  <div className="flex gap-1 mt-1">
+                  <div className="mt-1 flex gap-1">
                     <button
                       type="button"
-                      className="btn btn-xs flex-1 min-w-0 h-auto py-1"
+                      className="btn btn-xs h-auto min-w-0 flex-1 py-1"
                       onClick={() => update("storedMedals", member.investMedals)}
                     >
                       再プレイ補填
@@ -250,7 +262,7 @@ export function MemberForm({
                     </button>
                     <button
                       type="button"
-                      className="btn btn-xs flex-1 min-w-0 h-auto py-1"
+                      className="btn btn-xs h-auto min-w-0 flex-1 py-1"
                       onClick={() => update("storedMedals", member.collectMedals)}
                     >
                       全て
@@ -258,14 +270,14 @@ export function MemberForm({
                     </button>
                   </div>
                   {member.storedMedals > member.collectMedals && (
-                    <div className="text-xs text-right mt-1 text-error">
+                    <div className="text-error mt-1 text-right text-xs">
                       貯メダルが出玉を超えています
                     </div>
                   )}
                 </div>
 
                 {/* メダル収支 */}
-                <div className="flex justify-between items-center mt-2">
+                <div className="mt-2 flex items-center justify-between">
                   <span className="text-sm font-bold">メダル収支</span>
                   <span
                     className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}
@@ -278,13 +290,13 @@ export function MemberForm({
 
               {/* 現金 */}
               <div>
-                <div className="text-xs font-bold opacity-50 mb-2">現金結果</div>
-                <div className="text-xs flex flex-col gap-0.5">
-                  <div className="flex justify-between text-invest">
+                <div className="mb-2 text-xs font-bold opacity-50">現金結果</div>
+                <div className="flex flex-col gap-0.5 text-xs">
+                  <div className="text-invest flex justify-between">
                     <span className="font-bold">現金投資</span>
                     <span>{member.investCash.toLocaleString()} 円</span>
                   </div>
-                  <div className="flex justify-between text-collect">
+                  <div className="text-collect flex justify-between">
                     <span className="font-bold">換金</span>
                     <span className="flex items-center gap-1">
                       {Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚{" "}
@@ -298,7 +310,7 @@ export function MemberForm({
                 </div>
 
                 {/* 現金収支 */}
-                <div className="flex justify-between items-center mt-2">
+                <div className="mt-2 flex items-center justify-between">
                   <span className="text-sm font-bold">現金収支</span>
                   <span
                     className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-plus" : "text-minus"}`}
@@ -318,7 +330,7 @@ export function MemberForm({
 
                 {memberResult && (
                   <div>
-                    <div className="flex justify-between items-center border-t border-base-300 pt-2 mt-2">
+                    <div className="border-base-300 mt-2 flex items-center justify-between border-t pt-2">
                       <span className="text-sm font-bold">合計</span>
                       <span
                         className={`text-base font-bold ${memberResult.profit >= 0 ? "text-plus" : "text-minus"}`}
@@ -328,7 +340,7 @@ export function MemberForm({
                       </span>
                     </div>
                     <div className="divider my-1" />
-                    <div className="text-xs font-bold opacity-50 mb-2">精算</div>
+                    <div className="mb-2 text-xs font-bold opacity-50">精算</div>
                     {settlements && settlements.length > 0 ? (
                       <div className="flex flex-col gap-0.5 text-sm">
                         {settlements.map((s, i) => {
@@ -337,7 +349,7 @@ export function MemberForm({
                           return (
                             <div
                               key={i}
-                              className={`cursor-pointer select-none transition-opacity ${done ? "line-through opacity-40" : ""}`}
+                              className={`cursor-pointer transition-opacity select-none ${done ? "line-through opacity-40" : ""}`}
                               onClick={() =>
                                 setDoneSettlements((prev) => {
                                   const next = new Set(prev);

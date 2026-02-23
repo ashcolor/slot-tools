@@ -1,8 +1,9 @@
+import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useRef } from "react";
 import { TEMPLATE_CATEGORIES } from "../constants";
 import type { TemplateCategory } from "../constants";
 
-interface TemplateKeyboardProps {
+interface StampProps {
   visible: boolean;
   keyboardInset: number;
   floatingGap: number;
@@ -12,7 +13,7 @@ interface TemplateKeyboardProps {
   onOccupiedHeightChange?: (occupiedHeight: number) => void;
 }
 
-export function TemplateKeyboard({
+export function Stamp({
   visible,
   keyboardInset,
   floatingGap,
@@ -20,8 +21,8 @@ export function TemplateKeyboard({
   onSelectCategoryKey,
   onInsertCategoryItem,
   onOccupiedHeightChange,
-}: TemplateKeyboardProps) {
-  const keyboardRef = useRef<HTMLDivElement>(null);
+}: StampProps) {
+  const stampRef = useRef<HTMLDivElement>(null);
   const selectedCategory = useMemo(() => {
     const fallback = TEMPLATE_CATEGORIES[0];
     return TEMPLATE_CATEGORIES.find((category) => category.key === selectedCategoryKey) ?? fallback;
@@ -34,14 +35,14 @@ export function TemplateKeyboard({
       return;
     }
 
-    const keyboardElement = keyboardRef.current;
-    if (!keyboardElement) {
+    const stampElement = stampRef.current;
+    if (!stampElement) {
       onOccupiedHeightChange(0);
       return;
     }
 
     const updateLayout = () => {
-      const rect = keyboardElement.getBoundingClientRect();
+      const rect = stampElement.getBoundingClientRect();
       const viewportBottom = window.visualViewport
         ? window.visualViewport.height + window.visualViewport.offsetTop
         : window.innerHeight;
@@ -52,7 +53,7 @@ export function TemplateKeyboard({
 
     if (typeof ResizeObserver !== "undefined") {
       const observer = new ResizeObserver(updateLayout);
-      observer.observe(keyboardElement);
+      observer.observe(stampElement);
       window.addEventListener("resize", updateLayout);
       return () => {
         observer.disconnect();
@@ -70,31 +71,41 @@ export function TemplateKeyboard({
 
   return (
     <div
-      ref={keyboardRef}
+      ref={stampRef}
+      data-stamp-root="true"
       className="fixed inset-x-0 z-50 px-2 pb-2"
-      style={{ bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)` }}
+      style={{
+        bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)`,
+      }}
     >
       <div className="mx-auto max-w-4xl">
-        <div className="border border-base-300 bg-base-100/95 backdrop-blur rounded-xl shadow-lg p-2">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {TEMPLATE_CATEGORIES.map((category) => (
-              <button
-                key={category.key}
-                type="button"
-                className={`btn btn-sm px-1 shrink-0 ${selectedCategory.key === category.key ? "btn-neutral" : "btn-ghost"}`}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => onSelectCategoryKey(category.key)}
-              >
-                {category.label}
-              </button>
-            ))}
+        <div className="border-base-300 bg-base-100/95 rounded-xl border p-2 shadow-lg backdrop-blur">
+          <div className="overflow-x-auto">
+            <div className="join">
+              {TEMPLATE_CATEGORIES.map((category) => (
+                <button
+                  key={category.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedCategory.key === category.key}
+                  className={`join-item btn btn-sm gap-1 ${selectedCategory.key === category.key ? "btn-neutral" : ""}`}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onClick={() => onSelectCategoryKey(category.key)}
+                >
+                  {category.key === "calc" ? (
+                    <Icon icon="ic:baseline-widgets" className="size-4" aria-hidden />
+                  ) : null}
+                  {category.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1 overflow-x-auto mt-2">
+          <div className="mt-2 flex items-center gap-1 overflow-x-auto">
             {selectedCategory.items.map((item) => (
               <button
                 key={item}
                 type="button"
-                className="btn btn-sm btn-ghost px-1.5 shrink-0"
+                className="btn btn-sm btn-ghost shrink-0 px-1.5"
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => onInsertCategoryItem(item)}
               >

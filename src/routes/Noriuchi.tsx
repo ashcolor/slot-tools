@@ -118,7 +118,7 @@ export function Noriuchi() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm opacity-70">
           <span className="badge badge-neutral badge-sm">
             {lendingRate === 4 ? "パチンコ" : "スロット"}
@@ -161,9 +161,9 @@ export function Noriuchi() {
 
       <dialog ref={configModalRef} className="modal">
         <div className="modal-box">
-          <h3 className="font-bold text-lg mb-4">設定</h3>
+          <h3 className="mb-4 text-lg font-bold">設定</h3>
           <div className="flex flex-col gap-4">
-            <div className="tabs tabs-box w-fit mx-auto">
+            <div className="tabs tabs-box mx-auto w-fit">
               <input
                 type="radio"
                 name="game_type"
@@ -188,7 +188,7 @@ export function Noriuchi() {
               />
             </div>
             <div>
-              <div className="text-xs font-bold opacity-50 mb-2">レート</div>
+              <div className="mb-2 text-xs font-bold opacity-50">レート</div>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold">貸出</label>
@@ -212,7 +212,7 @@ export function Noriuchi() {
             </div>
             <div className="divider my-0" />
             <div>
-              <div className="text-xs font-bold opacity-50 mb-2">入力設定</div>
+              <div className="mb-2 text-xs font-bold opacity-50">入力設定</div>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold">再プレイ単位</label>
@@ -265,7 +265,7 @@ export function Noriuchi() {
 
       <dialog ref={resetModalRef} className="modal">
         <div className="modal-box">
-          <h3 className="font-bold text-lg mb-2">リセット</h3>
+          <h3 className="mb-2 text-lg font-bold">リセット</h3>
           <p className="text-sm opacity-70">全メンバーの入力内容をリセットしますか？</p>
           <div className="modal-action">
             <form method="dialog" className="flex gap-2">
@@ -306,10 +306,10 @@ export function Noriuchi() {
         />
         <div className="tab-content">
           <div className="flex flex-col gap-2">
-            <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
-              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex gap-3 w-min"}>
+            <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
+              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
                 {members.map((member, i) => (
-                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
                     <MemberForm
                       member={member}
                       exchangeRate={exchangeRate}
@@ -342,10 +342,10 @@ export function Noriuchi() {
         <div className="tab-content">
           <div className="flex flex-col gap-2">
             <SettlementView result={result} />
-            <div className={memberCount <= 2 ? "p-1 -m-1" : "overflow-x-auto p-1 -m-1"}>
-              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex gap-3 w-min"}>
+            <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
+              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
                 {members.map((member, i) => (
-                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "min-w-0 w-max"}>
+                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
                     <MemberForm
                       member={member}
                       exchangeRate={exchangeRate}
@@ -354,7 +354,13 @@ export function Noriuchi() {
                       onChange={(updated) => updateMember(i, updated)}
                       otherMembers={members
                         .filter((_, j) => j !== i)
-                        .map((m) => ({ id: m.id, name: m.name, investMedals: m.investMedals, storedMedals: m.storedMedals, collectMedals: m.collectMedals }))}
+                        .map((m) => ({
+                          id: m.id,
+                          name: m.name,
+                          investMedals: m.investMedals,
+                          storedMedals: m.storedMedals,
+                          collectMedals: m.collectMedals,
+                        }))}
                       onTransfer={(targetId, amount, setStoredMedals) =>
                         handleTransfer(i, targetId, amount, setStoredMedals)
                       }

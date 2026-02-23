@@ -1,7 +1,7 @@
 import { DEFAULT_FONT_SIZE_LEVEL } from "../../constants";
 
 export interface TemplateCategory {
-  key: "koyaku" | "game" | "type" | "color" | "state" | "calc";
+  key: "koyaku" | "game" | "cz" | "bonus" | "color" | "state" | "calc";
   label: string;
   items: string[];
 }
@@ -24,19 +24,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       "下段",
       "平行",
       "斜め",
-      "シングル",
-      "ダブル",
     ],
-  },
-  {
-    key: "game",
-    label: "ゲーム数",
-    items: ["天国", "天井", "100", "200", "300", "500", "1000"],
-  },
-  {
-    key: "type",
-    label: "種別",
-    items: ["CZ", "BONUS", "REG", "BIG", "AT", "ART"],
   },
   {
     key: "color",
@@ -44,9 +32,14 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     items: ["⬜️", "🟦", "🟨", "🟩", "🟥", "🟪", "🥉", "🥈", "🥇", "🦒", "🌈"],
   },
   {
+    key: "bonus",
+    label: "BONUS/CZ",
+    items: ["BONUS", "BIG", "REG", "AT", "ART", "CZ", "◯", "×"],
+  },
+  {
     key: "state",
     label: "状態",
-    items: ["低確率", "通常", "高確率", "超高確率"],
+    items: ["天国", "天井", "低確率", "通常", "高確率", "超高確率"],
   },
   {
     key: "calc",

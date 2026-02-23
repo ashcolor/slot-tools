@@ -6,7 +6,10 @@ import { usePwaInstallPrompt } from "../utils/usePwaInstallPrompt";
 import { IosInstallGuideModal } from "./IosInstallGuideModal";
 
 function isMobileDevice() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches;
+  return (
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    window.matchMedia("(max-width: 768px)").matches
+  );
 }
 
 function isIosBrowser() {
@@ -26,7 +29,7 @@ export function Header() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const location = useLocation();
   const currentTool = tools.find((t) => t.path === location.pathname);
-  const sidebarTools = tools.filter((t) => t.path !== "/slot-memo");
+  const sidebarTools = tools.filter((t) => t.path !== "/memo");
   const brandText = "スロツール";
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
   const isInstallActionAvailable = canInstall || isIos;
@@ -70,18 +73,23 @@ export function Header() {
     <>
       <header className="navbar bg-base-100 shadow-sm">
         <div className="flex-none">
-          <button type="button" className="btn btn-square btn-ghost" onClick={() => setOpen(!open)} aria-label="メニュー">
+          <button
+            type="button"
+            className="btn btn-square btn-ghost"
+            onClick={() => setOpen(!open)}
+            aria-label="メニュー"
+          >
             <Icon icon="fa6-solid:bars" className="size-4" />
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="text-lg font-bold inline-flex items-center">
+          <Link to="/" className="inline-flex items-center text-lg font-bold">
             <span>{brandText}</span>
             <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
             {currentTool ? <span>{currentTool.title}</span> : null}
           </Link>
         </div>
-        <div className="flex-none flex items-center gap-1">
+        <div className="flex flex-none items-center gap-1">
           <a
             href="https://www.buymeacoffee.com/ashcolor"
             target="_blank"
@@ -94,26 +102,39 @@ export function Header() {
         </div>
       </header>
 
-      {open && <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />}
+      {open && <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setOpen(false)} />}
 
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-base-100 shadow-xl z-50 transition-transform duration-200 flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`bg-base-100 fixed top-0 left-0 z-50 flex h-full w-64 flex-col shadow-xl transition-transform duration-200 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        <div className="border-base-300 flex items-center gap-2 border-b px-4 py-3">
           <img src="/logo.png" alt="ロゴ" className="size-10" />
-          <span className="text-lg font-bold inline-flex items-center">
+          <span className="inline-flex items-center text-lg font-bold">
             <span>{brandText}</span>
             <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
           </span>
-          <button type="button" className="btn btn-square btn-ghost btn-sm ml-auto" onClick={toggleTheme} aria-label="テーマ切替">
-            {dark ? <Icon icon="bi:moon" className="size-5" /> : <Icon icon="bi:sun" className="size-5" />}
+          <button
+            type="button"
+            className="btn btn-square btn-ghost btn-sm ml-auto"
+            onClick={toggleTheme}
+            aria-label="テーマ切替"
+          >
+            {dark ? (
+              <Icon icon="bi:moon" className="size-5" />
+            ) : (
+              <Icon icon="bi:sun" className="size-5" />
+            )}
           </button>
         </div>
 
         <div>
           <ul className="menu bg-base-100 w-full">
             <li>
-              <Link to="/" onClick={() => setOpen(false)} className={location.pathname === "/" ? "bg-base-200" : undefined}>
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className={location.pathname === "/" ? "bg-base-200" : undefined}
+              >
                 HOME
               </Link>
             </li>
@@ -151,7 +172,7 @@ export function Header() {
             </div>
           )}
 
-          <div className="border-t border-base-300" />
+          <div className="border-base-300 border-t" />
           <div className="p-4 text-xs">
             <div className="flex flex-col gap-1">
               <Link to="/operator" onClick={() => setOpen(false)} className="link link-hover">
@@ -169,7 +190,10 @@ export function Header() {
         </div>
       </div>
 
-      <IosInstallGuideModal open={showIosInstallHelp} onClose={() => setShowIosInstallHelp(false)} />
+      <IosInstallGuideModal
+        open={showIosInstallHelp}
+        onClose={() => setShowIosInstallHelp(false)}
+      />
     </>
   );
 }
