@@ -28,8 +28,8 @@ export function Header() {
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePwaInstallPrompt();
   const location = useLocation();
+  const isHome = location.pathname === "/";
   const currentTool = tools.find((t) => t.path === location.pathname);
-  const sidebarTools = tools.filter((t) => t.path !== "/memo");
   const brandText = "スロツール";
   const installLabel = isMobile ? "ホーム画面に追加" : "アプリをインストール";
   const isInstallActionAvailable = canInstall || isIos;
@@ -83,9 +83,11 @@ export function Header() {
           </button>
         </div>
         <div className="flex-1">
-          <Link to="/" className="inline-flex items-center text-lg font-bold">
-            <span>{brandText}</span>
-            <Icon icon="bi:plus-lg" className="size-4" aria-hidden />
+          <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold">
+            <span className={`inline-flex items-center ${isHome ? "" : "opacity-50"}`}>
+              <span>{brandText}</span>
+              <Icon icon="fa-solid:plus" className="size-4" aria-hidden />
+            </span>
             {currentTool ? <span>{currentTool.title}</span> : null}
           </Link>
         </div>
@@ -138,12 +140,12 @@ export function Header() {
                 HOME
               </Link>
             </li>
-            {sidebarTools.map((t) => (
+            {tools.map((t) => (
               <li key={t.path}>
                 <Link
                   to={t.path}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-4 ${location.pathname === t.path ? "bg-base-200" : ""}`}
+                  className={`flex items-center gap-4 py-4 ${location.pathname === t.path ? "bg-base-200" : ""}`}
                 >
                   {t.sidebarIcon ? (
                     <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
