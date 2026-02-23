@@ -393,7 +393,10 @@ function isFormulaDisplayMode(value: string): value is FormulaDisplayMode {
   return value === "auto" || value === "percent" || value === "odds";
 }
 
-function parseFormulaBody(rawBody: string): { expression: string; displayMode: FormulaDisplayMode } {
+function parseFormulaBody(rawBody: string): {
+  expression: string;
+  displayMode: FormulaDisplayMode;
+} {
   const body = rawBody.trim();
   let expression = body;
   let displayMode: FormulaDisplayMode = "auto";

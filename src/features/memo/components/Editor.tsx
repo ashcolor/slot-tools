@@ -10,6 +10,7 @@ interface MemoEditorProps {
   memo: string;
   memoRef: RefObject<HTMLTextAreaElement | null>;
   isMemoFocused: boolean;
+  isMemoLocked: boolean;
   isStampVisible: boolean;
   editingTopMargin: number;
   editingBottomMargin: number;
@@ -21,6 +22,7 @@ interface MemoEditorProps {
   onMemoBlur: () => void;
   onMemoChange: (memo: string) => void;
   onFocusEditor: (cursorPosition?: number) => void;
+  onLockedAction: () => void;
   onSaveEditor: () => void;
   onToggleStamp: () => void;
   onStepInlineCounter: (targetIndex: number, delta: number) => void;
@@ -163,6 +165,7 @@ export function Editor({
   memo,
   memoRef,
   isMemoFocused,
+  isMemoLocked,
   isStampVisible,
   editingTopMargin,
   editingBottomMargin,
@@ -174,6 +177,7 @@ export function Editor({
   onMemoBlur,
   onMemoChange,
   onFocusEditor,
+  onLockedAction,
   onSaveEditor,
   onToggleStamp,
   onStepInlineCounter,
@@ -186,6 +190,10 @@ export function Editor({
   const previewParts = useMemo(() => buildPreviewParts(memo, memoParts), [memo, memoParts]);
 
   const handlePreviewClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (isMemoLocked) {
+      onLockedAction();
+      return;
+    }
     const cursorPosition = getCursorPositionFromPreviewClick(event, memo.length);
     onFocusEditor(cursorPosition);
   };
@@ -220,9 +228,7 @@ export function Editor({
                     className={`btn btn-circle btn-lg shadow-lg ${isStampVisible ? "btn-info" : "btn-ghost bg-base-100"}`}
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={onToggleStamp}
-                    aria-label={
-                      isStampVisible ? "スタンプをオフ" : "スタンプをオン"
-                    }
+                    aria-label={isStampVisible ? "スタンプをオフ" : "スタンプをオン"}
                   >
                     <Icon icon="fa-solid:stamp" className="size-4" aria-hidden />
                   </button>
@@ -239,7 +245,7 @@ export function Editor({
             </>
           ) : (
             <div
-              className={`textarea textarea-bordered h-full min-h-0 w-full cursor-text overflow-y-auto whitespace-pre-wrap ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
+              className={`textarea textarea-bordered h-full min-h-0 w-full overflow-y-auto whitespace-pre-wrap ${isMemoLocked ? "cursor-default" : "cursor-text"} ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
               onClick={handlePreviewClick}
             >
               {memoParts.length === 0 ? (
@@ -280,6 +286,8 @@ export function Editor({
                         part={part}
                         result={formulaResults.get(part.index) ?? "--"}
                         inlineControlSize={inlineControlSize}
+                        disabled={isMemoLocked}
+                        onDisabledClick={onLockedAction}
                         onOpenFormulaPopup={onOpenFormulaPopup}
                       />
                     </span>

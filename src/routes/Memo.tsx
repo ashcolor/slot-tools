@@ -19,6 +19,8 @@ interface MemoProps {
 export function Memo({ onEditingChange }: MemoProps) {
   const floatingGap = 8;
   const memo = useMemoEditor();
+  const [isMemoLocked, setIsMemoLocked] = useState(false);
+  const [lockFeedbackNonce, setLockFeedbackNonce] = useState(0);
   const saveEditorRef = useRef(memo.saveMemoEditor);
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
@@ -31,13 +33,41 @@ export function Memo({ onEditingChange }: MemoProps) {
   const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
   const editingBottomMargin = memo.isMemoFocused ? stampOccupiedHeight + floatingGap : 0;
   const handleStampOccupiedHeightChange = useCallback((occupiedHeight: number) => {
-    setStampOccupiedHeight((current) =>
-      current === occupiedHeight ? current : occupiedHeight,
-    );
+    setStampOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
   }, []);
   const rootClassName = memo.isMemoFocused
     ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"
     : "relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden";
+  const triggerLockFeedback = useCallback(() => {
+    setLockFeedbackNonce((current) => current + 1);
+  }, []);
+  const handleToggleMemoLock = useCallback(() => {
+    if (!isMemoLocked) {
+      memo.saveMemoEditor();
+      memo.closeFormulaPopup();
+    }
+    setIsMemoLocked((current) => !current);
+  }, [isMemoLocked, memo]);
+  const handleFocusEditor = useCallback(
+    (cursorPosition?: number) => {
+      if (isMemoLocked) {
+        triggerLockFeedback();
+        return;
+      }
+      memo.focusMemoEditor(cursorPosition);
+    },
+    [isMemoLocked, memo, triggerLockFeedback],
+  );
+  const handleOpenFormulaPopup: typeof memo.openFormulaPopup = useCallback(
+    (event, targetIndex, expression, displayMode) => {
+      if (isMemoLocked) {
+        triggerLockFeedback();
+        return;
+      }
+      memo.openFormulaPopup(event, targetIndex, expression, displayMode);
+    },
+    [isMemoLocked, memo, triggerLockFeedback],
+  );
 
   useEffect(() => {
     onEditingChange?.(memo.isMemoFocused);
@@ -117,11 +147,14 @@ export function Memo({ onEditingChange }: MemoProps) {
     <div className={rootClassName} style={rootStyle}>
       {!memo.isMemoFocused ? (
         <Toolbar
+          isMemoLocked={isMemoLocked}
+          lockFeedbackNonce={lockFeedbackNonce}
           onCopyRawMemo={memo.copyRawMemoToClipboard}
           onCopyResolvedMemo={memo.copyResolvedMemoToClipboard}
           onCopyTemplateMemo={memo.copyTemplateMemoToClipboard}
           onCopyResolvedMemoImage={memo.copyResolvedMemoImageToClipboard}
           onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
+          onToggleMemoLock={handleToggleMemoLock}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}
           onOpenClear={() => memo.clearModalRef.current?.showModal()}
@@ -132,6 +165,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
+        isMemoLocked={isMemoLocked}
         isStampVisible={isStampVisible}
         editingTopMargin={editingTopMargin}
         editingBottomMargin={editingBottomMargin}
@@ -142,12 +176,13 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoFocus={() => memo.setIsMemoFocused(true)}
         onMemoBlur={memo.handleMemoBlur}
         onMemoChange={memo.setMemo}
-        onFocusEditor={memo.focusMemoEditor}
+        onFocusEditor={handleFocusEditor}
+        onLockedAction={triggerLockFeedback}
         onSaveEditor={memo.saveMemoEditor}
         onToggleStamp={() => setIsStampVisible((current) => !current)}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
-        onOpenFormulaPopup={memo.openFormulaPopup}
+        onOpenFormulaPopup={handleOpenFormulaPopup}
       />
 
       <ConfigDialog
@@ -201,7 +236,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         />
       ) : null}
 
-      {memo.formulaPopup ? (
+      {memo.formulaPopup && !isMemoLocked ? (
         <FormulaPopup
           expression={memo.formulaPopup.expression}
           displayMode={memo.formulaPopup.displayMode}

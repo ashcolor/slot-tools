@@ -26,7 +26,7 @@ export function InlineCounter({
     <span className="join join-horizontal mx-1 align-middle">
       <button
         type="button"
-        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-minus px-2`}
+        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-minus px-2 opacity-40`}
         aria-label="減らす"
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
@@ -38,18 +38,18 @@ export function InlineCounter({
       </button>
       <button
         type="button"
-        className={`join-item btn border-neutral z-1 ${inlineControlSize.buttonClass} ${inlineControlSize.valueWidthClass} px-2`}
+        className={`join-item btn btn-outline btn-outline z-1 border-neutral-500 ${inlineControlSize.buttonClass} ${inlineControlSize.valueWidthClass} gap-1 px-2`}
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();
           onOpenCounterPopup(event, part.index, part.value, part.name);
         }}
       >
-        {part.value}
+        <span className="text-[1.2em] leading-none">{part.value}</span>
       </button>
       <button
         type="button"
-        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-plus px-2`}
+        className={`join-item btn ${inlineControlSize.buttonClass} btn-outline text-plus px-2 opacity-40`}
         aria-label="増やす"
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
