@@ -29,7 +29,7 @@ export function InlineFormula({
   return (
     <button
       type="button"
-      className={`btn border-neutral z-1 ${inlineControlSize.formulaClass} ${inlineControlSize.valueWidthClass} mx-1 gap-1 px-2 align-middle ${disabled ? "cursor-not-allowed" : ""}`}
+      className={`btn btn-outline z-1 border-neutral-500 ${inlineControlSize.formulaClass} ${inlineControlSize.valueWidthClass} mx-1 gap-1 px-2 align-middle ${disabled ? "cursor-not-allowed" : ""}`}
       title={part.expression}
       aria-disabled={disabled}
       tabIndex={disabled ? -1 : undefined}
@@ -43,8 +43,7 @@ export function InlineFormula({
         onOpenFormulaPopup(event, part.index, part.expression, part.displayMode);
       }}
     >
-      <Icon icon="mdi:calculator" className="size-4" />
-      <span>{result}</span>
+      <span className="text-[1.2em] leading-none">{result}</span>
     </button>
   );
 }

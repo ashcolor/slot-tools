@@ -1,6 +1,10 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useRef } from "react";
-import { TEMPLATE_CATEGORIES } from "../constants";
+import {
+  TEMPLATE_CATEGORIES,
+  TEMPLATE_COUNTER_ITEM_LABEL,
+  TEMPLATE_FORMULA_ITEM_LABEL,
+} from "../constants";
 import type { TemplateCategory } from "../constants";
 
 interface StampProps {
@@ -105,10 +109,16 @@ export function Stamp({
               <button
                 key={item}
                 type="button"
-                className="btn btn-sm btn-ghost shrink-0 px-1.5"
+                className="btn btn-sm btn-ghost shrink-0 gap-1 px-1.5"
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => onInsertCategoryItem(item)}
               >
+                {item === TEMPLATE_COUNTER_ITEM_LABEL ? (
+                  <Icon icon="mdi:counter" className="size-4 opacity-60" aria-hidden />
+                ) : null}
+                {item === TEMPLATE_FORMULA_ITEM_LABEL ? (
+                  <Icon icon="mdi:calculator" className="size-4 opacity-60" aria-hidden />
+                ) : null}
                 {item}
               </button>
             ))}
