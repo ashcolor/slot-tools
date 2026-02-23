@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { TEMPLATE_CATEGORIES } from "../constants";
 import type { TemplateCategory } from "../constants";
 
-interface TemplateKeyboardProps {
+interface StampProps {
   visible: boolean;
   keyboardInset: number;
   floatingGap: number;
@@ -13,7 +13,7 @@ interface TemplateKeyboardProps {
   onOccupiedHeightChange?: (occupiedHeight: number) => void;
 }
 
-export function TemplateKeyboard({
+export function Stamp({
   visible,
   keyboardInset,
   floatingGap,
@@ -21,8 +21,8 @@ export function TemplateKeyboard({
   onSelectCategoryKey,
   onInsertCategoryItem,
   onOccupiedHeightChange,
-}: TemplateKeyboardProps) {
-  const keyboardRef = useRef<HTMLDivElement>(null);
+}: StampProps) {
+  const stampRef = useRef<HTMLDivElement>(null);
   const selectedCategory = useMemo(() => {
     const fallback = TEMPLATE_CATEGORIES[0];
     return TEMPLATE_CATEGORIES.find((category) => category.key === selectedCategoryKey) ?? fallback;
@@ -35,14 +35,14 @@ export function TemplateKeyboard({
       return;
     }
 
-    const keyboardElement = keyboardRef.current;
-    if (!keyboardElement) {
+    const stampElement = stampRef.current;
+    if (!stampElement) {
       onOccupiedHeightChange(0);
       return;
     }
 
     const updateLayout = () => {
-      const rect = keyboardElement.getBoundingClientRect();
+      const rect = stampElement.getBoundingClientRect();
       const viewportBottom = window.visualViewport
         ? window.visualViewport.height + window.visualViewport.offsetTop
         : window.innerHeight;
@@ -53,7 +53,7 @@ export function TemplateKeyboard({
 
     if (typeof ResizeObserver !== "undefined") {
       const observer = new ResizeObserver(updateLayout);
-      observer.observe(keyboardElement);
+      observer.observe(stampElement);
       window.addEventListener("resize", updateLayout);
       return () => {
         observer.disconnect();
@@ -71,8 +71,8 @@ export function TemplateKeyboard({
 
   return (
     <div
-      ref={keyboardRef}
-      data-template-keyboard-root="true"
+      ref={stampRef}
+      data-stamp-root="true"
       className="fixed inset-x-0 z-50 px-2 pb-2"
       style={{
         bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)`,

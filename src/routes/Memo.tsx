@@ -6,9 +6,9 @@ import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
 import { FormulaPopup } from "../features/memo/components/FormulaPopup";
+import { Stamp } from "../features/memo/components/Stamp";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
-import { TemplateKeyboard } from "../features/memo/components/TemplateKeyboard";
 import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
 
 interface MemoProps {
@@ -21,16 +21,16 @@ export function Memo({ onEditingChange }: MemoProps) {
   const saveEditorRef = useRef(memo.saveMemoEditor);
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
-  const [isTemplateKeyboardVisible, setIsTemplateKeyboardVisible] = useState(true);
-  const [templateKeyboardOccupiedHeight, setTemplateKeyboardOccupiedHeight] = useState(0);
+  const [isStampVisible, setIsStampVisible] = useState(true);
+  const [stampOccupiedHeight, setStampOccupiedHeight] = useState(0);
   const rootStyle =
     memo.isMemoFocused && memo.keyboardInset > 0
       ? { height: `calc(100svh - ${memo.keyboardInset}px)` }
       : undefined;
   const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
-  const editingBottomMargin = memo.isMemoFocused ? templateKeyboardOccupiedHeight + floatingGap : 0;
-  const handleTemplateKeyboardOccupiedHeightChange = useCallback((occupiedHeight: number) => {
-    setTemplateKeyboardOccupiedHeight((current) =>
+  const editingBottomMargin = memo.isMemoFocused ? stampOccupiedHeight + floatingGap : 0;
+  const handleStampOccupiedHeightChange = useCallback((occupiedHeight: number) => {
+    setStampOccupiedHeight((current) =>
       current === occupiedHeight ? current : occupiedHeight,
     );
   }, []);
@@ -131,7 +131,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         memo={memo.draft.memo}
         memoRef={memo.memoRef}
         isMemoFocused={memo.isMemoFocused}
-        isTemplateKeyboardVisible={isTemplateKeyboardVisible}
+        isStampVisible={isStampVisible}
         editingTopMargin={editingTopMargin}
         editingBottomMargin={editingBottomMargin}
         memoParts={memo.memoParts}
@@ -143,7 +143,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoChange={memo.setMemo}
         onFocusEditor={memo.focusMemoEditor}
         onSaveEditor={memo.saveMemoEditor}
-        onToggleTemplateKeyboard={() => setIsTemplateKeyboardVisible((current) => !current)}
+        onToggleStamp={() => setIsStampVisible((current) => !current)}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
         onOpenFormulaPopup={memo.openFormulaPopup}
@@ -207,14 +207,14 @@ export function Memo({ onEditingChange }: MemoProps) {
         />
       ) : null}
 
-      <TemplateKeyboard
-        visible={memo.isMemoFocused && isTemplateKeyboardVisible}
+      <Stamp
+        visible={memo.isMemoFocused && isStampVisible}
         keyboardInset={memo.keyboardInset}
         floatingGap={floatingGap}
         selectedCategoryKey={memo.selectedCategoryKey}
         onSelectCategoryKey={memo.setSelectedCategoryKey}
         onInsertCategoryItem={memo.insertTemplateItem}
-        onOccupiedHeightChange={handleTemplateKeyboardOccupiedHeightChange}
+        onOccupiedHeightChange={handleStampOccupiedHeightChange}
       />
     </div>
   );

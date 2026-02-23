@@ -66,7 +66,7 @@ function clampNumber(value: number, min: number, max: number): number {
 }
 
 const textareaScrollAnimationFrameMap = new WeakMap<HTMLTextAreaElement, number>();
-const TEMPLATE_KEYBOARD_ROOT_SELECTOR = "[data-template-keyboard-root='true']";
+const STAMP_ROOT_SELECTOR = "[data-stamp-root='true']";
 const FORMULA_ROUND_DECIMAL_PLACES_MIN = 0;
 const FORMULA_ROUND_DECIMAL_PLACES_MAX = 3;
 const FORMULA_ROUND_DECIMAL_PLACES_DEFAULT = 1;
@@ -201,17 +201,15 @@ function getKeyboardInsetInPixels(textarea: HTMLTextAreaElement): number {
   return Math.max(0, ownerWindow.innerHeight - viewport.height - viewport.offsetTop);
 }
 
-function getTemplateKeyboardTop(textarea: HTMLTextAreaElement, fallbackBottom: number): number {
-  const keyboardElement = textarea.ownerDocument.querySelector<HTMLElement>(
-    TEMPLATE_KEYBOARD_ROOT_SELECTOR,
-  );
-  if (!keyboardElement) return fallbackBottom;
+function getStampTop(textarea: HTMLTextAreaElement, fallbackBottom: number): number {
+  const stampElement = textarea.ownerDocument.querySelector<HTMLElement>(STAMP_ROOT_SELECTOR);
+  if (!stampElement) return fallbackBottom;
 
-  const rect = keyboardElement.getBoundingClientRect();
+  const rect = stampElement.getBoundingClientRect();
   return Number.isFinite(rect.top) ? rect.top : fallbackBottom;
 }
 
-function scrollCaretAboveTemplateKeyboard(textarea: HTMLTextAreaElement, position: number): void {
+function scrollCaretAboveStamp(textarea: HTMLTextAreaElement, position: number): void {
   if (getKeyboardInsetInPixels(textarea) <= 0) return;
 
   const targetTop = measureCaretTopInTextarea(textarea, position);
@@ -226,10 +224,10 @@ function scrollCaretAboveTemplateKeyboard(textarea: HTMLTextAreaElement, positio
   const lineHeightPx = getTextareaLineHeightPx(textarea);
   const caretBottom = rect.top + paddingTop + targetTop - textarea.scrollTop + lineHeightPx;
   const viewportBottom = getViewportBottomInDocument(textarea);
-  const templateKeyboardTop = getTemplateKeyboardTop(textarea, viewportBottom);
-  if (caretBottom <= templateKeyboardTop) return;
+  const stampTop = getStampTop(textarea, viewportBottom);
+  if (caretBottom <= stampTop) return;
 
-  const requiredDelta = caretBottom - templateKeyboardTop;
+  const requiredDelta = caretBottom - stampTop;
   const maxScrollTop = Math.max(0, textarea.scrollHeight - textarea.clientHeight);
   const nextScrollTop = clampNumber(textarea.scrollTop + requiredDelta, 0, maxScrollTop);
   const prefersReducedMotion =
@@ -714,7 +712,7 @@ export function useMemoEditor() {
     if (!field) return;
 
     requestAnimationFrame(() => {
-      scrollCaretAboveTemplateKeyboard(field, pendingPosition);
+      scrollCaretAboveStamp(field, pendingPosition);
       pendingKeyboardAvoidCaretPositionRef.current = null;
     });
   }, [isMemoFocused, keyboardInset]);

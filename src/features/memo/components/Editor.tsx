@@ -10,7 +10,7 @@ interface MemoEditorProps {
   memo: string;
   memoRef: RefObject<HTMLTextAreaElement | null>;
   isMemoFocused: boolean;
-  isTemplateKeyboardVisible: boolean;
+  isStampVisible: boolean;
   editingTopMargin: number;
   editingBottomMargin: number;
   memoParts: MemoPart[];
@@ -22,7 +22,7 @@ interface MemoEditorProps {
   onMemoChange: (memo: string) => void;
   onFocusEditor: (cursorPosition?: number) => void;
   onSaveEditor: () => void;
-  onToggleTemplateKeyboard: () => void;
+  onToggleStamp: () => void;
   onStepInlineCounter: (targetIndex: number, delta: number) => void;
   onOpenCounterPopup: (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -162,7 +162,7 @@ export function Editor({
   memo,
   memoRef,
   isMemoFocused,
-  isTemplateKeyboardVisible,
+  isStampVisible,
   editingTopMargin,
   editingBottomMargin,
   memoParts,
@@ -174,7 +174,7 @@ export function Editor({
   onMemoChange,
   onFocusEditor,
   onSaveEditor,
-  onToggleTemplateKeyboard,
+  onToggleStamp,
   onStepInlineCounter,
   onOpenCounterPopup,
   onOpenFormulaPopup,
@@ -216,13 +216,11 @@ export function Editor({
                 <div className="pointer-events-auto absolute right-3 bottom-3 flex flex-col items-end gap-2">
                   <button
                     type="button"
-                    className={`btn btn-circle btn-lg shadow-lg ${isTemplateKeyboardVisible ? "btn-info" : "btn-ghost bg-base-100"}`}
+                    className={`btn btn-circle btn-lg shadow-lg ${isStampVisible ? "btn-info" : "btn-ghost bg-base-100"}`}
                     onPointerDown={(event) => event.preventDefault()}
-                    onClick={onToggleTemplateKeyboard}
+                    onClick={onToggleStamp}
                     aria-label={
-                      isTemplateKeyboardVisible
-                        ? "テンプレートキーボードをオフ"
-                        : "テンプレートキーボードをオン"
+                      isStampVisible ? "スタンプをオフ" : "スタンプをオン"
                     }
                   >
                     <Icon icon="fa-solid:stamp" className="size-4" aria-hidden />
