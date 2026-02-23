@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { flip, offset, shift, useFloating, type VirtualElement } from "@floating-ui/react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { FormulaDisplayMode } from "../hooks/useMemoEditor";
 
 const FORMULA_SYMBOL_BUTTONS = [
@@ -21,6 +21,13 @@ const FORMULA_DISPLAY_MODE_BUTTONS: ReadonlyArray<{
   { mode: "percent", label: "%" },
   { mode: "odds", label: "1/〇〇" },
 ];
+
+const FORMULA_EXPRESSION_EXAMPLES = [
+  "big / game",
+  "(bell + cherry) / game",
+  "pow(big, 2) / game",
+  "max(big, reg) / game",
+] as const;
 
 interface FormulaVariable {
   name: string;
@@ -53,6 +60,7 @@ export function FormulaPopup({
   onConfirm,
 }: MemoFormulaPopupProps) {
   const expressionInputRef = useRef<HTMLInputElement>(null);
+  const [isFormulaHelpOpen, setIsFormulaHelpOpen] = useState(false);
   const { refs, floatingStyles } = useFloating({
     open: true,
     strategy: "fixed",
@@ -119,7 +127,34 @@ export function FormulaPopup({
           className="card bg-base-100 border-base-300 w-[min(92vw,34rem)] border shadow-lg"
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="card-body gap-3 p-4">
+          <div className="card-body relative gap-3 p-4">
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs btn-circle absolute top-3 right-3"
+              onClick={() => setIsFormulaHelpOpen((current) => !current)}
+              aria-label="数式ヘルプ"
+              title="数式ヘルプ"
+            >
+              <Icon icon="bi:info-circle" className="size-4" />
+            </button>
+
+            {isFormulaHelpOpen ? (
+              <div className="bg-base-200 rounded-md p-3 pr-10 text-xs">
+                <div className="mb-1 font-bold">入力できる数式</div>
+                <div className="opacity-80">演算子: + - * / % ^ ( )</div>
+                <div className="opacity-80">
+                  主な関数: min, max, pow, sqrt, abs, floor, ceil, roundTo, log
+                </div>
+                <div className="opacity-80">変数: カウンター名（例: game, big, reg）</div>
+                <div className="mt-2 opacity-70">例:</div>
+                <div className="flex flex-col gap-0.5 font-mono opacity-80">
+                  {FORMULA_EXPRESSION_EXAMPLES.map((example) => (
+                    <span key={example}>{example}</span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <label className="form-control gap-1">
               <span className="text-xs opacity-70">式</span>
               <input
