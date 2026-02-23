@@ -197,11 +197,13 @@ export function Memo({ onEditingChange }: MemoProps) {
       {memo.formulaPopup ? (
         <FormulaPopup
           expression={memo.formulaPopup.expression}
+          displayMode={memo.formulaPopup.displayMode}
           isExpressionInvalid={memo.isFormulaPopupExpressionInvalid}
           anchorX={memo.formulaPopup.anchorX}
           anchorY={memo.formulaPopup.anchorY}
           variables={memo.formulaVariableList}
           onExpressionChange={memo.setFormulaPopupExpression}
+          onDisplayModeChange={memo.setFormulaPopupDisplayMode}
           onConfirm={memo.applyFormulaPopup}
           onClose={memo.closeFormulaPopup}
         />

@@ -34,6 +34,7 @@ interface MemoEditorProps {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     expression: string,
+    displayMode: Extract<MemoPart, { type: "formula" }>["displayMode"],
   ) => void;
 }
 
@@ -72,7 +73,7 @@ function buildPreviewParts(memo: string, memoParts: MemoPart[]): PreviewPart[] {
 
     const fallbackToken =
       part.type === "formula"
-        ? `[[f:${part.expression}]]`
+        ? `[[f:${part.expression}${part.displayMode === "auto" ? "" : `;fmt=${part.displayMode}`}]]`
         : part.name
           ? `[[c:${part.name}=${part.value}]]`
           : `[[c:${part.value}]]`;

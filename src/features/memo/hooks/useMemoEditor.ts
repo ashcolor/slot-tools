@@ -29,10 +29,12 @@ export interface MemoTemplate {
   createdAt: string;
 }
 
+export type FormulaDisplayMode = "auto" | "percent" | "odds";
+
 export type MemoPart =
   | { type: "text"; value: string }
   | { type: "counter"; value: number; index: number; name: string | null; legacy: boolean }
-  | { type: "formula"; expression: string; index: number };
+  | { type: "formula"; expression: string; index: number; displayMode: FormulaDisplayMode };
 
 export interface CounterPopupState {
   targetIndex: number;
@@ -47,6 +49,7 @@ export interface FormulaPopupState {
   anchorX: number;
   anchorY: number;
   expression: string;
+  displayMode: FormulaDisplayMode;
 }
 
 export interface InlineControlSize {
@@ -70,7 +73,9 @@ const STAMP_ROOT_SELECTOR = "[data-stamp-root='true']";
 const FORMULA_ROUND_DECIMAL_PLACES_MIN = 0;
 const FORMULA_ROUND_DECIMAL_PLACES_MAX = 3;
 const FORMULA_ROUND_DECIMAL_PLACES_DEFAULT = 1;
-const FORMULA_CEIL_OPTION_PATTERN = /^(.*);ceil=(\d+)$/;
+const FORMULA_OPTION_PATTERN = /^(.*);([^=;]+)=([^;]+)$/;
+const FORMULA_PERCENT_DISPLAY_MIN = 0.01;
+const FORMULA_PERCENT_DISPLAY_MAX = 0.99;
 const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
 const MEMO_IMAGE_PADDING = 24;
 const MEMO_IMAGE_MIN_HEIGHT = 120;
@@ -319,18 +324,48 @@ function createTemplateId(): string {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function parseFormulaBody(rawBody: string): { expression: string } {
+function isFormulaDisplayMode(value: string): value is FormulaDisplayMode {
+  return value === "auto" || value === "percent" || value === "odds";
+}
+
+function parseFormulaBody(rawBody: string): { expression: string; displayMode: FormulaDisplayMode } {
   const body = rawBody.trim();
-  const optionMatch = body.match(FORMULA_CEIL_OPTION_PATTERN);
-  if (!optionMatch) {
-    return { expression: body };
+  let expression = body;
+  let displayMode: FormulaDisplayMode = "auto";
+
+  while (true) {
+    const optionMatch = expression.match(FORMULA_OPTION_PATTERN);
+    if (!optionMatch) break;
+
+    const nextExpression = optionMatch[1].trim();
+    const optionKey = optionMatch[2].trim().toLowerCase();
+    const optionValue = optionMatch[3].trim().toLowerCase();
+
+    if (optionKey === "ceil") {
+      expression = nextExpression;
+      continue;
+    }
+    if (
+      (optionKey === "fmt" || optionKey === "format" || optionKey === "display") &&
+      isFormulaDisplayMode(optionValue)
+    ) {
+      displayMode = optionValue;
+      expression = nextExpression;
+      continue;
+    }
+    break;
   }
 
-  const expression = optionMatch[1].trim();
   if (expression.length === 0) {
-    return { expression: body };
+    return { expression: body, displayMode: "auto" };
   }
-  return { expression };
+  return { expression, displayMode };
+}
+
+function buildFormulaBody(expression: string, displayMode: FormulaDisplayMode): string {
+  const trimmedExpression = expression.trim();
+  if (displayMode === "auto") return trimmedExpression;
+  return `${trimmedExpression};fmt=${displayMode}`;
 }
 
 function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
@@ -374,6 +409,7 @@ function parseMemoParts(memo: string): MemoPart[] {
         type: "formula",
         expression: parsed.expression,
         index: formulaIndex,
+        displayMode: parsed.displayMode,
       });
       formulaIndex += 1;
     }
@@ -534,13 +570,27 @@ function evaluateFormula(
   expression: string,
   variables: Record<string, number>,
   roundDecimalPlaces: number,
+  displayMode: FormulaDisplayMode,
 ): string {
   try {
     const raw = Parser.evaluate(expression, variables);
     const numberValue = Number(raw);
     if (!Number.isFinite(numberValue)) return "--";
-    if (numberValue < 1) {
+
+    if (displayMode === "percent") {
       return `${formatFormulaNumber(numberValue * 100, roundDecimalPlaces)}%`;
+    }
+
+    if (displayMode === "odds") {
+      if (numberValue <= 0) return "--";
+      return `1/${formatFormulaNumber(1 / numberValue, roundDecimalPlaces)}`;
+    }
+
+    if (numberValue >= FORMULA_PERCENT_DISPLAY_MIN && numberValue <= FORMULA_PERCENT_DISPLAY_MAX) {
+      return `${formatFormulaNumber(numberValue * 100, roundDecimalPlaces)}%`;
+    }
+    if (numberValue > 0 && numberValue < FORMULA_PERCENT_DISPLAY_MIN) {
+      return `1/${formatFormulaNumber(1 / numberValue, roundDecimalPlaces)}`;
     }
     return formatFormulaNumber(numberValue, roundDecimalPlaces);
   } catch {
@@ -642,7 +692,12 @@ export function useMemoEditor() {
       if (part.type === "formula") {
         results.set(
           part.index,
-          evaluateFormula(part.expression, variables, normalizedRoundDecimalPlaces),
+          evaluateFormula(
+            part.expression,
+            variables,
+            normalizedRoundDecimalPlaces,
+            part.displayMode,
+          ),
         );
       }
     });
@@ -884,7 +939,11 @@ export function useMemoEditor() {
     });
   };
 
-  const updateInlineFormula = (targetIndex: number, expression: string) => {
+  const updateInlineFormula = (
+    targetIndex: number,
+    expression: string,
+    displayMode: FormulaDisplayMode,
+  ) => {
     setDraft((prev) => {
       let currentIndex = 0;
       return {
@@ -897,7 +956,7 @@ export function useMemoEditor() {
           currentIndex += 1;
           const nextExpression = expression.trim();
           if (nextExpression.length === 0) return token;
-          return `[[f:${nextExpression}]]`;
+          return `[[f:${buildFormulaBody(nextExpression, displayMode)}]]`;
         }),
       };
     });
@@ -943,6 +1002,7 @@ export function useMemoEditor() {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     expression: string,
+    displayMode: FormulaDisplayMode,
   ) => {
     const rect = event.currentTarget.getBoundingClientRect();
     setCounterPopup(null);
@@ -951,6 +1011,7 @@ export function useMemoEditor() {
       anchorX: rect.left + rect.width / 2,
       anchorY: rect.bottom,
       expression,
+      displayMode,
     });
   };
 
@@ -958,9 +1019,17 @@ export function useMemoEditor() {
     setFormulaPopup((prev) => (prev ? { ...prev, expression } : prev));
   };
 
+  const setFormulaPopupDisplayMode = (displayMode: FormulaDisplayMode) => {
+    setFormulaPopup((prev) => (prev ? { ...prev, displayMode } : prev));
+  };
+
   const applyFormulaPopup = () => {
     if (!formulaPopup) return;
-    updateInlineFormula(formulaPopup.targetIndex, formulaPopup.expression);
+    updateInlineFormula(
+      formulaPopup.targetIndex,
+      formulaPopup.expression,
+      formulaPopup.displayMode,
+    );
     setFormulaPopup(null);
   };
 
@@ -1127,6 +1196,7 @@ export function useMemoEditor() {
     stepPopupCounterDigit,
     closeCounterPopup,
     setFormulaPopupExpression,
+    setFormulaPopupDisplayMode,
     applyFormulaPopup,
     closeFormulaPopup,
     copyRawMemoToClipboard,

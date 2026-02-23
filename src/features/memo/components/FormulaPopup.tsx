@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { flip, offset, shift, useFloating, type VirtualElement } from "@floating-ui/react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useLayoutEffect, useMemo, useRef } from "react";
+import type { FormulaDisplayMode } from "../hooks/useMemoEditor";
 
 const FORMULA_SYMBOL_BUTTONS = [
   { symbol: "+", icon: "mdi:plus", label: "Add" },
@@ -12,6 +13,15 @@ const FORMULA_SYMBOL_BUTTONS = [
   { symbol: ")", icon: "mdi:chevron-right", label: "Close Parenthesis" },
 ] as const;
 
+const FORMULA_DISPLAY_MODE_BUTTONS: ReadonlyArray<{
+  mode: FormulaDisplayMode;
+  label: string;
+}> = [
+  { mode: "auto", label: "自動" },
+  { mode: "percent", label: "%" },
+  { mode: "odds", label: "1/〇〇" },
+];
+
 interface FormulaVariable {
   name: string;
   value: number;
@@ -19,23 +29,27 @@ interface FormulaVariable {
 
 interface MemoFormulaPopupProps {
   expression: string;
+  displayMode: FormulaDisplayMode;
   isExpressionInvalid: boolean;
   anchorX: number;
   anchorY: number;
   variables: FormulaVariable[];
   onClose: () => void;
   onExpressionChange: (value: string) => void;
+  onDisplayModeChange: (mode: FormulaDisplayMode) => void;
   onConfirm: () => void;
 }
 
 export function FormulaPopup({
   expression,
+  displayMode,
   isExpressionInvalid,
   anchorX,
   anchorY,
   variables,
   onClose,
   onExpressionChange,
+  onDisplayModeChange,
   onConfirm,
 }: MemoFormulaPopupProps) {
   const expressionInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +134,22 @@ export function FormulaPopup({
             </label>
 
             <div className="flex flex-col gap-1">
+              <span className="text-xs opacity-70">表示形式</span>
+              <div className="join w-full">
+                {FORMULA_DISPLAY_MODE_BUTTONS.map((button) => (
+                  <button
+                    key={button.mode}
+                    type="button"
+                    className={`join-item btn btn-sm flex-1 ${displayMode === button.mode ? "btn-primary" : "btn-outline"}`}
+                    onClick={() => onDisplayModeChange(button.mode)}
+                  >
+                    {button.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
               <span className="text-xs opacity-70">変数</span>
               <div className="flex max-h-32 flex-wrap content-start gap-2 overflow-y-auto rounded-md p-1">
                 {variables.length === 0 ? (
@@ -130,11 +160,11 @@ export function FormulaPopup({
                       key={variable.name}
                       type="button"
                       className="btn btn-xs"
-                      title={`${variable.name}：${variable.value}`}
+                      title={`${variable.name} = ${variable.value}`}
                       onClick={() => handleVariableClick(variable.name)}
                     >
                       <span className="max-w-40 overflow-hidden font-mono text-ellipsis whitespace-nowrap">
-                        {variable.name}：{variable.value}
+                        {variable.name} : {variable.value}
                       </span>
                     </button>
                   ))

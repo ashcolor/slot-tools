@@ -12,6 +12,7 @@ interface MemoInlineFormulaProps {
     event: ReactMouseEvent<HTMLButtonElement>,
     targetIndex: number,
     expression: string,
+    displayMode: FormulaPart["displayMode"],
   ) => void;
 }
 
@@ -29,7 +30,7 @@ export function InlineFormula({
       onPointerDown={(event) => event.preventDefault()}
       onClick={(event) => {
         event.stopPropagation();
-        onOpenFormulaPopup(event, part.index, part.expression);
+        onOpenFormulaPopup(event, part.index, part.expression, part.displayMode);
       }}
     >
       <Icon icon="mdi:calculator" className="size-4" />
