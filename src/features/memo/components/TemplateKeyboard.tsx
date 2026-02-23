@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useRef } from "react";
 import { TEMPLATE_CATEGORIES } from "../constants";
 import type { TemplateCategory } from "../constants";
@@ -79,18 +80,25 @@ export function TemplateKeyboard({
     >
       <div className="mx-auto max-w-4xl">
         <div className="border-base-300 bg-base-100/95 rounded-xl border p-2 shadow-lg backdrop-blur">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {TEMPLATE_CATEGORIES.map((category) => (
-              <button
-                key={category.key}
-                type="button"
-                className={`btn btn-sm shrink-0 px-1 ${selectedCategory.key === category.key ? "btn-neutral" : "btn-ghost"}`}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => onSelectCategoryKey(category.key)}
-              >
-                {category.label}
-              </button>
-            ))}
+          <div className="overflow-x-auto">
+            <div className="join">
+              {TEMPLATE_CATEGORIES.map((category) => (
+                <button
+                  key={category.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedCategory.key === category.key}
+                  className={`join-item btn btn-sm gap-1 ${selectedCategory.key === category.key ? "btn-neutral" : ""}`}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onClick={() => onSelectCategoryKey(category.key)}
+                >
+                  {category.key === "calc" ? (
+                    <Icon icon="ic:baseline-widgets" className="size-4" aria-hidden />
+                  ) : null}
+                  {category.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="mt-2 flex items-center gap-1 overflow-x-auto">
             {selectedCategory.items.map((item) => (

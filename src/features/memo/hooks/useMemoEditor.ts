@@ -497,10 +497,7 @@ async function renderMemoTextImage(text: string, fontSizeLevel: number): Promise
 
   const width = Math.ceil(Math.max(240, widestLineWidth + MEMO_IMAGE_PADDING * 2));
   const height = Math.ceil(
-    Math.max(
-      MEMO_IMAGE_MIN_HEIGHT,
-      printableLines.length * lineHeight + MEMO_IMAGE_PADDING * 2,
-    ),
+    Math.max(MEMO_IMAGE_MIN_HEIGHT, printableLines.length * lineHeight + MEMO_IMAGE_PADDING * 2),
   );
   const devicePixelRatio =
     typeof window === "undefined" ? 1 : Math.min(3, Math.max(1, window.devicePixelRatio || 1));

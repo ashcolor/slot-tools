@@ -225,7 +225,7 @@ export function Editor({
                         : "テンプレートキーボードをオン"
                     }
                   >
-                    <Icon icon="mdi:text-box-multiple-outline" className="size-4" aria-hidden />
+                    <Icon icon="fa-solid:stamp" className="size-4" aria-hidden />
                   </button>
                   <button
                     type="button"

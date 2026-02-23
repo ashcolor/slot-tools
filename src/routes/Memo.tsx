@@ -143,9 +143,7 @@ export function Memo({ onEditingChange }: MemoProps) {
         onMemoChange={memo.setMemo}
         onFocusEditor={memo.focusMemoEditor}
         onSaveEditor={memo.saveMemoEditor}
-        onToggleTemplateKeyboard={() =>
-          setIsTemplateKeyboardVisible((current) => !current)
-        }
+        onToggleTemplateKeyboard={() => setIsTemplateKeyboardVisible((current) => !current)}
         onStepInlineCounter={memo.stepInlineCounter}
         onOpenCounterPopup={memo.openCounterPopup}
         onOpenFormulaPopup={memo.openFormulaPopup}
