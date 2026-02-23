@@ -177,7 +177,6 @@ export function Memo({ onEditingChange }: MemoProps) {
 
       <ApplyTemplateDialog
         applyTemplateModalRef={memo.applyTemplateModalRef}
-        pendingApplyTemplate={memo.pendingApplyTemplate}
         onConfirmApplyTemplate={memo.confirmApplyTemplate}
         onCancelApplyTemplate={memo.cancelApplyTemplate}
       />
