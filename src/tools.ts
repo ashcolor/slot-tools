@@ -11,9 +11,9 @@ export const tools: Tool[] = [
     path: "/memo",
     title: "実戦メモ",
     description:
-      "ホール・機種・収支・示唆を1画面で記録。タグ管理と検索で振り返りしやすいメモアプリです。",
+      "実戦内容の記録に特化したメモアプリ。カウンターや数式が置ける機能付き。",
     emoji: "📝",
-    sidebarIcon: "fa6-solid:note-sticky",
+    sidebarIcon: "fa7-regular:file-text",
   },
   {
     path: "/noriuchi",
