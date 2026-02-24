@@ -1,15 +1,19 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
+import { formatTemplateDate, getTemplateTitle, type MemoHistoryItem } from "../hooks/useMemoEditor";
 import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
   isMemoLocked: boolean;
   lockFeedbackNonce: number;
+  memoHistoryList: MemoHistoryItem[];
   onCopyRawMemo: () => Promise<void>;
   onCopyResolvedMemo: () => Promise<void>;
   onCopyTemplateMemo: () => Promise<void>;
   onCopyResolvedMemoImage: () => Promise<void>;
   onDownloadResolvedMemoImage: () => Promise<void>;
+  onCreateNewMemo: () => boolean;
+  onRestoreMemoHistory: (historyId: string) => void;
   onToggleMemoLock: () => void;
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
@@ -42,16 +46,19 @@ REG：[[c:reg=0]] [[f:reg / game;fmt=odds]]
 ## 作成するメモの内容
 URLが記載されている場合はURL先の設定推測ポイントを反映したメモを作成して。
 [設定差のある要素を直接記載するか、URLを記載]
-`
+`;
 
 export function Toolbar({
   isMemoLocked,
   lockFeedbackNonce,
+  memoHistoryList,
   onCopyRawMemo,
   onCopyResolvedMemo,
   onCopyTemplateMemo,
   onCopyResolvedMemoImage,
   onDownloadResolvedMemoImage,
+  onCreateNewMemo,
+  onRestoreMemoHistory,
   onToggleMemoLock,
   onOpenTemplate,
   onOpenConfig,
@@ -59,20 +66,29 @@ export function Toolbar({
   const shareDialogRef = useRef<HTMLDialogElement>(null);
   const notationDialogRef = useRef<HTMLDialogElement>(null);
   const llmGuideDialogRef = useRef<HTMLDialogElement>(null);
+  const historyDialogRef = useRef<HTMLDialogElement>(null);
   const llmCopiedTimerRef = useRef<number | null>(null);
+  const newMemoToastTimerRef = useRef<number | null>(null);
   const [isLlmGuideCopied, setIsLlmGuideCopied] = useState(false);
+  const [isNewMemoToastVisible, setIsNewMemoToastVisible] = useState(false);
 
   useEffect(() => {
     return () => {
       if (llmCopiedTimerRef.current !== null) {
         window.clearTimeout(llmCopiedTimerRef.current);
       }
+      if (newMemoToastTimerRef.current !== null) {
+        window.clearTimeout(newMemoToastTimerRef.current);
+      }
     };
   }, []);
 
   const copyLlmGuide = async () => {
     try {
-      if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      if (
+        typeof navigator === "undefined" ||
+        typeof navigator.clipboard?.writeText !== "function"
+      ) {
         throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
       }
       await navigator.clipboard.writeText(LLM_MEMO_GUIDE_TEXT);
@@ -99,10 +115,32 @@ export function Toolbar({
       llmGuideDialogRef.current?.showModal();
     });
   };
+  const handleCreateNewMemo = () => {
+    const didSaveToHistory = onCreateNewMemo();
+    if (!didSaveToHistory) return;
+
+    setIsNewMemoToastVisible(true);
+    if (newMemoToastTimerRef.current !== null) {
+      window.clearTimeout(newMemoToastTimerRef.current);
+    }
+    newMemoToastTimerRef.current = window.setTimeout(() => {
+      setIsNewMemoToastVisible(false);
+      newMemoToastTimerRef.current = null;
+    }, 1800);
+  };
 
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm btn-square"
+          onClick={handleCreateNewMemo}
+          aria-label="New memo"
+          title="新規"
+        >
+          <Icon icon="mdi:note-plus-outline" className="size-4" />
+        </button>
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
@@ -139,6 +177,15 @@ export function Toolbar({
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
+          onClick={() => historyDialogRef.current?.showModal()}
+          aria-label="History"
+          title="履歴"
+        >
+          <Icon icon="mdi:history" className="size-4" />
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm btn-square"
           onClick={() => shareDialogRef.current?.showModal()}
           aria-label="Share"
         >
@@ -162,6 +209,58 @@ export function Toolbar({
         onCopyResolvedMemoImage={onCopyResolvedMemoImage}
         onDownloadResolvedMemoImage={onDownloadResolvedMemoImage}
       />
+
+      <dialog ref={historyDialogRef} className="modal">
+        <div className="modal-box">
+          <h3 className="mb-3 text-lg font-bold">履歴</h3>
+          {memoHistoryList.length === 0 ? (
+            <p className="text-sm opacity-70">履歴はありません。</p>
+          ) : (
+            <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+              {memoHistoryList.map((history) => (
+                <div key={history.id} className="p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{getTemplateTitle(history.memo)}</p>
+                      <p className="text-xs opacity-70">{formatTemplateDate(history.createdAt)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${isMemoLocked ? "btn-disabled" : "btn-primary"}`}
+                      onClick={() => {
+                        if (isMemoLocked) return;
+                        onRestoreMemoHistory(history.id);
+                        historyDialogRef.current?.close();
+                      }}
+                    >
+                      復元
+                    </button>
+                  </div>
+                  <p className="mt-1 truncate text-xs opacity-70">
+                    {history.memo.replace(/\r?\n/g, " ").trim()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-sm">閉じる</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {isNewMemoToastVisible ? (
+        <div className="toast toast-top toast-center z-50">
+          <div className="alert alert-success">
+            <span className="text-sm">履歴に保存しました</span>
+          </div>
+        </div>
+      ) : null}
 
       <dialog ref={notationDialogRef} className="modal">
         <div className="modal-box relative">
@@ -196,8 +295,8 @@ export function Toolbar({
                 <code>[[f:big / game;fmt=percent]]</code>
               </div>
               <div className="text-xs opacity-70">
-                <code>fmt</code> は表示形式の指定です（自動表示: <code>auto</code> / %
-                表示: <code>percent</code> / 1/〇〇表示: <code>odds</code>）
+                <code>fmt</code> は表示形式の指定です（自動表示: <code>auto</code> / % 表示:{" "}
+                <code>percent</code> / 1/〇〇表示: <code>odds</code>）
               </div>
               <div className="mt-2 text-xs opacity-70">使用可能関数</div>
               <div className="text-xs opacity-70">
@@ -225,7 +324,9 @@ export function Toolbar({
           <h3 className="mb-2 text-lg font-bold">LLM向けコピー内容</h3>
           <div className="mb-2 text-xs opacity-80 flex flex-col gap-1">
             <span>このテキストをLLMに渡すと、メモ記法に沿ったメモを作成できます。</span>
-            <span>テキスト下部に設定推測要素やURLを記載すると、その内容を反映したメモを生成できます。</span>
+            <span>
+              テキスト下部に設定推測要素やURLを記載すると、その内容を反映したメモを生成できます。
+            </span>
           </div>
           <textarea
             className="textarea textarea-bordered font-mono text-xs"
@@ -261,7 +362,11 @@ export function Toolbar({
             </a>
           </div>
           <div className="modal-action">
-            <button type="button" className="btn btn-sm btn-primary" onClick={() => void copyLlmGuide()}>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => void copyLlmGuide()}
+            >
               <Icon icon={isLlmGuideCopied ? "fa6-solid:check" : "fa6-regular:clipboard"} />
               コピー
             </button>

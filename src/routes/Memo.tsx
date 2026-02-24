@@ -68,6 +68,23 @@ export function Memo({ onEditingChange }: MemoProps) {
     },
     [isMemoLocked, memo, triggerLockFeedback],
   );
+  const handleCreateNewMemo = useCallback(() => {
+    if (isMemoLocked) {
+      triggerLockFeedback();
+      return false;
+    }
+    return memo.createNewMemo();
+  }, [isMemoLocked, memo, triggerLockFeedback]);
+  const handleRestoreMemoHistory = useCallback(
+    (historyId: string) => {
+      if (isMemoLocked) {
+        triggerLockFeedback();
+        return;
+      }
+      memo.restoreMemoHistory(historyId);
+    },
+    [isMemoLocked, memo, triggerLockFeedback],
+  );
 
   useEffect(() => {
     onEditingChange?.(memo.isMemoFocused);
@@ -149,11 +166,14 @@ export function Memo({ onEditingChange }: MemoProps) {
         <Toolbar
           isMemoLocked={isMemoLocked}
           lockFeedbackNonce={lockFeedbackNonce}
+          memoHistoryList={memo.memoHistoryList}
           onCopyRawMemo={memo.copyRawMemoToClipboard}
           onCopyResolvedMemo={memo.copyResolvedMemoToClipboard}
           onCopyTemplateMemo={memo.copyTemplateMemoToClipboard}
           onCopyResolvedMemoImage={memo.copyResolvedMemoImageToClipboard}
           onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
+          onCreateNewMemo={handleCreateNewMemo}
+          onRestoreMemoHistory={handleRestoreMemoHistory}
           onToggleMemoLock={handleToggleMemoLock}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}

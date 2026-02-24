@@ -30,6 +30,12 @@ export interface MemoTemplate {
   createdAt: string;
 }
 
+export interface MemoHistoryItem {
+  id: string;
+  memo: string;
+  createdAt: string;
+}
+
 export type FormulaDisplayMode = "auto" | "percent" | "odds";
 
 export type MemoPart =
@@ -81,6 +87,7 @@ const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
 const MEMO_IMAGE_PADDING = 24;
 const MEMO_IMAGE_MIN_HEIGHT = 120;
 const MEMO_QUERY_KEY = "m";
+const MEMO_HISTORY_LIMIT = 50;
 
 function bytesToBase64Url(bytes: Uint8Array): string | null {
   if (typeof btoa !== "function") return null;
@@ -704,6 +711,7 @@ export function useMemoEditor() {
     "slot-memo-templates",
     INITIAL_TEMPLATES as MemoTemplate[],
   );
+  const [memoHistory, setMemoHistory] = useLocalStorage<MemoHistoryItem[]>("slot-memo-history", []);
   const [isUrlMemoHydrated, setIsUrlMemoHydrated] = useState(false);
   const [pendingUrlMemo, setPendingUrlMemo] = useState<string | null>(null);
   const [isMemoFocused, setIsMemoFocused] = useState(false);
@@ -727,6 +735,10 @@ export function useMemoEditor() {
   const didInitUrlMemoRef = useRef(false);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
+  const memoHistoryList = useMemo(
+    () => (Array.isArray(memoHistory) ? memoHistory : []),
+    [memoHistory],
+  );
   const pendingApplyTemplate = useMemo(
     () => templateList.find((template) => template.id === pendingApplyTemplateId) ?? null,
     [pendingApplyTemplateId, templateList],
@@ -923,6 +935,40 @@ export function useMemoEditor() {
       fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
       formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(prev.formulaRoundDecimalPlaces),
     }));
+    setCounterPopup(null);
+    setFormulaPopup(null);
+    setIsMemoFocused(false);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
+  };
+
+  const createNewMemo = (): boolean => {
+    let didSaveToHistory = false;
+    if (draft.memo.trim().length > 0) {
+      didSaveToHistory = true;
+      const nextHistory: MemoHistoryItem = {
+        id: createTemplateId(),
+        memo: draft.memo,
+        createdAt: new Date().toISOString(),
+      };
+      setMemoHistory((prev) => {
+        const list = Array.isArray(prev) ? prev : [];
+        return [nextHistory, ...list].slice(0, MEMO_HISTORY_LIMIT);
+      });
+    }
+
+    setDraft((prev) => ({ ...prev, memo: "" }));
+    setCounterPopup(null);
+    setFormulaPopup(null);
+    setIsMemoFocused(false);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
+    return didSaveToHistory;
+  };
+
+  const restoreMemoHistory = (historyId: string) => {
+    const target = memoHistoryList.find((item) => item.id === historyId);
+    if (!target) return;
+
+    setDraft((prev) => ({ ...prev, memo: target.memo }));
     setCounterPopup(null);
     setFormulaPopup(null);
     setIsMemoFocused(false);
@@ -1314,6 +1360,7 @@ export function useMemoEditor() {
     deleteTemplateModalRef,
     urlMemoConfirmModalRef,
     templateList,
+    memoHistoryList,
     pendingUrlMemo,
     pendingApplyTemplate,
     pendingDeleteTemplate,
@@ -1334,6 +1381,8 @@ export function useMemoEditor() {
     setSelectedCategoryKey,
     setIsMemoFocused,
     clearDraft,
+    createNewMemo,
+    restoreMemoHistory,
     handleMemoBlur,
     insertTemplateItem,
     focusMemoEditor,
