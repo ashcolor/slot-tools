@@ -1,6 +1,9 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
-import { formatTemplateDate, getTemplateTitle, type MemoHistoryItem } from "../hooks/useMemoEditor";
+import type { MemoHistoryItem } from "../hooks/useMemoEditor";
+import { HistoryDialog } from "./HistoryDialog";
+import { LlmGuideDialog } from "./LlmGuideDialog";
+import { NotationDialog } from "./NotationDialog";
 import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
@@ -210,49 +213,12 @@ export function Toolbar({
         onDownloadResolvedMemoImage={onDownloadResolvedMemoImage}
       />
 
-      <dialog ref={historyDialogRef} className="modal">
-        <div className="modal-box">
-          <h3 className="mb-3 text-lg font-bold">履歴</h3>
-          {memoHistoryList.length === 0 ? (
-            <p className="text-sm opacity-70">履歴はありません。</p>
-          ) : (
-            <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
-              {memoHistoryList.map((history) => (
-                <div key={history.id} className="p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">{getTemplateTitle(history.memo)}</p>
-                      <p className="text-xs opacity-70">{formatTemplateDate(history.createdAt)}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className={`btn btn-xs ${isMemoLocked ? "btn-disabled" : "btn-primary"}`}
-                      onClick={() => {
-                        if (isMemoLocked) return;
-                        onRestoreMemoHistory(history.id);
-                        historyDialogRef.current?.close();
-                      }}
-                    >
-                      復元
-                    </button>
-                  </div>
-                  <p className="mt-1 truncate text-xs opacity-70">
-                    {history.memo.replace(/\r?\n/g, " ").trim()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-sm">閉じる</button>
-            </form>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <HistoryDialog
+        dialogRef={historyDialogRef}
+        memoHistoryList={memoHistoryList}
+        isMemoLocked={isMemoLocked}
+        onRestoreMemoHistory={onRestoreMemoHistory}
+      />
 
       {isNewMemoToastVisible ? (
         <div className="toast toast-top toast-center z-50">
@@ -262,123 +228,18 @@ export function Toolbar({
         </div>
       ) : null}
 
-      <dialog ref={notationDialogRef} className="modal">
-        <div className="modal-box relative">
-          <button
-            type="button"
-            className="btn btn-ghost btn-circle absolute top-4 right-4"
-            onClick={handleLlmGuideClick}
-            aria-label="LLM向け説明をコピー"
-            title="LLM向け説明をコピー"
-          >
-            <Icon icon={isLlmGuideCopied ? "fa6-solid:check" : "mdi:brain"} className="size-4" />
-          </button>
-          <h3 className="mb-2 text-lg font-bold">メモ記法</h3>
-          <div className="flex flex-col gap-3 text-sm opacity-80">
-            <div>
-              <div className="mb-1 font-bold">カウンター</div>
-              <div>
-                <code>[[c:name=0]]</code>
-              </div>
-              <div className="text-xs opacity-70">
-                変数名は英字または<code>_</code>開始、以降は英数字と<code>_</code>
-                を使用できます
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 font-bold">数式</div>
-              <div>
-                <code>[[f:big / game]]</code>
-              </div>
-              <div className="mt-2 text-xs opacity-70">表示形式オプション</div>
-              <div className="mt-0.5">
-                <code>[[f:big / game;fmt=percent]]</code>
-              </div>
-              <div className="text-xs opacity-70">
-                <code>fmt</code> は表示形式の指定です（自動表示: <code>auto</code> / % 表示:{" "}
-                <code>percent</code> / 1/〇〇表示: <code>odds</code>）
-              </div>
-              <div className="mt-2 text-xs opacity-70">使用可能関数</div>
-              <div className="text-xs opacity-70">
-                <code>
-                  abs, acos, acosh, asin, asinh, atan, atan2, atanh, cbrt, ceil, cos, cosh, exp,
-                  expm1, floor, gamma, hypot, if, lg, ln, log, log10, log1p, log2, max, min, pow,
-                  pyt, round, roundTo, sign, sin, sinh, sqrt, sum, tan, tanh, trunc
-                </code>
-              </div>
-            </div>
-          </div>
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-sm">閉じる</button>
-            </form>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <NotationDialog
+        dialogRef={notationDialogRef}
+        isLlmGuideCopied={isLlmGuideCopied}
+        onOpenLlmGuide={handleLlmGuideClick}
+      />
 
-      <dialog ref={llmGuideDialogRef} className="modal">
-        <div className="modal-box">
-          <h3 className="mb-2 text-lg font-bold">LLM向けコピー内容</h3>
-          <div className="mb-2 text-xs opacity-80 flex flex-col gap-1">
-            <span>このテキストをLLMに渡すと、メモ記法に沿ったメモを作成できます。</span>
-            <span>
-              テキスト下部に設定推測要素やURLを記載すると、その内容を反映したメモを生成できます。
-            </span>
-          </div>
-          <textarea
-            className="textarea textarea-bordered font-mono text-xs"
-            style={{ width: "100%", minHeight: "13rem" }}
-            value={LLM_MEMO_GUIDE_TEXT}
-            readOnly
-          />
-          <div className="mt-2 text-xs opacity-80">LLMリンク</div>
-          <div className="mt-1 flex flex-wrap gap-2 text-xs">
-            <a
-              href="https://chatgpt.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="link link-primary"
-            >
-              ChatGPT
-            </a>
-            <a
-              href="https://gemini.google.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="link link-primary"
-            >
-              Gemini
-            </a>
-            <a
-              href="https://claude.ai/"
-              target="_blank"
-              rel="noreferrer"
-              className="link link-primary"
-            >
-              Claude
-            </a>
-          </div>
-          <div className="modal-action">
-            <button
-              type="button"
-              className="btn btn-sm btn-primary"
-              onClick={() => void copyLlmGuide()}
-            >
-              <Icon icon={isLlmGuideCopied ? "fa6-solid:check" : "fa6-regular:clipboard"} />
-              コピー
-            </button>
-            <form method="dialog">
-              <button className="btn btn-sm">閉じる</button>
-            </form>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <LlmGuideDialog
+        dialogRef={llmGuideDialogRef}
+        guideText={LLM_MEMO_GUIDE_TEXT}
+        isCopied={isLlmGuideCopied}
+        onCopyGuide={() => void copyLlmGuide()}
+      />
     </div>
   );
 }

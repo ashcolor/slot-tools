@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Icon } from "@iconify/react";
-import { RateSelector } from "../features/noriuchi/components/RateSelector";
 import { MemberForm } from "../features/noriuchi/components/MemberForm";
+import { NoriuchiConfigDialog } from "../features/noriuchi/components/NoriuchiConfigDialog";
+import { NoriuchiResetDialog } from "../features/noriuchi/components/NoriuchiResetDialog";
 import { SettlementView } from "../features/noriuchi/components/Settlement";
 import {
   MAX_MEMBERS,
@@ -159,141 +160,42 @@ export function Noriuchi() {
         </div>
       </div>
 
-      <dialog ref={configModalRef} className="modal">
-        <div className="modal-box">
-          <h3 className="mb-4 text-lg font-bold">設定</h3>
-          <div className="flex flex-col gap-4">
-            <div className="tabs tabs-box mx-auto w-fit">
-              <input
-                type="radio"
-                name="game_type"
-                className="tab"
-                aria-label="スロット"
-                checked={lendingRate !== 4}
-                onChange={() => {
-                  handleLendingRateChange(20);
-                  setSlotSize(46);
-                }}
-              />
-              <input
-                type="radio"
-                name="game_type"
-                className="tab"
-                aria-label="パチンコ"
-                checked={lendingRate === 4}
-                onChange={() => {
-                  handleLendingRateChange(4);
-                  setSlotSize(125);
-                }}
-              />
-            </div>
-            <div>
-              <div className="mb-2 text-xs font-bold opacity-50">レート</div>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold">貸出</label>
-                  <RateSelector
-                    rate={lendingRate}
-                    options={
-                      lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS
-                    }
-                    onChange={handleLendingRateChange}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold">交換</label>
-                  <RateSelector
-                    rate={exchangeRate}
-                    options={exchangeOptions}
-                    onChange={setExchangeRate}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="divider my-0" />
-            <div>
-              <div className="mb-2 text-xs font-bold opacity-50">入力設定</div>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold">再プレイ単位</label>
-                  {lendingRate === 4 ? (
-                    <select
-                      className="select select-bordered select-sm w-auto"
-                      value={slotSize}
-                      onChange={(e) => setSlotSize(Number(e.target.value) as 125)}
-                    >
-                      <option value={125}>125玉</option>
-                    </select>
-                  ) : (
-                    <select
-                      className="select select-bordered select-sm w-auto"
-                      value={slotSize}
-                      onChange={(e) => setSlotSize(Number(e.target.value) as 46 | 50)}
-                    >
-                      <option value={46}>46枚</option>
-                      <option value={50}>50枚</option>
-                    </select>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold">メンバー数</label>
-                  <select
-                    className="select select-bordered select-sm w-auto"
-                    value={memberCount}
-                    onChange={(e) => handleCountChange(Number(e.target.value))}
-                  >
-                    {[1, 2, 3, 4].map((n) => (
-                      <option key={n} value={n}>
-                        {n}人
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-sm">閉じる</button>
-            </form>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <NoriuchiConfigDialog
+        dialogRef={configModalRef}
+        lendingRate={lendingRate}
+        exchangeRate={exchangeRate}
+        slotSize={slotSize}
+        memberCount={memberCount}
+        exchangeOptions={exchangeOptions}
+        onSwitchToSlot={() => {
+          handleLendingRateChange(20);
+          setSlotSize(46);
+        }}
+        onSwitchToPachinko={() => {
+          handleLendingRateChange(4);
+          setSlotSize(125);
+        }}
+        onChangeLendingRate={handleLendingRateChange}
+        onChangeExchangeRate={setExchangeRate}
+        onChangeSlotSize={(newSlotSize) => setSlotSize(newSlotSize)}
+        onChangeMemberCount={handleCountChange}
+      />
 
-      <dialog ref={resetModalRef} className="modal">
-        <div className="modal-box">
-          <h3 className="mb-2 text-lg font-bold">リセット</h3>
-          <p className="text-sm opacity-70">全メンバーの入力内容をリセットしますか？</p>
-          <div className="modal-action">
-            <form method="dialog" className="flex gap-2">
-              <button className="btn btn-sm">キャンセル</button>
-              <button
-                className="btn btn-sm btn-error"
-                onClick={() => {
-                  setMembers((prev) =>
-                    prev.map((m) => ({
-                      ...m,
-                      investMedals: 0,
-                      investCash: 0,
-                      collectMedals: 0,
-                      storedMedals: 0,
-                    })),
-                  );
-                  setActiveTab("playing");
-                }}
-              >
-                リセット
-              </button>
-            </form>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <NoriuchiResetDialog
+        dialogRef={resetModalRef}
+        onConfirmReset={() => {
+          setMembers((prev) =>
+            prev.map((member) => ({
+              ...member,
+              investMedals: 0,
+              investCash: 0,
+              collectMedals: 0,
+              storedMedals: 0,
+            })),
+          );
+          setActiveTab("playing");
+        }}
+      />
 
       <div className="tabs tabs-box tabs-xs">
         <input
