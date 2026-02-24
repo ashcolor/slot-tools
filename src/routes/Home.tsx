@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Icon } from "@iconify/react";
 import { tools } from "../tools";
 
 export function Home() {
@@ -13,7 +14,11 @@ export function Home() {
             className="card bg-base-100 shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="card-body flex-row items-center gap-3 p-4">
-              <span className="text-3xl">{tool.emoji}</span>
+              {tool.sidebarIcon ? (
+                <Icon icon={tool.sidebarIcon} className="size-8 shrink-0" />
+              ) : (
+                <span className="text-3xl">{tool.emoji}</span>
+              )}
               <div className="text-left">
                 <div className="font-bold">{tool.title}</div>
                 <div className="text-xs opacity-60">{tool.description}</div>
