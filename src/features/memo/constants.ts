@@ -51,8 +51,14 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 export const TEMPLATE_COUNTER_ITEM_LABEL = "カウンター";
 export const TEMPLATE_FORMULA_ITEM_LABEL = "数式";
 
-export const EMPTY_MEMO_PLACEHOLDER = `テンプレートにサンプルがあります（上部の「テンプレート」から読込）
-使い方: [[c:name=0]] でカウンター、[[f:name / game]] で数式`;
+export const EMPTY_MEMO_PLACEHOLDER = `📄: 新規
+ℹ️: ヘルプ
+📝: テンプレート
+🔒: 編集のロック
+📜: 履歴
+📤: コピー
+⚙️: 設定
+`;
 
 const SAMPLE_TEMPLATE_MEMO = `■ゲーム数
 ゲーム数：[[c:game=0]]
