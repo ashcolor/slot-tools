@@ -13,13 +13,6 @@ interface Props {
   playUnit: "枚" | "玉";
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
-  otherMembers?: {
-    id: string;
-    name: string;
-    investMedals: number;
-    collectMedals: number;
-  }[];
-  onTransfer?: (targetId: string, amount: number) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
 }
@@ -35,14 +28,10 @@ export function MemberForm({
   playUnit,
   mode,
   onChange,
-  otherMembers,
-  onTransfer,
   memberResult,
   settlements,
 }: Props) {
   const [editing, setEditing] = useState(false);
-  const [transferOpen, setTransferOpen] = useState(false);
-  const [transferTarget, setTransferTarget] = useState(otherMembers?.[0]?.id ?? "");
   const [doneSettlements, setDoneSettlements] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -169,103 +158,13 @@ export function MemberForm({
                       {member.investMedals.toLocaleString()} {playUnit}
                     </span>
                   </div>
-                  <div className="text-collect">
-                    <div className="mb-1 text-xs font-bold">出玉</div>
-                    <StepInput
-                      icon="akar-icons:coin"
-                      iconClass="text-base text-collect shrink-0 w-8"
-                      value={member.collectMedals}
-                      unit={playUnit}
-                      steps={[]}
-                      onChange={(v) => update("collectMedals", v)}
-                      onAdd={() => {}}
-                    />
+                  <div className="text-collect flex justify-between">
+                    <span className="text-xs font-bold">出玉</span>
+                    <span>
+                      {member.collectMedals.toLocaleString()} {playUnit}
+                    </span>
                   </div>
                 </div>
-
-                {/* 出玉移動 */}
-                {otherMembers && otherMembers.length > 0 && onTransfer && (
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      className="btn btn-xs w-full"
-                      onClick={() => setTransferOpen((v) => !v)}
-                    >
-                      <Icon icon="fa6-solid:right-left" className="size-3" />
-                      出玉移動
-                      <Icon
-                        icon={transferOpen ? "fa6-solid:chevron-up" : "fa6-solid:chevron-down"}
-                        className="size-2"
-                      />
-                    </button>
-                    {transferOpen && (
-                      <div className="bg-base-200 mt-2 flex items-center gap-1 rounded-lg p-2">
-                        <select
-                          className="select select-bordered select-xs min-w-0 flex-1"
-                          value={transferTarget}
-                          onChange={(e) => setTransferTarget(e.target.value)}
-                        >
-                          {otherMembers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.name}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="shrink-0 text-xs leading-6 opacity-60">へ</span>
-                        <div className="flex shrink-0 flex-col gap-1">
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-primary h-auto w-full py-1"
-                            disabled={
-                              !transferTarget ||
-                              (() => {
-                                const t = otherMembers.find((m) => m.id === transferTarget);
-                                if (!t) return true;
-                                const amount = Math.max(t.investMedals - t.collectMedals, 0);
-                                return amount === 0 || member.collectMedals < amount;
-                              })()
-                            }
-                            onClick={() => {
-                              const target = otherMembers.find((m) => m.id === transferTarget);
-                              if (target) {
-                                const amount = Math.max(
-                                  target.investMedals - target.collectMedals,
-                                  0,
-                                );
-                                onTransfer(transferTarget, amount);
-                                setTransferOpen(false);
-                              }
-                            }}
-                          >
-                            再プレイ補填
-                            <br />（
-                            {(() => {
-                              const t = otherMembers.find((m) => m.id === transferTarget);
-                              return Math.max(
-                                (t?.investMedals ?? 0) - (t?.collectMedals ?? 0),
-                                0,
-                              ).toLocaleString();
-                            })()}
-                            {playUnit}）
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-xs btn-primary h-auto w-full py-1"
-                            disabled={!transferTarget || !member.collectMedals}
-                            onClick={() => {
-                              onTransfer(transferTarget, member.collectMedals);
-                              setTransferOpen(false);
-                            }}
-                          >
-                            出玉全て
-                            <br />（{member.collectMedals.toLocaleString()}
-                            {playUnit}）
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* メダル収支 */}
                 <div className="mt-2 flex items-center justify-between">

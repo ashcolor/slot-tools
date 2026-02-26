@@ -89,24 +89,6 @@ export function Noriuchi() {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
   };
 
-  const handleTransfer = (fromIndex: number, targetId: string, amount: number) => {
-    setMembers((prev) =>
-      prev.map((m, i) => {
-        if (i === fromIndex)
-          return {
-            ...m,
-            collectMedals: m.collectMedals - amount,
-          };
-        if (m.id === targetId)
-          return {
-            ...m,
-            collectMedals: m.collectMedals + amount,
-          };
-        return m;
-      }),
-    );
-  };
-
   const handleCountChange = (newCount: number) => {
     setMemberCount(newCount);
     setMembers((prev) => {
@@ -282,15 +264,6 @@ export function Noriuchi() {
                       playUnit={playUnit}
                       mode="settlement"
                       onChange={(updated) => updateMember(i, updated)}
-                      otherMembers={members
-                        .filter((_, j) => j !== i)
-                        .map((m) => ({
-                          id: m.id,
-                          name: m.name,
-                          investMedals: m.investMedals,
-                          collectMedals: m.collectMedals,
-                        }))}
-                      onTransfer={(targetId, amount) => handleTransfer(i, targetId, amount)}
                       memberResult={result.members[i]}
                       settlements={result.settlements.filter(
                         (s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name,
