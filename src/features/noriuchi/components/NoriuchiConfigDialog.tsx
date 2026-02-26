@@ -1,12 +1,13 @@
 import type { RefObject } from "react";
-import type { RateOption } from "../../../types";
-import { PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS } from "../constants";
+import type { CollectCalculationMode, RateOption } from "../../../types";
+import { PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS, isPachinkoRate } from "../constants";
 import { RateSelector } from "./RateSelector";
 
 interface NoriuchiConfigDialogProps {
   dialogRef: RefObject<HTMLDialogElement | null>;
   lendingRate: number;
   exchangeRate: number;
+  collectCalculationMode: CollectCalculationMode;
   slotSize: 46 | 50 | 125;
   memberCount: number;
   exchangeOptions: RateOption[];
@@ -14,6 +15,7 @@ interface NoriuchiConfigDialogProps {
   onSwitchToPachinko: () => void;
   onChangeLendingRate: (rate: number) => void;
   onChangeExchangeRate: (rate: number) => void;
+  onChangeCollectCalculationMode: (mode: CollectCalculationMode) => void;
   onChangeSlotSize: (slotSize: 46 | 50 | 125) => void;
   onChangeMemberCount: (count: number) => void;
 }
@@ -22,6 +24,7 @@ export function NoriuchiConfigDialog({
   dialogRef,
   lendingRate,
   exchangeRate,
+  collectCalculationMode,
   slotSize,
   memberCount,
   exchangeOptions,
@@ -29,9 +32,12 @@ export function NoriuchiConfigDialog({
   onSwitchToPachinko,
   onChangeLendingRate,
   onChangeExchangeRate,
+  onChangeCollectCalculationMode,
   onChangeSlotSize,
   onChangeMemberCount,
 }: NoriuchiConfigDialogProps) {
+  const isPachinko = isPachinkoRate(lendingRate);
+
   return (
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box">
@@ -43,7 +49,7 @@ export function NoriuchiConfigDialog({
               name="game_type"
               className="tab"
               aria-label="スロット"
-              checked={lendingRate !== 4}
+              checked={!isPachinko}
               onChange={onSwitchToSlot}
             />
             <input
@@ -51,7 +57,7 @@ export function NoriuchiConfigDialog({
               name="game_type"
               className="tab"
               aria-label="パチンコ"
-              checked={lendingRate === 4}
+              checked={isPachinko}
               onChange={onSwitchToPachinko}
             />
           </div>
@@ -62,7 +68,7 @@ export function NoriuchiConfigDialog({
                 <label className="text-sm font-bold">貸出</label>
                 <RateSelector
                   rate={lendingRate}
-                  options={lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS}
+                  options={isPachinko ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS}
                   onChange={onChangeLendingRate}
                 />
               </div>
@@ -76,13 +82,30 @@ export function NoriuchiConfigDialog({
               </div>
             </div>
           </div>
+          <div>
+            <div className="mb-1 text-xs font-bold opacity-50">計算式</div>
+            <div className="flex items-center justify-between">
+              <div className="mb-2 text-sm font-bold">出玉</div>
+              <select
+                className="select select-bordered select-sm ml-auto"
+                value={collectCalculationMode}
+                onChange={(event) =>
+                  onChangeCollectCalculationMode(event.target.value as CollectCalculationMode)
+                }
+              >
+                <option value="lending">全て貸玉レートで計算</option>
+                <option value="exchange">全て交換レートで計算</option>
+                <option value="auto">再プレイ分まで貸玉レート、超過分は交換レート</option>
+              </select>
+            </div>
+          </div>
           <div className="divider my-0" />
           <div>
             <div className="mb-2 text-xs font-bold opacity-50">入力設定</div>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-bold">再プレイ単位</label>
-                {lendingRate === 4 ? (
+                {isPachinko ? (
                   <select
                     className="select select-bordered select-sm w-auto"
                     value={slotSize}

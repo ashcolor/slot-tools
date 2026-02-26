@@ -74,7 +74,7 @@ export function StepInput({
                 className="btn btn-xs btn-error btn-soft min-w-0 flex-1"
                 onClick={() => onAdd(-v)}
               >
-                <Icon icon="mdi:minus-circle-outline" className="size-4" />
+                <Icon icon="mdi:minus-circle-outline" className="size-3.5 shrink-0" />
                 {fmt(v)}
               </button>
             ))}

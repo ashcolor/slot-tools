@@ -4,8 +4,9 @@ export interface Member {
   investMedals: number;
   investCash: number;
   collectMedals: number;
-  storedMedals: number;
 }
+
+export type CollectCalculationMode = "lending" | "exchange" | "auto";
 
 export interface RateOption {
   label: string;

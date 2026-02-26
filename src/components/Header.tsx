@@ -147,11 +147,7 @@ export function Header() {
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-4 py-4 ${location.pathname === t.path ? "bg-base-200" : ""}`}
                 >
-                  {t.sidebarIcon ? (
-                    <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
-                  ) : (
-                    <span>{t.emoji}</span>
-                  )}
+                  <Icon icon={t.sidebarIcon} className="size-5 shrink-0" />
                   <span>{t.title}</span>
                 </Link>
               </li>
