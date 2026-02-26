@@ -57,16 +57,6 @@ export function MemberForm({
         ? member.collectMedals * exchangeRate
         : Math.min(member.collectMedals, member.investMedals) * lendingRate +
           Math.max(member.collectMedals - member.investMedals, 0) * exchangeRate);
-  const fmtPerThousand = (rate: number) =>
-    (Math.round((1000 / rate) * 10) / 10).toLocaleString(undefined, {
-      maximumFractionDigits: 1,
-    });
-  const convertLabel =
-    collectCalculationMode === "lending"
-      ? `全て貸玉レート(${fmtPerThousand(lendingRate)}${playUnit} = 1000円)`
-      : collectCalculationMode === "exchange"
-        ? `全て交換レート(${fmtPerThousand(exchangeRate)}${playUnit} = 1000円)`
-        : "再プレイ分まで貸玉レート・超過分交換レート";
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -148,132 +138,101 @@ export function MemberForm({
 
           {mode === "settlement" && (
             <>
-              {/* メダル */}
+              {/* 投資 */}
               <div>
-                <div className="mb-2 text-xs font-bold opacity-50">メダル結果</div>
+                <div className="mb-2 text-xs font-bold opacity-50">投資</div>
                 <div className="flex flex-col gap-0.5 text-sm">
-                  <div className="text-invest flex justify-between">
-                    <span className="text-xs font-bold">再プレイ</span>
-                    <span>
-                      {member.investMedals.toLocaleString()} {playUnit}
-                    </span>
-                  </div>
-                  <div className="text-collect flex justify-between">
-                    <span className="text-xs font-bold">出玉</span>
-                    <span>
-                      {member.collectMedals.toLocaleString()} {playUnit}
-                    </span>
-                  </div>
-                </div>
-
-                {/* メダル収支 */}
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm font-bold">メダル収支</span>
-                  <span
-                    className={`font-bold ${member.collectMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}
-                  >
-                    {member.collectMedals - member.investMedals >= 0 ? "+" : ""}
-                    {(member.collectMedals - member.investMedals).toLocaleString()} {playUnit}
-                  </span>
-                </div>
-              </div>
-
-              {/* 現金 */}
-              <div>
-                <div className="mb-2 text-xs font-bold opacity-50">現金結果</div>
-                <div className="flex flex-col gap-0.5 text-xs">
-                  <div className="text-invest flex justify-between">
-                    <span className="font-bold">現金投資</span>
-                    <span>{member.investCash.toLocaleString()} 円</span>
-                  </div>
-                  <div className="text-invest flex justify-between">
-                    <span className="font-bold">再プレイ換算</span>
+                  <div className="flex justify-between">
+                    <span>再プレイ換算</span>
                     <span>
                       {member.investMedals.toLocaleString()} {playUnit}{" "}
                       <Icon icon="fa6-solid:arrow-right" className="mb-0.5 inline size-2" />{" "}
                       {Math.round(member.investMedals * lendingRate).toLocaleString()} 円
                     </span>
                   </div>
-                  <div className="text-collect flex justify-between">
-                    <span className="font-bold">出玉換算</span>
+                  <div className="flex justify-between">
+                    <span>現金投資</span>
+                    <span>{member.investCash.toLocaleString()} 円</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-bold">合計</span>
+                    <span>{Math.round(convertedInvest).toLocaleString()} 円</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 回収 */}
+              <div>
+                <div className="mb-2 text-xs font-bold opacity-50">回収</div>
+                <div className="flex flex-col gap-0.5 text-sm">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-bold">合計</span>
                     <span className="flex items-center gap-1">
                       {member.collectMedals.toLocaleString()} {playUnit}{" "}
                       <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
                       {Math.round(convertedCollect).toLocaleString()} 円
                     </span>
                   </div>
-                  <div className="text-right text-[10px] opacity-60">{convertLabel}</div>
                 </div>
-
-                {/* 現金収支 */}
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm font-bold">換算収支</span>
-                  <span
-                    className={`font-bold ${convertedCollect - convertedInvest >= 0 ? "text-plus" : "text-minus"}`}
-                  >
-                    {convertedCollect - convertedInvest >= 0 ? "+" : ""}
-                    {Math.round(convertedCollect - convertedInvest).toLocaleString()} 円
-                  </span>
-                </div>
-
-                {memberResult && (
-                  <div>
-                    <div className="border-base-300 mt-2 flex items-center justify-between border-t pt-2">
-                      <span className="text-sm font-bold">合計</span>
-                      <span
-                        className={`text-base font-bold ${memberResult.profit >= 0 ? "text-plus" : "text-minus"}`}
-                      >
-                        {memberResult.profit >= 0 ? "+" : ""}
-                        {Math.round(memberResult.profit).toLocaleString()} 円
-                      </span>
-                    </div>
-                    <div className="divider my-1" />
-                    <div className="mb-2 text-xs font-bold opacity-50">精算</div>
-                    {settlements && settlements.length > 0 ? (
-                      <div className="flex flex-col gap-0.5 text-sm">
-                        {settlements.map((s, i) => {
-                          const isPayer = s.from === memberResult.name;
-                          const done = doneSettlements.has(i);
-                          return (
-                            <div
-                              key={i}
-                              className={`cursor-pointer transition-opacity select-none ${done ? "line-through opacity-40" : ""}`}
-                              onClick={() =>
-                                setDoneSettlements((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(i)) next.delete(i);
-                                  else next.add(i);
-                                  return next;
-                                })
-                              }
-                            >
-                              {isPayer ? (
-                                <>
-                                  <span className="font-bold">{s.to}</span> に{" "}
-                                  <span className="font-bold">
-                                    {Math.round(s.amount).toLocaleString()} 円
-                                  </span>{" "}
-                                  渡す
-                                </>
-                              ) : (
-                                <>
-                                  <span className="font-bold">{s.from}</span> から{" "}
-                                  <span className="font-bold">
-                                    {Math.round(s.amount).toLocaleString()} 円
-                                  </span>{" "}
-                                  受取
-                                </>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-sm opacity-50">精算なし</div>
-                    )}
-                  </div>
-                )}
               </div>
+
+              {memberResult && (
+                <div>
+                  <div className="border-base-300 mt-2 flex items-center justify-between border-t pt-2">
+                    <span className="text-sm font-bold">収支</span>
+                    <span
+                      className={`text-base font-bold ${memberResult.profit >= 0 ? "text-plus" : "text-minus"}`}
+                    >
+                      {memberResult.profit >= 0 ? "+" : ""}
+                      {Math.round(memberResult.profit).toLocaleString()} 円
+                    </span>
+                  </div>
+                  <div className="divider my-1" />
+                  <div className="mb-2 text-xs font-bold opacity-50">精算</div>
+                  {settlements && settlements.length > 0 ? (
+                    <div className="flex flex-col gap-0.5 text-sm">
+                      {settlements.map((s, i) => {
+                        const isPayer = s.from === memberResult.name;
+                        const done = doneSettlements.has(i);
+                        return (
+                          <div
+                            key={i}
+                            className={`cursor-pointer transition-opacity select-none ${done ? "line-through opacity-40" : ""}`}
+                            onClick={() =>
+                              setDoneSettlements((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(i)) next.delete(i);
+                                else next.add(i);
+                                return next;
+                              })
+                            }
+                          >
+                            {isPayer ? (
+                              <>
+                                <span className="font-bold">{s.to}</span> に{" "}
+                                <span className="font-bold">
+                                  {Math.round(s.amount).toLocaleString()} 円
+                                </span>{" "}
+                                渡す
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-bold">{s.from}</span> から{" "}
+                                <span className="font-bold">
+                                  {Math.round(s.amount).toLocaleString()} 円
+                                </span>{" "}
+                                受取
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-sm opacity-50">精算なし</div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
