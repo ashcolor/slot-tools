@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import type { RateOption } from "../../../types";
+import type { CollectCalculationMode, RateOption } from "../../../types";
 import { PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS, isPachinkoRate } from "../constants";
 import { RateSelector } from "./RateSelector";
 
@@ -7,6 +7,7 @@ interface NoriuchiConfigDialogProps {
   dialogRef: RefObject<HTMLDialogElement | null>;
   lendingRate: number;
   exchangeRate: number;
+  collectCalculationMode: CollectCalculationMode;
   slotSize: 46 | 50 | 125;
   memberCount: number;
   exchangeOptions: RateOption[];
@@ -14,6 +15,7 @@ interface NoriuchiConfigDialogProps {
   onSwitchToPachinko: () => void;
   onChangeLendingRate: (rate: number) => void;
   onChangeExchangeRate: (rate: number) => void;
+  onChangeCollectCalculationMode: (mode: CollectCalculationMode) => void;
   onChangeSlotSize: (slotSize: 46 | 50 | 125) => void;
   onChangeMemberCount: (count: number) => void;
 }
@@ -22,6 +24,7 @@ export function NoriuchiConfigDialog({
   dialogRef,
   lendingRate,
   exchangeRate,
+  collectCalculationMode,
   slotSize,
   memberCount,
   exchangeOptions,
@@ -29,6 +32,7 @@ export function NoriuchiConfigDialog({
   onSwitchToPachinko,
   onChangeLendingRate,
   onChangeExchangeRate,
+  onChangeCollectCalculationMode,
   onChangeSlotSize,
   onChangeMemberCount,
 }: NoriuchiConfigDialogProps) {
@@ -76,6 +80,23 @@ export function NoriuchiConfigDialog({
                   onChange={onChangeExchangeRate}
                 />
               </div>
+            </div>
+          </div>
+          <div>
+            <div className="mb-1 text-xs font-bold opacity-50">計算式</div>
+            <div className="flex items-center justify-between">
+              <div className="mb-2 text-sm font-bold">出玉</div>
+              <select
+                className="select select-bordered select-sm ml-auto"
+                value={collectCalculationMode}
+                onChange={(event) =>
+                  onChangeCollectCalculationMode(event.target.value as CollectCalculationMode)
+                }
+              >
+                <option value="lending">全て貸玉レートで計算</option>
+                <option value="exchange">全て交換レートで計算</option>
+                <option value="auto">再プレイ分まで貸玉レート、超過分は交換レート</option>
+              </select>
             </div>
           </div>
           <div className="divider my-0" />

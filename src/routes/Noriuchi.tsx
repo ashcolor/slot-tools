@@ -15,7 +15,15 @@ import {
 } from "../features/noriuchi/constants";
 import { calculate } from "../utils/calculate";
 import { useLocalStorage } from "../utils/useLocalStorage";
-import type { Member } from "../types";
+import type { CollectCalculationMode, Member } from "../types";
+
+function normalizeCollectCalculationMode(
+  value: CollectCalculationMode | "autro" | number,
+): CollectCalculationMode {
+  if (value === "lending" || value === 1) return "lending";
+  if (value === "exchange" || value === 2) return "exchange";
+  return "auto";
+}
 
 function createMember(emoji: string): Member {
   return {
@@ -24,7 +32,6 @@ function createMember(emoji: string): Member {
     investMedals: 0,
     investCash: 0,
     collectMedals: 0,
-    storedMedals: 0,
   };
 }
 
@@ -33,6 +40,10 @@ const DEFAULT_EMOJIS = pickRandomEmojis(MAX_MEMBERS);
 export function Noriuchi() {
   const [lendingRate, setLendingRate] = useLocalStorage("noriuchi-rate", 20);
   const [exchangeRate, setExchangeRate] = useLocalStorage("noriuchi-exchangeRate", 20);
+  const [collectCalculationModeRaw, setCollectCalculationModeRaw] = useLocalStorage<
+    CollectCalculationMode | number
+  >("noriuchi-collectCalculationMode", "auto");
+  const collectCalculationMode = normalizeCollectCalculationMode(collectCalculationModeRaw);
   const [slotSize, setSlotSize] = useLocalStorage<46 | 50 | 125>("noriuchi-slotSize", 46);
   const [memberCount, setMemberCount] = useLocalStorage("noriuchi-memberCount", 2);
   const [usedEmojis] = useLocalStorage("noriuchi-emojis", DEFAULT_EMOJIS);
@@ -56,6 +67,13 @@ export function Noriuchi() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 旧数値設定(1/2/3)を文字列設定へ移行
+  useEffect(() => {
+    if (collectCalculationModeRaw !== collectCalculationMode) {
+      setCollectCalculationModeRaw(collectCalculationMode);
+    }
+  }, [collectCalculationMode, collectCalculationModeRaw, setCollectCalculationModeRaw]);
+
   const exchangeOptions = useMemo(() => getExchangeOptions(lendingRate), [lendingRate]);
 
   const handleLendingRateChange = (newRate: number) => {
@@ -63,30 +81,26 @@ export function Noriuchi() {
     // 等価にリセット
     setExchangeRate(newRate);
   };
+  const handleCollectCalculationModeChange = (mode: CollectCalculationMode) => {
+    setCollectCalculationModeRaw(mode);
+  };
 
   const updateMember = (index: number, updated: Member) => {
     setMembers((prev) => prev.map((m, i) => (i === index ? updated : m)));
   };
 
-  const handleTransfer = (
-    fromIndex: number,
-    targetId: string,
-    amount: number,
-    setStoredMedals: boolean,
-  ) => {
+  const handleTransfer = (fromIndex: number, targetId: string, amount: number) => {
     setMembers((prev) =>
       prev.map((m, i) => {
         if (i === fromIndex)
           return {
             ...m,
             collectMedals: m.collectMedals - amount,
-            storedMedals: setStoredMedals ? m.storedMedals : 0,
           };
         if (m.id === targetId)
           return {
             ...m,
             collectMedals: m.collectMedals + amount,
-            ...(setStoredMedals ? { storedMedals: amount } : {}),
           };
         return m;
       }),
@@ -116,8 +130,8 @@ export function Noriuchi() {
   const playUnit = isPachinko ? "玉" : "枚";
 
   const result = useMemo(
-    () => calculate(filledMembers, lendingRate, exchangeRate),
-    [filledMembers, lendingRate, exchangeRate],
+    () => calculate(filledMembers, lendingRate, exchangeRate, collectCalculationMode),
+    [filledMembers, lendingRate, exchangeRate, collectCalculationMode],
   );
 
   return (
@@ -167,6 +181,7 @@ export function Noriuchi() {
         dialogRef={configModalRef}
         lendingRate={lendingRate}
         exchangeRate={exchangeRate}
+        collectCalculationMode={collectCalculationMode}
         slotSize={slotSize}
         memberCount={memberCount}
         exchangeOptions={exchangeOptions}
@@ -180,6 +195,7 @@ export function Noriuchi() {
         }}
         onChangeLendingRate={handleLendingRateChange}
         onChangeExchangeRate={setExchangeRate}
+        onChangeCollectCalculationMode={handleCollectCalculationModeChange}
         onChangeSlotSize={(newSlotSize) => setSlotSize(newSlotSize)}
         onChangeMemberCount={handleCountChange}
       />
@@ -193,7 +209,6 @@ export function Noriuchi() {
               investMedals: 0,
               investCash: 0,
               collectMedals: 0,
-              storedMedals: 0,
             })),
           );
           setActiveTab("playing");
@@ -217,7 +232,9 @@ export function Noriuchi() {
                   <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
                     <MemberForm
                       member={member}
+                      lendingRate={lendingRate}
                       exchangeRate={exchangeRate}
+                      collectCalculationMode={collectCalculationMode}
                       medalSteps={medalSteps}
                       playUnit={playUnit}
                       mode="playing"
@@ -247,14 +264,20 @@ export function Noriuchi() {
         />
         <div className="tab-content">
           <div className="flex flex-col gap-2">
-            <SettlementView result={result} playUnit={playUnit} />
+            <SettlementView
+              result={result}
+              playUnit={playUnit}
+              collectCalculationMode={collectCalculationMode}
+            />
             <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
               <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
                 {members.map((member, i) => (
                   <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
                     <MemberForm
                       member={member}
+                      lendingRate={lendingRate}
                       exchangeRate={exchangeRate}
+                      collectCalculationMode={collectCalculationMode}
                       medalSteps={medalSteps}
                       playUnit={playUnit}
                       mode="settlement"
@@ -265,12 +288,9 @@ export function Noriuchi() {
                           id: m.id,
                           name: m.name,
                           investMedals: m.investMedals,
-                          storedMedals: m.storedMedals,
                           collectMedals: m.collectMedals,
                         }))}
-                      onTransfer={(targetId, amount, setStoredMedals) =>
-                        handleTransfer(i, targetId, amount, setStoredMedals)
-                      }
+                      onTransfer={(targetId, amount) => handleTransfer(i, targetId, amount)}
                       memberResult={result.members[i]}
                       settlements={result.settlements.filter(
                         (s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name,

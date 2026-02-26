@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { StepInput } from "../../../components/StepInput";
 import { pickRandomEmoji } from "../constants";
-import type { Member, MemberResult, Settlement } from "../../../types";
+import type { CollectCalculationMode, Member, MemberResult, Settlement } from "../../../types";
 
 interface Props {
   member: Member;
+  lendingRate: number;
   exchangeRate: number;
+  collectCalculationMode: CollectCalculationMode;
   medalSteps: number[];
   playUnit: "枚" | "玉";
   mode: "playing" | "settlement";
@@ -15,10 +17,9 @@ interface Props {
     id: string;
     name: string;
     investMedals: number;
-    storedMedals: number;
     collectMedals: number;
   }[];
-  onTransfer?: (targetId: string, amount: number, setStoredMedals: boolean) => void;
+  onTransfer?: (targetId: string, amount: number) => void;
   memberResult?: MemberResult;
   settlements?: Settlement[];
 }
@@ -27,7 +28,9 @@ const fmtCash = (v: number) => v.toLocaleString();
 
 export function MemberForm({
   member,
+  lendingRate,
   exchangeRate,
+  collectCalculationMode,
   medalSteps,
   playUnit,
   mode,
@@ -54,6 +57,27 @@ export function MemberForm({
   const addTo = (field: keyof Member, amount: number) => {
     update(field, Math.max(0, (member[field] as number) + amount));
   };
+
+  const convertedInvest =
+    memberResult?.totalInvest ?? member.investCash + member.investMedals * lendingRate;
+  const convertedCollect =
+    memberResult?.totalCollect ??
+    (collectCalculationMode === "lending"
+      ? member.collectMedals * lendingRate
+      : collectCalculationMode === "exchange"
+        ? member.collectMedals * exchangeRate
+        : Math.min(member.collectMedals, member.investMedals) * lendingRate +
+          Math.max(member.collectMedals - member.investMedals, 0) * exchangeRate);
+  const fmtPerThousand = (rate: number) =>
+    (Math.round((1000 / rate) * 10) / 10).toLocaleString(undefined, {
+      maximumFractionDigits: 1,
+    });
+  const convertLabel =
+    collectCalculationMode === "lending"
+      ? `全て貸玉レート(${fmtPerThousand(lendingRate)}${playUnit} = 1000円)`
+      : collectCalculationMode === "exchange"
+        ? `全て交換レート(${fmtPerThousand(exchangeRate)}${playUnit} = 1000円)`
+        : "再プレイ分まで貸玉レート・超過分交換レート";
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -208,7 +232,7 @@ export function MemberForm({
                                   target.investMedals - target.collectMedals,
                                   0,
                                 );
-                                onTransfer(transferTarget, amount, true);
+                                onTransfer(transferTarget, amount);
                                 setTransferOpen(false);
                               }
                             }}
@@ -229,7 +253,7 @@ export function MemberForm({
                             className="btn btn-xs btn-primary h-auto w-full py-1"
                             disabled={!transferTarget || !member.collectMedals}
                             onClick={() => {
-                              onTransfer(transferTarget, member.collectMedals, false);
+                              onTransfer(transferTarget, member.collectMedals);
                               setTransferOpen(false);
                             }}
                           >
@@ -243,54 +267,14 @@ export function MemberForm({
                   </div>
                 )}
 
-                {/* 貯玉 */}
-                <div className="mt-3">
-                  <div className="text-store mb-1 text-xs font-bold">貯玉</div>
-                  <StepInput
-                    icon="bi:piggy-bank"
-                    iconClass="text-base text-store shrink-0 w-8"
-                    value={member.storedMedals}
-                    unit={playUnit}
-                    steps={[]}
-                    onChange={(v) => update("storedMedals", v)}
-                    onAdd={() => {}}
-                    error={member.storedMedals > member.collectMedals}
-                  />
-                  <div className="mt-1 flex gap-1">
-                    <button
-                      type="button"
-                      className="btn btn-xs h-auto min-w-0 flex-1 py-1"
-                      onClick={() => update("storedMedals", member.investMedals)}
-                    >
-                      再プレイ補填
-                      <br />（{member.investMedals.toLocaleString()}
-                      {playUnit}）
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-xs h-auto min-w-0 flex-1 py-1"
-                      onClick={() => update("storedMedals", member.collectMedals)}
-                    >
-                      全て
-                      <br />（{member.collectMedals.toLocaleString()}
-                      {playUnit}）
-                    </button>
-                  </div>
-                  {member.storedMedals > member.collectMedals && (
-                    <div className="text-error mt-1 text-right text-xs">
-                      貯玉が出玉を超えています
-                    </div>
-                  )}
-                </div>
-
                 {/* メダル収支 */}
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-sm font-bold">メダル収支</span>
                   <span
-                    className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}
+                    className={`font-bold ${member.collectMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}
                   >
-                    {member.storedMedals - member.investMedals >= 0 ? "+" : ""}
-                    {(member.storedMedals - member.investMedals).toLocaleString()} {playUnit}
+                    {member.collectMedals - member.investMedals >= 0 ? "+" : ""}
+                    {(member.collectMedals - member.investMedals).toLocaleString()} {playUnit}
                   </span>
                 </div>
               </div>
@@ -303,35 +287,33 @@ export function MemberForm({
                     <span className="font-bold">現金投資</span>
                     <span>{member.investCash.toLocaleString()} 円</span>
                   </div>
-                  <div className="text-collect flex justify-between">
-                    <span className="font-bold">換金</span>
-                    <span className="flex items-center gap-1">
-                      {Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()}{" "}
-                      {playUnit} <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
-                      {Math.round(
-                        Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate,
-                      ).toLocaleString()}{" "}
-                      円
+                  <div className="text-invest flex justify-between">
+                    <span className="font-bold">再プレイ換算</span>
+                    <span>
+                      {member.investMedals.toLocaleString()} {playUnit}{" "}
+                      <Icon icon="fa6-solid:arrow-right" className="mb-0.5 inline size-2" />{" "}
+                      {Math.round(member.investMedals * lendingRate).toLocaleString()} 円
                     </span>
                   </div>
+                  <div className="text-collect flex justify-between">
+                    <span className="font-bold">出玉換算</span>
+                    <span className="flex items-center gap-1">
+                      {member.collectMedals.toLocaleString()} {playUnit}{" "}
+                      <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
+                      {Math.round(convertedCollect).toLocaleString()} 円
+                    </span>
+                  </div>
+                  <div className="text-right text-[10px] opacity-60">{convertLabel}</div>
                 </div>
 
                 {/* 現金収支 */}
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm font-bold">現金収支</span>
+                  <span className="text-sm font-bold">換算収支</span>
                   <span
-                    className={`font-bold ${Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate - member.investCash >= 0 ? "text-plus" : "text-minus"}`}
+                    className={`font-bold ${convertedCollect - convertedInvest >= 0 ? "text-plus" : "text-minus"}`}
                   >
-                    {Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate -
-                      member.investCash >=
-                    0
-                      ? "+"
-                      : ""}
-                    {Math.round(
-                      Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate -
-                        member.investCash,
-                    ).toLocaleString()}{" "}
-                    円
+                    {convertedCollect - convertedInvest >= 0 ? "+" : ""}
+                    {Math.round(convertedCollect - convertedInvest).toLocaleString()} 円
                   </span>
                 </div>
 

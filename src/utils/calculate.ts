@@ -1,17 +1,43 @@
-import type { Member, MemberResult, Settlement, CalcResult } from "../types";
+import type {
+  CalcResult,
+  CollectCalculationMode,
+  Member,
+  MemberResult,
+  Settlement,
+} from "../types";
+
+function calculateCollectValue(
+  member: Member,
+  lendingRate: number,
+  exchangeRate: number,
+  collectCalculationMode: CollectCalculationMode,
+): number {
+  if (collectCalculationMode === "lending") {
+    return member.collectMedals * lendingRate;
+  }
+  if (collectCalculationMode === "exchange") {
+    return member.collectMedals * exchangeRate;
+  }
+
+  const replayPortion = Math.min(member.collectMedals, member.investMedals);
+  const exchangePortion = Math.max(member.collectMedals - member.investMedals, 0);
+  return replayPortion * lendingRate + exchangePortion * exchangeRate;
+}
 
 export function calculate(
   members: Member[],
   lendingRate: number,
   exchangeRate: number,
+  collectCalculationMode: CollectCalculationMode,
 ): CalcResult {
   const memberResults: MemberResult[] = members.map((m) => {
-    // 先に投資メダルと貯玉を相殺
-    const medalDiff = m.storedMedals - m.investMedals;
-    // 回収メダルから貯玉を引いた分が換金分
-    const cashedOut = m.collectMedals - m.storedMedals;
-    const totalCollect = cashedOut * exchangeRate + (medalDiff >= 0 ? medalDiff * exchangeRate : 0);
-    const totalInvest = m.investCash + (medalDiff < 0 ? -medalDiff * lendingRate : 0);
+    const totalInvest = m.investCash + m.investMedals * lendingRate;
+    const totalCollect = calculateCollectValue(
+      m,
+      lendingRate,
+      exchangeRate,
+      collectCalculationMode,
+    );
     return {
       id: m.id,
       name: m.name,
@@ -46,10 +72,8 @@ export function calculate(
   const totalInvestMedals = members.reduce((s, m) => s + m.investMedals, 0);
   const totalCollectMedals = members.reduce((s, m) => s + m.collectMedals, 0);
   const totalInvestCash = members.reduce((s, m) => s + m.investCash, 0);
-
-  // 表示用: 単純な計算式に基づく値
-  const displayInvest = totalInvestCash + totalInvestMedals * lendingRate;
-  const displayCollect = totalCollectMedals * exchangeRate;
+  const displayInvest = totalInvest;
+  const displayCollect = totalCollect;
 
   return {
     totalInvest,
