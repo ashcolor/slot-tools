@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import type { RateOption } from "../../../types";
-import { PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS } from "../constants";
+import { PACHINKO_LENDING_OPTIONS, PACHISLOT_LENDING_OPTIONS, isPachinkoRate } from "../constants";
 import { RateSelector } from "./RateSelector";
 
 interface NoriuchiConfigDialogProps {
@@ -32,6 +32,8 @@ export function NoriuchiConfigDialog({
   onChangeSlotSize,
   onChangeMemberCount,
 }: NoriuchiConfigDialogProps) {
+  const isPachinko = isPachinkoRate(lendingRate);
+
   return (
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box">
@@ -43,7 +45,7 @@ export function NoriuchiConfigDialog({
               name="game_type"
               className="tab"
               aria-label="スロット"
-              checked={lendingRate !== 4}
+              checked={!isPachinko}
               onChange={onSwitchToSlot}
             />
             <input
@@ -51,7 +53,7 @@ export function NoriuchiConfigDialog({
               name="game_type"
               className="tab"
               aria-label="パチンコ"
-              checked={lendingRate === 4}
+              checked={isPachinko}
               onChange={onSwitchToPachinko}
             />
           </div>
@@ -62,7 +64,7 @@ export function NoriuchiConfigDialog({
                 <label className="text-sm font-bold">貸出</label>
                 <RateSelector
                   rate={lendingRate}
-                  options={lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS}
+                  options={isPachinko ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS}
                   onChange={onChangeLendingRate}
                 />
               </div>
@@ -82,7 +84,7 @@ export function NoriuchiConfigDialog({
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-bold">再プレイ単位</label>
-                {lendingRate === 4 ? (
+                {isPachinko ? (
                   <select
                     className="select select-bordered select-sm w-auto"
                     value={slotSize}

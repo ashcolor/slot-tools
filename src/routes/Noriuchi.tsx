@@ -9,6 +9,7 @@ import {
   PACHINKO_LENDING_OPTIONS,
   PACHISLOT_LENDING_OPTIONS,
   getExchangeOptions,
+  isPachinkoRate,
   pickRandomEmoji,
   pickRandomEmojis,
 } from "../features/noriuchi/constants";
@@ -111,6 +112,8 @@ export function Noriuchi() {
   );
 
   const medalSteps = useMemo(() => [slotSize, slotSize * 10], [slotSize]);
+  const isPachinko = isPachinkoRate(lendingRate);
+  const playUnit = isPachinko ? "玉" : "枚";
 
   const result = useMemo(
     () => calculate(filledMembers, lendingRate, exchangeRate),
@@ -122,12 +125,12 @@ export function Noriuchi() {
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm opacity-70">
           <span className="badge badge-neutral badge-sm">
-            {lendingRate === 4 ? "パチンコ" : "スロット"}
+            {isPachinko ? "パチンコ" : "スロット"}
           </span>
           <span>
             <span>貸出：</span>
             <span className="font-bold">
-              {(lendingRate === 4 ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find(
+              {(isPachinko ? PACHINKO_LENDING_OPTIONS : PACHISLOT_LENDING_OPTIONS).find(
                 (o) => o.value === lendingRate,
               )?.label ?? `${lendingRate}円`}
             </span>
@@ -216,6 +219,7 @@ export function Noriuchi() {
                       member={member}
                       exchangeRate={exchangeRate}
                       medalSteps={medalSteps}
+                      playUnit={playUnit}
                       mode="playing"
                       onChange={(updated) => updateMember(i, updated)}
                     />
@@ -243,7 +247,7 @@ export function Noriuchi() {
         />
         <div className="tab-content">
           <div className="flex flex-col gap-2">
-            <SettlementView result={result} />
+            <SettlementView result={result} playUnit={playUnit} />
             <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
               <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
                 {members.map((member, i) => (
@@ -252,6 +256,7 @@ export function Noriuchi() {
                       member={member}
                       exchangeRate={exchangeRate}
                       medalSteps={medalSteps}
+                      playUnit={playUnit}
                       mode="settlement"
                       onChange={(updated) => updateMember(i, updated)}
                       otherMembers={members

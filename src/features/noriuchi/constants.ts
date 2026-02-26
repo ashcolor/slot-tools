@@ -58,6 +58,10 @@ export const PACHISLOT_LENDING_OPTIONS: RateOption[] = [
   { label: "1000円/46枚", value: 1000 / 46 },
 ];
 
+export function isPachinkoRate(lendingRate: number): boolean {
+  return PACHINKO_LENDING_OPTIONS.some((option) => option.value === lendingRate);
+}
+
 export function pickRandomEmoji(): string {
   return ANIMAL_EMOJIS[Math.floor(Math.random() * ANIMAL_EMOJIS.length)];
 }
@@ -68,9 +72,9 @@ export function pickRandomEmojis(count: number): string[] {
 }
 
 export function getExchangeOptions(lendingRate: number): RateOption[] {
-  if (lendingRate === 4) {
+  if (isPachinkoRate(lendingRate)) {
     return [
-      { label: "等価", value: 4 },
+      { label: "等価", value: lendingRate },
       { label: "28玉", value: 100 / 28 },
       { label: "30玉", value: 100 / 30 },
       { label: "33玉", value: 100 / 33 },

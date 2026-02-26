@@ -5,9 +5,10 @@ import { SettlementInfoDialog } from "./SettlementInfoDialog";
 
 interface Props {
   result: CalcResult;
+  playUnit: "枚" | "玉";
 }
 
-export function SettlementView({ result }: Props) {
+export function SettlementView({ result, playUnit }: Props) {
   const modalRef = useRef<HTMLDialogElement>(null);
   const fmt = (n: number) => Math.round(n).toLocaleString();
 
@@ -32,7 +33,8 @@ export function SettlementView({ result }: Props) {
               <div className="text-invest text-lg font-bold">{fmt(result.displayInvest)} 円</div>
               <div className="text-xs opacity-50">
                 再プレイ{" "}
-                <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>枚
+                <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>
+                {playUnit}
                 込み
               </div>
             </div>
@@ -41,7 +43,7 @@ export function SettlementView({ result }: Props) {
               <div className="text-collect text-lg font-bold">{fmt(result.displayCollect)} 円</div>
               <div className="text-xs opacity-50">
                 出玉 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>
-                枚
+                {playUnit}
               </div>
             </div>
           </div>

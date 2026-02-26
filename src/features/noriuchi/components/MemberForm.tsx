@@ -8,6 +8,7 @@ interface Props {
   member: Member;
   exchangeRate: number;
   medalSteps: number[];
+  playUnit: "枚" | "玉";
   mode: "playing" | "settlement";
   onChange: (updated: Member) => void;
   otherMembers?: {
@@ -28,6 +29,7 @@ export function MemberForm({
   member,
   exchangeRate,
   medalSteps,
+  playUnit,
   mode,
   onChange,
   otherMembers,
@@ -91,7 +93,7 @@ export function MemberForm({
                   icon="material-symbols:replay"
                   iconClass="text-base text-invest shrink-0 w-8"
                   value={member.investMedals}
-                  unit="枚"
+                  unit={playUnit}
                   steps={medalSteps}
                   onChange={(v) => update("investMedals", v)}
                   onAdd={(v) => addTo("investMedals", v)}
@@ -122,7 +124,7 @@ export function MemberForm({
                   icon="akar-icons:coin"
                   iconClass="text-base text-collect shrink-0 w-8"
                   value={member.collectMedals}
-                  unit="枚"
+                  unit={playUnit}
                   steps={[]}
                   onChange={(v) => update("collectMedals", v)}
                   onAdd={() => {}}
@@ -139,7 +141,9 @@ export function MemberForm({
                 <div className="flex flex-col gap-0.5 text-sm">
                   <div className="text-invest flex justify-between">
                     <span className="text-xs font-bold">再プレイ</span>
-                    <span>{member.investMedals.toLocaleString()} 枚</span>
+                    <span>
+                      {member.investMedals.toLocaleString()} {playUnit}
+                    </span>
                   </div>
                   <div className="text-collect">
                     <div className="mb-1 text-xs font-bold">出玉</div>
@@ -147,7 +151,7 @@ export function MemberForm({
                       icon="akar-icons:coin"
                       iconClass="text-base text-collect shrink-0 w-8"
                       value={member.collectMedals}
-                      unit="枚"
+                      unit={playUnit}
                       steps={[]}
                       onChange={(v) => update("collectMedals", v)}
                       onAdd={() => {}}
@@ -218,7 +222,7 @@ export function MemberForm({
                                 0,
                               ).toLocaleString();
                             })()}
-                            枚）
+                            {playUnit}）
                           </button>
                           <button
                             type="button"
@@ -230,7 +234,8 @@ export function MemberForm({
                             }}
                           >
                             出玉全て
-                            <br />（{member.collectMedals.toLocaleString()}枚）
+                            <br />（{member.collectMedals.toLocaleString()}
+                            {playUnit}）
                           </button>
                         </div>
                       </div>
@@ -245,7 +250,7 @@ export function MemberForm({
                     icon="bi:piggy-bank"
                     iconClass="text-base text-store shrink-0 w-8"
                     value={member.storedMedals}
-                    unit="枚"
+                    unit={playUnit}
                     steps={[]}
                     onChange={(v) => update("storedMedals", v)}
                     onAdd={() => {}}
@@ -258,7 +263,8 @@ export function MemberForm({
                       onClick={() => update("storedMedals", member.investMedals)}
                     >
                       再プレイ補填
-                      <br />（{member.investMedals.toLocaleString()}枚）
+                      <br />（{member.investMedals.toLocaleString()}
+                      {playUnit}）
                     </button>
                     <button
                       type="button"
@@ -266,7 +272,8 @@ export function MemberForm({
                       onClick={() => update("storedMedals", member.collectMedals)}
                     >
                       全て
-                      <br />（{member.collectMedals.toLocaleString()}枚）
+                      <br />（{member.collectMedals.toLocaleString()}
+                      {playUnit}）
                     </button>
                   </div>
                   {member.storedMedals > member.collectMedals && (
@@ -283,7 +290,7 @@ export function MemberForm({
                     className={`font-bold ${member.storedMedals - member.investMedals >= 0 ? "text-plus" : "text-minus"}`}
                   >
                     {member.storedMedals - member.investMedals >= 0 ? "+" : ""}
-                    {(member.storedMedals - member.investMedals).toLocaleString()} 枚
+                    {(member.storedMedals - member.investMedals).toLocaleString()} {playUnit}
                   </span>
                 </div>
               </div>
@@ -299,8 +306,8 @@ export function MemberForm({
                   <div className="text-collect flex justify-between">
                     <span className="font-bold">換金</span>
                     <span className="flex items-center gap-1">
-                      {Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()} 枚{" "}
-                      <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
+                      {Math.max(member.collectMedals - member.storedMedals, 0).toLocaleString()}{" "}
+                      {playUnit} <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
                       {Math.round(
                         Math.max(member.collectMedals - member.storedMedals, 0) * exchangeRate,
                       ).toLocaleString()}{" "}
