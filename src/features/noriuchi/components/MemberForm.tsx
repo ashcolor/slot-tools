@@ -16,7 +16,11 @@ interface Props {
   settlements?: Settlement[];
 }
 const CASH_STEPS = [1000, 10000];
-const fmtCash = (v: number) => v.toLocaleString();
+const fmtCash = (v: number) => {
+  if (v === 1000) return "1千";
+  if (v === 10000) return "1万";
+  return v.toLocaleString();
+};
 
 export function MemberForm({
   member,
@@ -140,14 +144,17 @@ export function MemberForm({
             />
           </div>
 
-          <div className="pt-2">
+          <div>
             <div className="mb-2 flex justify-center opacity-40">
               <Icon icon="fa6-solid:angle-down" className="size-3" />
             </div>
             {/* 投資 */}
             <div>
-              <div className="text-invest mb-2 text-xs font-bold">投資</div>
-              <div className="flex flex-col gap-0.5 text-sm">
+              <div className="text-invest mb-2 flex items-center justify-between text-sm font-bold">
+                <span>投資</span>
+                <span>{Math.round(convertedInvest).toLocaleString()} 円</span>
+              </div>
+              <div className="flex flex-col gap-0.5 text-xs">
                 <div className="flex justify-between">
                   <span>再プレイ換算</span>
                   <span>
@@ -160,25 +167,22 @@ export function MemberForm({
                   <span>現金投資</span>
                   <span>{member.investCash.toLocaleString()} 円</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-bold">合計</span>
-                  <span>{Math.round(convertedInvest).toLocaleString()} 円</span>
-                </div>
               </div>
             </div>
 
             {/* 回収 */}
             <div className="mt-4">
-              <div className="text-collect mb-2 text-xs font-bold">回収</div>
-              <div className="flex flex-col gap-0.5 text-sm">
-                <div className="flex justify-between text-sm">
-                  <span className="font-bold">合計</span>
-                  <span className="flex items-center gap-1">
-                    {member.collectMedals.toLocaleString()} {playUnit}{" "}
-                    <Icon icon="fa6-solid:arrow-right" className="size-2" />{" "}
-                    {Math.round(convertedCollect).toLocaleString()} 円
+              <div className="text-collect mb-2 flex items-center justify-between text-sm font-bold">
+                <span>回収</span>
+                <span className="flex items-center gap-1">
+                  <span className="text-base-content flex items-center gap-1 text-xs font-normal">
+                    {member.collectMedals.toLocaleString()} {playUnit}
+                    <Icon icon="fa6-solid:arrow-right" className="size-2" />
                   </span>
-                </div>
+                  <span>{Math.round(convertedCollect).toLocaleString()} 円</span>
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5 text-sm">
                 <div className="text-right text-[10px] opacity-60">{convertLabel}</div>
               </div>
             </div>
@@ -197,7 +201,6 @@ export function MemberForm({
                 <div className="my-1 flex justify-center opacity-40">
                   <Icon icon="fa6-solid:angle-down" className="size-3" />
                 </div>
-                <div className="mb-2 text-xs font-bold opacity-50">精算</div>
                 {settlements && settlements.length > 0 ? (
                   <div className="flex flex-col gap-0.5 text-sm">
                     {settlements.map((s, i) => {
@@ -219,19 +222,20 @@ export function MemberForm({
                           {isPayer ? (
                             <>
                               <span className="font-bold">{s.to}</span> に{" "}
-                              <span className="font-bold">
+                              <span className="text-invest font-bold">
                                 {Math.round(s.amount).toLocaleString()} 円
                               </span>{" "}
                               渡す
                             </>
                           ) : (
-                            <>
+                            <span className="opacity-60">
                               <span className="font-bold">{s.from}</span> から{" "}
                               <span className="font-bold">
                                 {Math.round(s.amount).toLocaleString()} 円
                               </span>{" "}
                               受取
-                            </>
+                              <span />
+                            </span>
                           )}
                         </div>
                       );

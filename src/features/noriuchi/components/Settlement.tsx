@@ -30,7 +30,7 @@ export function SettlementView({ result, playUnit, collectCalculationMode }: Pro
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-center gap-8 text-center">
             <div>
-              <div className="text-sm">投資</div>
+              <div className="text-invest text-sm">投資</div>
               <div className="text-invest text-lg font-bold">{fmt(result.displayInvest)} 円</div>
               <div className="text-xs opacity-50">
                 再プレイ{" "}
@@ -40,7 +40,7 @@ export function SettlementView({ result, playUnit, collectCalculationMode }: Pro
               </div>
             </div>
             <div>
-              <div className="text-sm">回収</div>
+              <div className="text-collect text-sm">回収</div>
               <div className="text-collect text-lg font-bold">{fmt(result.displayCollect)} 円</div>
               <div className="text-xs opacity-50">
                 <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>{" "}
