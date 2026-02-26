@@ -21,8 +21,8 @@ export function SettlementInfoDialog({ dialogRef }: SettlementInfoDialogProps) {
           <div>
             <div className="mb-1 font-bold">収支</div>
             <div className="flex flex-col gap-1">
-              <div>換金枚数 = 出玉 − 貯メダル</div>
-              <div>メダル差分 = 貯メダル − 再プレイ</div>
+              <div>換金枚数 = 出玉 − 貯玉</div>
+              <div>メダル差分 = 貯玉 − 再プレイ</div>
               <div>現金換算回収 = (換金枚数 × 交換レート) + (メダル増加分 × 交換レート)</div>
               <div>現金換算投資 = 現金投資 + (メダル減少分 × 貸出レート)</div>
               <div>収支 = 現金換算回収 − 現金換算投資</div>
@@ -31,7 +31,7 @@ export function SettlementInfoDialog({ dialogRef }: SettlementInfoDialogProps) {
               ※メダル差分が正なら「増加分」、負なら「減少分」として計算
             </div>
             <div className="mt-0.5 text-xs opacity-60">
-              ※再プレイや貯メダルの増減を考慮しているため、上記の回収額 −
+              ※再プレイや貯玉の増減を考慮しているため、上記の回収額 −
               投資額とは一致しない場合があります
             </div>
           </div>

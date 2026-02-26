@@ -243,9 +243,9 @@ export function MemberForm({
                   </div>
                 )}
 
-                {/* 貯メダル */}
+                {/* 貯玉 */}
                 <div className="mt-3">
-                  <div className="text-store mb-1 text-xs font-bold">貯メダル</div>
+                  <div className="text-store mb-1 text-xs font-bold">貯玉</div>
                   <StepInput
                     icon="bi:piggy-bank"
                     iconClass="text-base text-store shrink-0 w-8"
@@ -278,7 +278,7 @@ export function MemberForm({
                   </div>
                   {member.storedMedals > member.collectMedals && (
                     <div className="text-error mt-1 text-right text-xs">
-                      貯メダルが出玉を超えています
+                      貯玉が出玉を超えています
                     </div>
                   )}
                 </div>
