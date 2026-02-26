@@ -14,11 +14,7 @@ export function Home() {
             className="card bg-base-100 shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="card-body flex-row items-center gap-3 p-4">
-              {tool.sidebarIcon ? (
-                <Icon icon={tool.sidebarIcon} className="size-8 shrink-0" />
-              ) : (
-                <span className="text-3xl">{tool.emoji}</span>
-              )}
+              <Icon icon={tool.sidebarIcon} className="size-8 shrink-0" />
               <div className="text-left">
                 <div className="font-bold">{tool.title}</div>
                 <div className="text-xs opacity-60">{tool.description}</div>
