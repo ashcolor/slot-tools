@@ -51,10 +51,6 @@ export function Noriuchi() {
     createMember(usedEmojis[0]),
     createMember(usedEmojis[1]),
   ]);
-  const [activeTab, setActiveTab] = useLocalStorage<"playing" | "settlement">(
-    "noriuchi-activeTab",
-    "playing",
-  );
   const configModalRef = useRef<HTMLDialogElement>(null);
   const resetModalRef = useRef<HTMLDialogElement>(null);
 
@@ -193,93 +189,35 @@ export function Noriuchi() {
               collectMedals: 0,
             })),
           );
-          setActiveTab("playing");
         }}
       />
 
-      <div className="tabs tabs-box tabs-xs">
-        <input
-          type="radio"
-          name="noriuchi_tabs"
-          className="tab flex-1"
-          aria-label="遊技中"
-          checked={activeTab === "playing"}
-          onChange={() => setActiveTab("playing")}
+      <div className="flex flex-col gap-3">
+        <SettlementView
+          result={result}
+          playUnit={playUnit}
+          collectCalculationMode={collectCalculationMode}
         />
-        <div className="tab-content">
-          <div className="flex flex-col gap-2">
-            <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
-              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
-                {members.map((member, i) => (
-                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
-                    <MemberForm
-                      member={member}
-                      lendingRate={lendingRate}
-                      exchangeRate={exchangeRate}
-                      collectCalculationMode={collectCalculationMode}
-                      medalSteps={medalSteps}
-                      playUnit={playUnit}
-                      mode="playing"
-                      onChange={(updated) => updateMember(i, updated)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary btn-soft self-end"
-              onClick={() => setActiveTab("settlement")}
-            >
-              精算 <Icon icon="fa6-solid:arrow-right" className="size-3" />
-            </button>
-          </div>
-        </div>
 
-        <input
-          type="radio"
-          name="noriuchi_tabs"
-          className="tab flex-1"
-          aria-label="精算"
-          checked={activeTab === "settlement"}
-          onChange={() => setActiveTab("settlement")}
-        />
-        <div className="tab-content">
-          <div className="flex flex-col gap-2">
-            <SettlementView
-              result={result}
-              playUnit={playUnit}
-              collectCalculationMode={collectCalculationMode}
-            />
-            <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
-              <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
-                {members.map((member, i) => (
-                  <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
-                    <MemberForm
-                      member={member}
-                      lendingRate={lendingRate}
-                      exchangeRate={exchangeRate}
-                      collectCalculationMode={collectCalculationMode}
-                      medalSteps={medalSteps}
-                      playUnit={playUnit}
-                      mode="settlement"
-                      onChange={(updated) => updateMember(i, updated)}
-                      memberResult={result.members[i]}
-                      settlements={result.settlements.filter(
-                        (s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name,
-                      )}
-                    />
-                  </div>
-                ))}
+        <div className={memberCount <= 2 ? "-m-1 p-1" : "-m-1 overflow-x-auto p-1"}>
+          <div className={memberCount <= 2 ? "grid grid-cols-2 gap-1" : "flex w-min gap-3"}>
+            {members.map((member, i) => (
+              <div key={member.id} className={memberCount <= 2 ? "min-w-0" : "w-max min-w-0"}>
+                <MemberForm
+                  member={member}
+                  lendingRate={lendingRate}
+                  exchangeRate={exchangeRate}
+                  collectCalculationMode={collectCalculationMode}
+                  medalSteps={medalSteps}
+                  playUnit={playUnit}
+                  onChange={(updated) => updateMember(i, updated)}
+                  memberResult={result.members[i]}
+                  settlements={result.settlements.filter(
+                    (s) => s.from === filledMembers[i].name || s.to === filledMembers[i].name,
+                  )}
+                />
               </div>
-            </div>
-            <button
-              type="button"
-              className="btn btn-soft self-start"
-              onClick={() => setActiveTab("playing")}
-            >
-              <Icon icon="fa6-solid:arrow-left" className="size-3" /> 戻る
-            </button>
+            ))}
           </div>
         </div>
       </div>
