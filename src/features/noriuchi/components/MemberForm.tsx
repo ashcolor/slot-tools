@@ -57,6 +57,16 @@ export function MemberForm({
         ? member.collectMedals * exchangeRate
         : Math.min(member.collectMedals, member.investMedals) * lendingRate +
           Math.max(member.collectMedals - member.investMedals, 0) * exchangeRate);
+  const fmtPerThousand = (rate: number) =>
+    (Math.round((1000 / rate) * 10) / 10).toLocaleString(undefined, {
+      maximumFractionDigits: 1,
+    });
+  const convertLabel =
+    collectCalculationMode === "lending"
+      ? `全て貸玉レート(${fmtPerThousand(lendingRate)}${playUnit} = 1000円)`
+      : collectCalculationMode === "exchange"
+        ? `全て交換レート(${fmtPerThousand(exchangeRate)}${playUnit} = 1000円)`
+        : "再プレイ分まで貸玉レート・超過分交換レート";
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -173,13 +183,14 @@ export function MemberForm({
                       {Math.round(convertedCollect).toLocaleString()} 円
                     </span>
                   </div>
+                  <div className="text-right text-[10px] opacity-60">{convertLabel}</div>
                 </div>
               </div>
 
               {memberResult && (
                 <div>
                   <div className="border-base-300 mt-2 flex items-center justify-between border-t pt-2">
-                    <span className="text-sm font-bold">収支</span>
+                    <span className="font-bold">収支</span>
                     <span
                       className={`text-base font-bold ${memberResult.profit >= 0 ? "text-plus" : "text-minus"}`}
                     >
