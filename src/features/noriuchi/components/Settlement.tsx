@@ -34,8 +34,8 @@ export function SettlementView({ result, playUnit, collectCalculationMode }: Pro
               <div className="text-invest text-lg font-bold">{fmt(result.displayInvest)} 円</div>
               <div className="text-xs opacity-50">
                 再プレイ{" "}
-                <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>
-                {" "}{playUnit}
+                <span className="font-bold">{result.totalInvestMedals.toLocaleString()}</span>{" "}
+                {playUnit}
                 込み
               </div>
             </div>
@@ -43,8 +43,8 @@ export function SettlementView({ result, playUnit, collectCalculationMode }: Pro
               <div className="text-sm">回収</div>
               <div className="text-collect text-lg font-bold">{fmt(result.displayCollect)} 円</div>
               <div className="text-xs opacity-50">
-                <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>
-                {" "}{playUnit}
+                <span className="font-bold">{result.totalCollectMedals.toLocaleString()}</span>{" "}
+                {playUnit}
               </div>
             </div>
           </div>
