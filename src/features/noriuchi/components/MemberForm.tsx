@@ -156,7 +156,7 @@ export function MemberForm({
               </div>
               <div className="flex flex-col gap-0.5 text-xs">
                 <div className="flex justify-between">
-                  <span>再プレイ換算</span>
+                  <span>再プレイ</span>
                   <span>
                     {member.investMedals.toLocaleString()} {playUnit}{" "}
                     <Icon icon="fa6-solid:arrow-right" className="mb-0.5 inline size-2" />{" "}
