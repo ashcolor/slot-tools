@@ -39,28 +39,31 @@ const LLM_MEMO_GUIDE_TEXT = `パチスロ用メモアプリのためのテキス
 ■ゲーム数
 ゲーム数：[[c:game=0]]
 BIG：[[c:big=0]] [[f:big / game;fmt=odds]]
+※ 設定1：1/300、設定6：1/250
 REG：[[c:reg=0]] [[f:reg / game;fmt=odds]]
+※ 設定1：1/300、設定6：1/250
 
 ■小役カウント
 ベル：[[c:bell=0]] [[f:bell / game;fmt=odds]]
+※ 多いほど高設定期待
 チェリー：[[c:cherry=0]] [[f:cherry / game;fmt=odds]]
+※ 多いほど高設定期待
 
 ■参照サイト
-- [](https://example.com/)
-- [](https://example.com/)
+- [DMMぱちタウン](https://p-town.dmm.com/machines/4602)
+- [一撃](https://1geki.jp/slot/l_godeater_r/)
 \`\`\`
 
 ## 注意事項
 - 必ずWeb検索を行い、最新の情報を取得すること
 - メモ内容だけを出力すること
-- :contentReferenceは使用しないこと
+- :contentReferenceを絶対に使用しないこと
 
 ## 作成するテキストの内容
 以下に記載されている機種名、またはURLのパチスロ情報を検索し、設定推測ポイントをテキストに反映する。
 検索する際はDMMぱちタウンと一撃を優先的に参照すること。
 
-[機種名、またはURL]
-`;
+機種名、またはURL：`;
 
 export function Toolbar({
   isMemoLocked,
