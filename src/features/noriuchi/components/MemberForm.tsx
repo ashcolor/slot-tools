@@ -207,7 +207,7 @@ export function MemberForm({
                   <Icon icon="fa6-solid:angle-down" className="size-3" />
                 </div>
                 {settlements && settlements.length > 0 ? (
-                  <div className="flex flex-col gap-0.5 text-sm">
+                  <div className="flex flex-col gap-0.5 text-base">
                     {settlements.map((s, i) => {
                       const isPayer = s.from === memberResult.name;
                       const done = doneSettlements.has(i);
