@@ -16,6 +16,10 @@ interface Props {
   settlements?: Settlement[];
 }
 const CASH_STEPS = [1000, 10000];
+const CASH_STEP_COLORS: Partial<Record<number, string>> = {
+  1000: "#4D5B6D",
+  10000: "#6D5A4D",
+};
 const fmtCash = (v: number) => {
   if (v === 1000) return "1千";
   if (v === 10000) return "1万";
@@ -126,6 +130,7 @@ export function MemberForm({
               onChange={(v) => update("investCash", v)}
               onAdd={(v) => addTo("investCash", v)}
               formatStep={fmtCash}
+              stepColors={CASH_STEP_COLORS}
               readOnly
             />
           </div>

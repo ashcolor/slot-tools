@@ -9,6 +9,7 @@ interface Props {
   onChange: (value: number) => void;
   onAdd: (amount: number) => void;
   formatStep?: (v: number) => string;
+  stepColors?: Partial<Record<number, string>>;
   error?: boolean;
   readOnly?: boolean;
 }
@@ -22,10 +23,18 @@ export function StepInput({
   onChange,
   onAdd,
   formatStep,
+  stepColors,
   error,
   readOnly,
 }: Props) {
   const fmt = (v: number) => (formatStep ? formatStep(v) : String(v));
+  const getStepTextStyle = (v: number) => {
+    const color = stepColors?.[v];
+    if (!color) return undefined;
+    return {
+      color,
+    };
+  };
   return (
     <div>
       <div className="flex items-center gap-1">
@@ -62,7 +71,7 @@ export function StepInput({
                 onClick={() => onAdd(v)}
               >
                 <Icon icon="mdi:plus-circle-outline" className="size-4 shrink-0" />
-                {fmt(v)}
+                <span style={getStepTextStyle(v)}>{fmt(v)}</span>
               </button>
             ))}
           </div>
@@ -75,7 +84,7 @@ export function StepInput({
                 onClick={() => onAdd(-v)}
               >
                 <Icon icon="mdi:minus-circle-outline" className="size-3.5 shrink-0" />
-                {fmt(v)}
+                <span style={getStepTextStyle(v)}>{fmt(v)}</span>
               </button>
             ))}
           </div>
