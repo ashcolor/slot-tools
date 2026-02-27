@@ -22,9 +22,9 @@ interface MemoToolbarProps {
   onOpenConfig: () => void;
 }
 
-const LLM_MEMO_GUIDE_TEXT = `パチスロ用メモアプリのためのメモを出力して。
+const LLM_MEMO_GUIDE_TEXT = `パチスロ用メモアプリのためのテキストを出力して。
 
-## メモ記法
+## テキスト記法
 - カウンター: [[c:name=0]]
   - name は英字または _ で開始し、以降は英数字と _ を使用
 - 数式: [[f:big / game]]
@@ -33,23 +33,37 @@ const LLM_MEMO_GUIDE_TEXT = `パチスロ用メモアプリのためのメモを
   - percent: %表示
   - odds: 1/〇〇表示
 
-## メモ例
+## テキスト例
 \`\`\`
 【機種名】
 ■ゲーム数
 ゲーム数：[[c:game=0]]
 BIG：[[c:big=0]] [[f:big / game;fmt=odds]]
+※ 設定1：1/300、設定6：1/250
 REG：[[c:reg=0]] [[f:reg / game;fmt=odds]]
+※ 設定1：1/300、設定6：1/250
 
 ■小役カウント
 ベル：[[c:bell=0]] [[f:bell / game;fmt=odds]]
+※ 多いほど高設定期待
 チェリー：[[c:cherry=0]] [[f:cherry / game;fmt=odds]]
+※ 多いほど高設定期待
+
+■参照サイト
+- [DMMぱちタウン](https://p-town.dmm.com/machines/4602)
+- [一撃](https://1geki.jp/slot/l_godeater_r/)
 \`\`\`
 
-## 作成するメモの内容
-URLが記載されている場合はURL先の設定推測ポイントを反映したメモを作成して。
-[設定差のある要素を直接記載するか、URLを記載]
-`;
+## 注意事項
+- 必ずWeb検索を行い、最新の情報を取得すること
+- メモ内容だけを出力すること
+- :contentReferenceを絶対に使用しないこと
+
+## 作成するテキストの内容
+以下に記載されている機種名、またはURLのパチスロ情報を検索し、設定推測ポイントをテキストに反映する。
+検索する際はDMMぱちタウンと一撃を優先的に参照すること。
+
+機種名、またはURL：`;
 
 export function Toolbar({
   isMemoLocked,

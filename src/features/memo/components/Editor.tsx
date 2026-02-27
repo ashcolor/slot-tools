@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { useMemo } from "react";
-import type { ChangeEvent, MouseEvent as ReactMouseEvent, RefObject } from "react";
+import type { ChangeEvent, MouseEvent as ReactMouseEvent, ReactNode, RefObject } from "react";
 import type { InlineControlSize, MemoPart } from "../hooks/useMemoEditor";
 import { EMPTY_MEMO_PLACEHOLDER } from "../constants";
 import { InlineCounter } from "./InlineCounter";
@@ -46,8 +46,76 @@ interface PreviewPart {
   end: number;
 }
 
+interface TextFragment {
+  type: "text" | "link";
+  value: string;
+  url?: string;
+}
+
+const MARKDOWN_LINK_PATTERN = /\[(?!\[)([^\]]*)\]\(([^)]+)\)/g;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function parseTextFragments(value: string): TextFragment[] {
+  const fragments: TextFragment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = MARKDOWN_LINK_PATTERN.exec(value)) !== null) {
+    if (match.index > lastIndex) {
+      fragments.push({ type: "text", value: value.slice(lastIndex, match.index) });
+    }
+
+    const rawLabel = match[1].trim();
+    const rawUrl = match[2].trim();
+    if (rawUrl.length === 0) {
+      fragments.push({ type: "text", value: match[0] });
+    } else {
+      fragments.push({ type: "link", value: rawLabel.length > 0 ? rawLabel : rawUrl, url: rawUrl });
+    }
+
+    lastIndex = MARKDOWN_LINK_PATTERN.lastIndex;
+  }
+
+  if (lastIndex < value.length) {
+    fragments.push({ type: "text", value: value.slice(lastIndex) });
+  }
+
+  if (fragments.length === 0) {
+    fragments.push({ type: "text", value });
+  }
+
+  MARKDOWN_LINK_PATTERN.lastIndex = 0;
+  return fragments;
+}
+
+function buildLinkedTextNodes(
+  value: string,
+  keyPrefix: string,
+  onLinkClick: (event: ReactMouseEvent<HTMLAnchorElement>) => void,
+): ReactNode[] {
+  const fragments = parseTextFragments(value);
+
+  return fragments.map((fragment, index) => {
+    if (fragment.type === "text") {
+      return <span key={`${keyPrefix}-text-${index}`}>{fragment.value}</span>;
+    }
+
+    return (
+      <a
+        key={`${keyPrefix}-link-${index}`}
+        href={fragment.url}
+        target="_blank"
+        rel="noreferrer"
+        className="link link-primary break-all"
+        onClick={onLinkClick}
+      >
+        {fragment.value}
+      </a>
+    );
+  });
 }
 
 function buildPreviewParts(memo: string, memoParts: MemoPart[]): PreviewPart[] {
@@ -101,15 +169,30 @@ function getPreviewPartElement(node: Node | null, container: HTMLElement): HTMLE
 function getPositionFromPartElement(
   element: HTMLElement,
   clientX: number,
-  textOffset: number | null,
+  offsetNode: Node | null,
+  offset: number | null,
 ): number | null {
   const start = Number(element.dataset.memoStart);
   const end = Number(element.dataset.memoEnd);
   if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
   if (end < start) return null;
 
-  if (element.dataset.memoType === "text" && typeof textOffset === "number") {
-    return clamp(start + textOffset, start, end);
+  if (element.dataset.memoType === "text" && offsetNode && typeof offset === "number") {
+    const ownerDocument = element.ownerDocument;
+    const walker = ownerDocument.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let accumulated = 0;
+    let currentNode = walker.nextNode();
+
+    while (currentNode) {
+      const textNode = currentNode as Text;
+      const textLength = textNode.nodeValue?.length ?? 0;
+      if (textNode === offsetNode) {
+        const boundedOffset = clamp(offset, 0, textLength);
+        return clamp(start + accumulated + boundedOffset, start, end);
+      }
+      accumulated += textLength;
+      currentNode = walker.nextNode();
+    }
   }
 
   const rect = element.getBoundingClientRect();
@@ -131,8 +214,12 @@ function getCursorPositionFromPreviewClick(
     if (caret) {
       const partElement = getPreviewPartElement(caret.offsetNode, container);
       if (partElement) {
-        const textOffset = caret.offsetNode?.nodeType === Node.TEXT_NODE ? caret.offset : null;
-        const position = getPositionFromPartElement(partElement, event.clientX, textOffset);
+        const position = getPositionFromPartElement(
+          partElement,
+          event.clientX,
+          caret.offsetNode,
+          caret.offset,
+        );
         if (typeof position === "number") return position;
       }
     }
@@ -143,9 +230,12 @@ function getCursorPositionFromPreviewClick(
     if (range) {
       const partElement = getPreviewPartElement(range.startContainer, container);
       if (partElement) {
-        const textOffset =
-          range.startContainer.nodeType === Node.TEXT_NODE ? range.startOffset : null;
-        const position = getPositionFromPartElement(partElement, event.clientX, textOffset);
+        const position = getPositionFromPartElement(
+          partElement,
+          event.clientX,
+          range.startContainer,
+          range.startOffset,
+        );
         if (typeof position === "number") return position;
       }
     }
@@ -154,7 +244,7 @@ function getCursorPositionFromPreviewClick(
   const elementAtPoint = container.ownerDocument.elementFromPoint(event.clientX, event.clientY);
   const partElement = getPreviewPartElement(elementAtPoint, container);
   if (partElement) {
-    const position = getPositionFromPartElement(partElement, event.clientX, null);
+    const position = getPositionFromPartElement(partElement, event.clientX, null, null);
     if (typeof position === "number") return position;
   }
 
@@ -188,6 +278,9 @@ export function Editor({
     onMemoChange(event.target.value);
   };
   const previewParts = useMemo(() => buildPreviewParts(memo, memoParts), [memo, memoParts]);
+  const handleLinkClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+  };
 
   const handlePreviewClick = (event: ReactMouseEvent<HTMLDivElement>) => {
     if (isMemoLocked) {
@@ -259,7 +352,7 @@ export function Editor({
                       data-memo-end={end}
                       data-memo-type="text"
                     >
-                      {part.value}
+                      {buildLinkedTextNodes(part.value, `text-${index}`, handleLinkClick)}
                     </span>
                   ) : part.type === "counter" ? (
                     <span

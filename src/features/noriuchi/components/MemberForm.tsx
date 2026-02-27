@@ -16,6 +16,10 @@ interface Props {
   settlements?: Settlement[];
 }
 const CASH_STEPS = [1000, 10000];
+const CASH_STEP_COLORS: Partial<Record<number, string>> = {
+  1000: "#4D5B6D",
+  10000: "#6D5A4D",
+};
 const fmtCash = (v: number) => {
   if (v === 1000) return "1千";
   if (v === 10000) return "1万";
@@ -126,6 +130,7 @@ export function MemberForm({
               onChange={(v) => update("investCash", v)}
               onAdd={(v) => addTo("investCash", v)}
               formatStep={fmtCash}
+              stepColors={CASH_STEP_COLORS}
               readOnly
             />
           </div>
@@ -156,7 +161,7 @@ export function MemberForm({
               </div>
               <div className="flex flex-col gap-0.5 text-xs">
                 <div className="flex justify-between">
-                  <span>再プレイ換算</span>
+                  <span>再プレイ</span>
                   <span>
                     {member.investMedals.toLocaleString()} {playUnit}{" "}
                     <Icon icon="fa6-solid:arrow-right" className="mb-0.5 inline size-2" />{" "}
@@ -202,7 +207,7 @@ export function MemberForm({
                   <Icon icon="fa6-solid:angle-down" className="size-3" />
                 </div>
                 {settlements && settlements.length > 0 ? (
-                  <div className="flex flex-col gap-0.5 text-sm">
+                  <div className="flex flex-col gap-0.5 text-base">
                     {settlements.map((s, i) => {
                       const isPayer = s.from === memberResult.name;
                       const done = doneSettlements.has(i);
