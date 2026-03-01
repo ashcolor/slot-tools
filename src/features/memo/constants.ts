@@ -51,7 +51,8 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 export const TEMPLATE_COUNTER_ITEM_LABEL = "カウンター";
 export const TEMPLATE_FORMULA_ITEM_LABEL = "数式";
 
-export const EMPTY_MEMO_PLACEHOLDER = `📄: 新規
+export const EMPTY_MEMO_PLACEHOLDER = `🗓️：ヘッダー表示
+📄: 新規
 ℹ️: ヘルプ
 📝: テンプレート
 🔒: 編集のロック
