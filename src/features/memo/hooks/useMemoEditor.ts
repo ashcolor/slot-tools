@@ -324,7 +324,12 @@ export function toCounterDigits(value: number): string[] {
 
 function normalizeFontSizeLevel(level: number): (typeof FONT_SIZE_OPTIONS)[number]["level"] {
   if (!Number.isFinite(level)) return DEFAULT_FONT_SIZE_LEVEL;
-  return Math.min(5, Math.max(1, Math.round(level))) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
+  const minLevel = FONT_SIZE_OPTIONS[0].level;
+  const maxLevel = FONT_SIZE_OPTIONS[FONT_SIZE_OPTIONS.length - 1].level;
+  return Math.min(
+    maxLevel,
+    Math.max(minLevel, Math.round(level)),
+  ) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
 }
 
 function getInlineControlSize(
@@ -336,40 +341,49 @@ function getInlineControlSize(
       formulaClass: "btn-xs",
       valueWidthClass: "min-w-8",
       iconClass: "size-3",
-      lineHeightClass: "leading-8",
+      lineHeightClass: "leading-7",
     };
   }
   if (level === 2) {
     return {
-      buttonClass: "btn-sm",
+      buttonClass: "btn-xs",
       formulaClass: "btn-xs",
-      valueWidthClass: "min-w-9",
-      iconClass: "size-4",
+      valueWidthClass: "min-w-8",
+      iconClass: "size-3",
       lineHeightClass: "leading-8",
     };
   }
   if (level === 3) {
     return {
       buttonClass: "btn-sm",
-      formulaClass: "btn-sm",
-      valueWidthClass: "min-w-10",
+      formulaClass: "btn-xs",
+      valueWidthClass: "min-w-9",
       iconClass: "size-4",
       lineHeightClass: "leading-9",
     };
   }
   if (level === 4) {
     return {
+      buttonClass: "btn-sm",
+      formulaClass: "btn-sm",
+      valueWidthClass: "min-w-10",
+      iconClass: "size-4",
+      lineHeightClass: "leading-10",
+    };
+  }
+  if (level === 5) {
+    return {
       buttonClass: "btn-md",
       formulaClass: "btn-md",
       valueWidthClass: "min-w-12",
       iconClass: "size-5",
-      lineHeightClass: "leading-10",
+      lineHeightClass: "leading-[2.8rem]",
     };
   }
   return {
-    buttonClass: "btn-lg",
-    formulaClass: "btn-lg",
-    valueWidthClass: "min-w-14",
+    buttonClass: "btn-md",
+    formulaClass: "btn-md",
+    valueWidthClass: "min-w-12",
     iconClass: "size-5",
     lineHeightClass: "leading-[2.8rem]",
   };
@@ -544,11 +558,12 @@ function buildResolvedMemoText(memoParts: MemoPart[], formulaResults: Map<number
 }
 
 function getMemoImageFontSize(fontSizeLevel: number): number {
-  if (fontSizeLevel <= 1) return 16;
-  if (fontSizeLevel === 2) return 18;
-  if (fontSizeLevel === 3) return 20;
-  if (fontSizeLevel === 4) return 22;
-  return 24;
+  if (fontSizeLevel <= 1) return 14;
+  if (fontSizeLevel === 2) return 16;
+  if (fontSizeLevel === 3) return 18;
+  if (fontSizeLevel === 4) return 20;
+  if (fontSizeLevel === 5) return 22;
+  return 22;
 }
 
 function wrapLineToWidth(

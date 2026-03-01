@@ -160,7 +160,14 @@ export function Toolbar({
           aria-label={isHeaderVisible ? "Hide header" : "Show header"}
           title={isHeaderVisible ? "Hide header" : "Show header"}
         >
-          <Icon icon={isHeaderVisible ? "fluent:window-header-horizontal-20-filled" : "fluent:window-header-horizontal-off-20-filled"} className="size-4" />
+          <Icon
+            icon={
+              isHeaderVisible
+                ? "fluent:window-header-horizontal-20-filled"
+                : "fluent:window-header-horizontal-off-20-filled"
+            }
+            className="size-4"
+          />
         </button>
         <button
           type="button"

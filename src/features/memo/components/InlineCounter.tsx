@@ -38,7 +38,7 @@ export function InlineCounter({
       </button>
       <button
         type="button"
-        className={`join-item btn btn-outline btn-outline z-1 border-neutral-500 ${inlineControlSize.buttonClass} ${inlineControlSize.valueWidthClass} gap-1 px-2`}
+        className={`join-item btn btn-outline z-1 border-neutral-500 ${inlineControlSize.buttonClass} ${inlineControlSize.valueWidthClass} gap-1 px-2`}
         onPointerDown={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();

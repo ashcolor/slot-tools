@@ -35,7 +35,7 @@ export function ConfigDialog({
                   key={option.level}
                   type="radio"
                   name="font-size-options"
-                  className="join-item btn btn-xs"
+                  className="join-item btn btn-sm"
                   aria-label={option.label}
                   checked={memoFontSizeLevel === option.level}
                   onChange={() => onChangeFontSizeLevel(option.level)}
