@@ -52,13 +52,8 @@ export const TEMPLATE_COUNTER_ITEM_LABEL = "カウンター";
 export const TEMPLATE_FORMULA_ITEM_LABEL = "数式";
 
 export const EMPTY_MEMO_PLACEHOLDER = `🗓️：ヘッダー表示
-📄: 新規
-ℹ️: ヘルプ
-📝: テンプレート
 🔒: 編集のロック
-📜: 履歴
-📤: コピー
-⚙️: 設定
+⋮：メニュー
 `;
 
 const SAMPLE_TEMPLATE_MEMO = `■ゲーム数

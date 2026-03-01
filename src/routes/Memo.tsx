@@ -84,6 +84,13 @@ export function Memo({
     }
     return memo.createNewMemo();
   }, [isMemoLocked, memo, triggerLockFeedback]);
+  const handleResetMemoCounters = useCallback(() => {
+    if (isMemoLocked) {
+      triggerLockFeedback();
+      return;
+    }
+    memo.resetMemoCounters();
+  }, [isMemoLocked, memo, triggerLockFeedback]);
   const handleRestoreMemoHistory = useCallback(
     (historyId: string) => {
       if (isMemoLocked) {
@@ -176,13 +183,14 @@ export function Memo({
           isHeaderVisible={isHeaderVisible}
           isMemoLocked={isMemoLocked}
           lockFeedbackNonce={lockFeedbackNonce}
+          memoUrl={memo.memoUrl}
           memoHistoryList={memo.memoHistoryList}
-          onCopyRawMemo={memo.copyRawMemoToClipboard}
           onCopyResolvedMemo={memo.copyResolvedMemoToClipboard}
-          onCopyTemplateMemo={memo.copyTemplateMemoToClipboard}
           onCopyResolvedMemoImage={memo.copyResolvedMemoImageToClipboard}
+          onCopyMemoUrl={memo.copyMemoUrlToClipboard}
           onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
           onCreateNewMemo={handleCreateNewMemo}
+          onResetMemoCounters={handleResetMemoCounters}
           onRestoreMemoHistory={handleRestoreMemoHistory}
           onDeleteMemoHistory={memo.deleteMemoHistory}
           onClearMemoHistory={memo.clearMemoHistory}

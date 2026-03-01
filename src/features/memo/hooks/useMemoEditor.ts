@@ -34,6 +34,7 @@ export interface MemoTemplate {
 export interface MemoHistoryItem {
   id: string;
   memo: string;
+  resolvedMemo?: string;
   createdAt: string;
 }
 
@@ -153,6 +154,20 @@ function readMemoFromLocationSearch(search: string): string | null {
   const encoded = params.get(MEMO_QUERY_KEY);
   if (!encoded) return null;
   return decodeMemoFromUrl(encoded);
+}
+
+function buildMemoUrl(href: string, memo: string): string {
+  const encodedMemo = encodeMemoForUrl(memo);
+  if (encodedMemo === null) return href;
+
+  const url = new URL(href);
+  if (encodedMemo.length > 0) {
+    url.searchParams.set(MEMO_QUERY_KEY, encodedMemo);
+  } else {
+    url.searchParams.delete(MEMO_QUERY_KEY);
+  }
+
+  return url.toString();
 }
 
 function easeOutCubic(progress: number): number {
@@ -411,6 +426,9 @@ function pruneMemoHistoryItems(items: MemoHistoryItem[]): MemoHistoryItem[] {
       if (
         typeof item.id !== "string" ||
         typeof item.memo !== "string" ||
+        ("resolvedMemo" in item &&
+          typeof item.resolvedMemo !== "undefined" &&
+          typeof item.resolvedMemo !== "string") ||
         typeof item.createdAt !== "string"
       ) {
         return false;
@@ -426,6 +444,7 @@ function hasSameMemoHistoryItems(a: MemoHistoryItem[], b: MemoHistoryItem[]): bo
     (item, index) =>
       item.id === b[index]?.id &&
       item.memo === b[index]?.memo &&
+      (item.resolvedMemo ?? null) === (b[index]?.resolvedMemo ?? null) &&
       item.createdAt === b[index]?.createdAt,
   );
 }
@@ -591,6 +610,36 @@ function buildResolvedMemoText(memoParts: MemoPart[], formulaResults: Map<number
       return formulaResults.get(part.index) ?? "--";
     })
     .join("");
+}
+
+function resolveMemoText(memo: string, roundDecimalPlaces: number): string {
+  const memoParts = parseMemoParts(memo);
+  const variables = Object.fromEntries(
+    memoParts.flatMap((part) => {
+      if (part.type !== "counter") return [];
+      const entries: [string, number][] = [[`c${part.index}`, part.value]];
+      if (part.name) {
+        entries.push([part.name, part.value]);
+      }
+      return entries;
+    }),
+  );
+  const formulaResults = new Map<number, string>();
+
+  memoParts.forEach((part) => {
+    if (part.type !== "formula") return;
+    formulaResults.set(
+      part.index,
+      evaluateFormula(
+        part.expression,
+        variables,
+        normalizeFormulaRoundDecimalPlaces(roundDecimalPlaces),
+        part.displayMode,
+      ),
+    );
+  });
+
+  return buildResolvedMemoText(memoParts, formulaResults);
 }
 
 function getMemoImageFontSize(fontSizeLevel: number): number {
@@ -785,13 +834,19 @@ export function useMemoEditor() {
   const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
   const didInitUrlMemoRef = useRef(false);
   const latestMemoRef = useRef(draft.memo);
+  const latestResolvedMemoRef = useRef("");
   const lastSavedHistoryMemoRef = useRef<string | null>(null);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
-  const memoHistoryList = useMemo(
-    () => pruneMemoHistoryItems(Array.isArray(memoHistory) ? memoHistory : []),
-    [memoHistory],
-  );
+  const memoHistoryList = useMemo(() => {
+    const normalizedRoundDecimalPlaces = normalizeFormulaRoundDecimalPlaces(
+      draft.formulaRoundDecimalPlaces,
+    );
+    return pruneMemoHistoryItems(Array.isArray(memoHistory) ? memoHistory : []).map((item) => ({
+      ...item,
+      resolvedMemo: item.resolvedMemo ?? resolveMemoText(item.memo, normalizedRoundDecimalPlaces),
+    }));
+  }, [draft.formulaRoundDecimalPlaces, memoHistory]);
   const pendingApplyTemplate = useMemo(
     () => templateList.find((template) => template.id === pendingApplyTemplateId) ?? null,
     [pendingApplyTemplateId, templateList],
@@ -887,6 +942,10 @@ export function useMemoEditor() {
   useEffect(() => {
     latestMemoRef.current = draft.memo;
   }, [draft.memo]);
+
+  useEffect(() => {
+    latestResolvedMemoRef.current = resolvedMemoText;
+  }, [resolvedMemoText]);
 
   useEffect(() => {
     lastSavedHistoryMemoRef.current = memoHistoryList[0]?.memo ?? null;
@@ -1014,13 +1073,14 @@ export function useMemoEditor() {
   };
 
   const saveMemoToHistory = useCallback(
-    (memo: string): boolean => {
+    (memo: string, resolvedMemo: string): boolean => {
       if (memo.trim().length === 0) return false;
       if (lastSavedHistoryMemoRef.current === memo) return false;
 
       const nextHistory: MemoHistoryItem = {
         id: createTemplateId(),
         memo,
+        resolvedMemo,
         createdAt: new Date().toISOString(),
       };
 
@@ -1044,7 +1104,7 @@ export function useMemoEditor() {
 
     const timerId = window.setInterval(
       () => {
-        saveMemoToHistory(latestMemoRef.current);
+        saveMemoToHistory(latestMemoRef.current, latestResolvedMemoRef.current);
       },
       intervalMinutes * 60 * 1000,
     );
@@ -1070,7 +1130,7 @@ export function useMemoEditor() {
   };
 
   const createNewMemo = (): boolean => {
-    const didSaveToHistory = saveMemoToHistory(draft.memo);
+    const didSaveToHistory = saveMemoToHistory(draft.memo, resolvedMemoText);
 
     setDraft((prev) => ({ ...prev, memo: "" }));
     setCounterPopup(null);
@@ -1078,6 +1138,13 @@ export function useMemoEditor() {
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
     return didSaveToHistory;
+  };
+
+  const resetMemoCounters = () => {
+    setDraft((prev) => ({ ...prev, memo: resetCounterValues(prev.memo) }));
+    setCounterPopup(null);
+    setFormulaPopup(null);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
   const restoreMemoHistory = (historyId: string) => {
@@ -1375,6 +1442,19 @@ export function useMemoEditor() {
     await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
   };
 
+  const copyMemoUrlToClipboard = async () => {
+    if (typeof window === "undefined") {
+      throw new Error("この環境ではURLを取得できません。");
+    }
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+    }
+
+    await navigator.clipboard.writeText(buildMemoUrl(window.location.href, draft.memo));
+  };
+  const memoUrl =
+    typeof window === "undefined" ? "" : buildMemoUrl(window.location.href, draft.memo);
+
   const downloadResolvedMemoImage = async () => {
     const blob = await renderMemoTextImage(resolvedMemoText, memoFontSizeLevel);
     const url = URL.createObjectURL(blob);
@@ -1513,6 +1593,7 @@ export function useMemoEditor() {
     setIsMemoFocused,
     clearDraft,
     createNewMemo,
+    resetMemoCounters,
     restoreMemoHistory,
     deleteMemoHistory,
     clearMemoHistory,
@@ -1534,6 +1615,8 @@ export function useMemoEditor() {
     copyResolvedMemoToClipboard,
     copyTemplateMemoToClipboard,
     copyResolvedMemoImageToClipboard,
+    copyMemoUrlToClipboard,
+    memoUrl,
     downloadResolvedMemoImage,
     openTemplateModal,
     applyTemplate,

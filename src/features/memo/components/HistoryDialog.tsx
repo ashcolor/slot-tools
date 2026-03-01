@@ -22,6 +22,7 @@ export function HistoryDialog({
 }: MemoHistoryDialogProps) {
   const previewDialogRef = useRef<HTMLDialogElement>(null);
   const [previewTarget, setPreviewTarget] = useState<MemoHistoryItem | null>(null);
+  const previewMemo = previewTarget?.resolvedMemo ?? previewTarget?.memo ?? "";
 
   const handleOpenPreview = (history: MemoHistoryItem) => {
     setPreviewTarget(history);
@@ -94,7 +95,7 @@ export function HistoryDialog({
                     </div>
                   </div>
                   <p className="mt-1 truncate text-xs opacity-70">
-                    {history.memo.replace(/\r?\n/g, " ").trim()}
+                    {(history.resolvedMemo ?? history.memo).replace(/\r?\n/g, " ").trim()}
                   </p>
                 </div>
               ))}
@@ -129,9 +130,9 @@ export function HistoryDialog({
                 {formatTemplateDate(previewTarget.createdAt)}
               </p>
               <div className="max-h-[60vh] overflow-y-auto rounded-box bg-base-200/40 p-4">
-                <p className="mb-3 text-sm font-semibold">{getTemplateTitle(previewTarget.memo)}</p>
+                <p className="mb-3 text-sm font-semibold">{getTemplateTitle(previewMemo)}</p>
                 <div className="whitespace-pre-wrap break-words text-sm leading-7">
-                  {previewTarget.memo}
+                  {previewMemo}
                 </div>
               </div>
             </>
