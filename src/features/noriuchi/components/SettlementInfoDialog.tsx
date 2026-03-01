@@ -15,13 +15,12 @@ export function SettlementInfoDialog({
       ? "出玉 × 貸玉レート"
       : collectCalculationMode === "exchange"
         ? "出玉 × 交換レート"
-        : "min(出玉, 再プレイ) × 貸玉レート + max(出玉 - 再プレイ, 0) × 交換レート";
+        : "再プレイした分までは貸玉レート、超えた分は交換レートで計算";
 
   return (
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box">
         <h3 className="mb-2 text-lg font-bold">計算式について</h3>
-        <div className="mb-2 text-xs opacity-60">※貸出レート・交換レートは設定から変更できます</div>
         <div className="flex flex-col gap-3 text-sm opacity-70">
           <div>
             <div className="mb-1 font-bold">投資額</div>
@@ -35,8 +34,7 @@ export function SettlementInfoDialog({
           <div>
             <div className="mb-1 font-bold">収支</div>
             <div className="flex flex-col gap-1">
-              <div>投資額 = 現金投資 + (再プレイ × 貸出レート)</div>
-              <div>収支 = 回収額 − 投資額</div>
+              <div>回収額 − 投資額</div>
             </div>
           </div>
         </div>
