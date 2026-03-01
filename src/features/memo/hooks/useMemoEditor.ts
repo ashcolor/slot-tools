@@ -1054,7 +1054,7 @@ export function useMemoEditor() {
       insertFormulaToken();
       return;
     }
-    insertTextAtCursor(`${item} `);
+    insertTextAtCursor(item);
   };
 
   const focusMemoEditor = (cursorPosition?: number) => {
