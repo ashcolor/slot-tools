@@ -27,7 +27,6 @@ export interface MemoDraft {
 export interface MemoTemplate {
   id: string;
   memo: string;
-  fontSizeLevel: number;
   createdAt: string;
 }
 
@@ -1483,7 +1482,6 @@ export function useMemoEditor() {
     setDraft((prev) => ({
       ...prev,
       memo: template.memo,
-      fontSizeLevel: normalizeFontSizeLevel(template.fontSizeLevel),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -1495,7 +1493,6 @@ export function useMemoEditor() {
     setDraft((prev) => ({
       ...prev,
       memo: pendingApplyTemplate.memo,
-      fontSizeLevel: normalizeFontSizeLevel(pendingApplyTemplate.fontSizeLevel),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -1528,7 +1525,6 @@ export function useMemoEditor() {
     const nextTemplate: MemoTemplate = {
       id: createTemplateId(),
       memo: resetCounterValues(draft.memo),
-      fontSizeLevel: memoFontSizeLevel,
       createdAt: new Date().toISOString(),
     };
     setTemplates((prev) => [nextTemplate, ...(Array.isArray(prev) ? prev : [])]);

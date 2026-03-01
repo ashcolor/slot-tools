@@ -1,5 +1,3 @@
-import { DEFAULT_FONT_SIZE_LEVEL } from "../../constants";
-
 export interface TemplateCategory {
   key: "koyaku" | "game" | "cz" | "bonus" | "color" | "state" | "calc";
   label: string;
@@ -75,7 +73,6 @@ export const INITIAL_TEMPLATES = [
   {
     id: "default-slot-sample-template-v1",
     memo: SAMPLE_TEMPLATE_MEMO,
-    fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     createdAt: "2026-02-21T00:00:00.000Z",
   },
 ];
