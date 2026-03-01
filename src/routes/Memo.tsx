@@ -11,6 +11,7 @@ import { Stamp } from "../features/memo/components/Stamp";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
 import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
+import { useLocalStorage } from "../utils/useLocalStorage";
 
 interface MemoProps {
   onEditingChange?: (isEditing: boolean) => void;
@@ -29,7 +30,10 @@ export function Memo({
   const saveEditorRef = useRef(memo.saveMemoEditor);
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
-  const [isStampVisible, setIsStampVisible] = useState(true);
+  const [isStampVisible, setIsStampVisible] = useLocalStorage<boolean>(
+    "slot-memo-stamp-visible",
+    true,
+  );
   const rootStyle =
     memo.isMemoFocused && memo.keyboardInset > 0
       ? { height: `calc(100svh - ${memo.keyboardInset}px)` }
