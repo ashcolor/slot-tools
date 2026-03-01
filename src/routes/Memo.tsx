@@ -14,9 +14,15 @@ import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
 
 interface MemoProps {
   onEditingChange?: (isEditing: boolean) => void;
+  isHeaderVisible?: boolean;
+  onToggleHeaderVisibility?: () => void;
 }
 
-export function Memo({ onEditingChange }: MemoProps) {
+export function Memo({
+  onEditingChange,
+  isHeaderVisible = true,
+  onToggleHeaderVisibility,
+}: MemoProps) {
   const floatingGap = 8;
   const memo = useMemoEditor();
   const [isMemoLocked, setIsMemoLocked] = useState(false);
@@ -35,9 +41,12 @@ export function Memo({ onEditingChange }: MemoProps) {
   const handleStampOccupiedHeightChange = useCallback((occupiedHeight: number) => {
     setStampOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
   }, []);
+  const nonEditingHeightClass = isHeaderVisible
+    ? "h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)]"
+    : "h-[100svh]";
   const rootClassName = memo.isMemoFocused
     ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"
-    : "relative left-1/2 -ml-[50vw] w-screen h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)] px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden";
+    : `relative left-1/2 -ml-[50vw] w-screen ${nonEditingHeightClass} px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden`;
   const triggerLockFeedback = useCallback(() => {
     setLockFeedbackNonce((current) => current + 1);
   }, []);
@@ -164,6 +173,7 @@ export function Memo({ onEditingChange }: MemoProps) {
     <div className={rootClassName} style={rootStyle}>
       {!memo.isMemoFocused ? (
         <Toolbar
+          isHeaderVisible={isHeaderVisible}
           isMemoLocked={isMemoLocked}
           lockFeedbackNonce={lockFeedbackNonce}
           memoHistoryList={memo.memoHistoryList}
@@ -174,6 +184,7 @@ export function Memo({ onEditingChange }: MemoProps) {
           onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
           onCreateNewMemo={handleCreateNewMemo}
           onRestoreMemoHistory={handleRestoreMemoHistory}
+          onToggleHeaderVisibility={onToggleHeaderVisibility}
           onToggleMemoLock={handleToggleMemoLock}
           onOpenTemplate={memo.openTemplateModal}
           onOpenConfig={() => memo.configModalRef.current?.showModal()}

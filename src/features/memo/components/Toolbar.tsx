@@ -7,6 +7,7 @@ import { NotationDialog } from "./NotationDialog";
 import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
+  isHeaderVisible: boolean;
   isMemoLocked: boolean;
   lockFeedbackNonce: number;
   memoHistoryList: MemoHistoryItem[];
@@ -17,6 +18,7 @@ interface MemoToolbarProps {
   onDownloadResolvedMemoImage: () => Promise<void>;
   onCreateNewMemo: () => boolean;
   onRestoreMemoHistory: (historyId: string) => void;
+  onToggleHeaderVisibility?: () => void;
   onToggleMemoLock: () => void;
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
@@ -66,6 +68,7 @@ REG：[[c:reg=0]] [[f:reg / game;fmt=odds]]
 機種名、またはURL：`;
 
 export function Toolbar({
+  isHeaderVisible,
   isMemoLocked,
   lockFeedbackNonce,
   memoHistoryList,
@@ -76,6 +79,7 @@ export function Toolbar({
   onDownloadResolvedMemoImage,
   onCreateNewMemo,
   onRestoreMemoHistory,
+  onToggleHeaderVisibility,
   onToggleMemoLock,
   onOpenTemplate,
   onOpenConfig,
@@ -149,6 +153,15 @@ export function Toolbar({
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className={`btn btn-ghost btn-sm btn-square ${isHeaderVisible ? "text-primary" : ""}`}
+          onClick={onToggleHeaderVisibility}
+          aria-label={isHeaderVisible ? "Hide header" : "Show header"}
+          title={isHeaderVisible ? "Hide header" : "Show header"}
+        >
+          <Icon icon="wordpress:header" className="size-4" />
+        </button>
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
