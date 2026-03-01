@@ -23,7 +23,6 @@ export function Memo({
   isHeaderVisible = true,
   onToggleHeaderVisibility,
 }: MemoProps) {
-  const floatingGap = 8;
   const memo = useMemoEditor();
   const [isMemoLocked, setIsMemoLocked] = useState(false);
   const [lockFeedbackNonce, setLockFeedbackNonce] = useState(0);
@@ -31,21 +30,17 @@ export function Memo({
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
   const [isStampVisible, setIsStampVisible] = useState(true);
-  const [stampOccupiedHeight, setStampOccupiedHeight] = useState(0);
   const rootStyle =
     memo.isMemoFocused && memo.keyboardInset > 0
       ? { height: `calc(100svh - ${memo.keyboardInset}px)` }
       : undefined;
-  const editingTopMargin = memo.isMemoFocused ? floatingGap : 0;
-  const editingBottomMargin = memo.isMemoFocused ? stampOccupiedHeight + floatingGap : 0;
-  const handleStampOccupiedHeightChange = useCallback((occupiedHeight: number) => {
-    setStampOccupiedHeight((current) => (current === occupiedHeight ? current : occupiedHeight));
-  }, []);
+  const editingTopMargin = 0;
+  const editingBottomMargin = 0;
   const nonEditingHeightClass = isHeaderVisible
     ? "h-[calc(100svh-4rem-1rem)] sm:h-[calc(100svh-4rem-2rem)]"
     : "h-[100svh]";
   const rootClassName = memo.isMemoFocused
-    ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-2 sm:px-4 py-0 flex flex-col gap-0 overflow-hidden"
+    ? "relative left-1/2 -ml-[50vw] w-screen h-[100svh] px-0 py-0 flex flex-col gap-0 overflow-hidden"
     : `relative left-1/2 -ml-[50vw] w-screen ${nonEditingHeightClass} px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden`;
   const triggerLockFeedback = useCallback(() => {
     setLockFeedbackNonce((current) => current + 1);
@@ -295,12 +290,9 @@ export function Memo({
 
       <Stamp
         visible={memo.isMemoFocused && isStampVisible}
-        keyboardInset={memo.keyboardInset}
-        floatingGap={floatingGap}
         selectedCategoryKey={memo.selectedCategoryKey}
         onSelectCategoryKey={memo.setSelectedCategoryKey}
         onInsertCategoryItem={memo.insertTemplateItem}
-        onOccupiedHeightChange={handleStampOccupiedHeightChange}
       />
     </div>
   );

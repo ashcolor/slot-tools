@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import {
   TEMPLATE_CATEGORIES,
   TEMPLATE_COUNTER_ITEM_LABEL,
@@ -9,81 +9,31 @@ import type { TemplateCategory } from "../constants";
 
 interface StampProps {
   visible: boolean;
-  keyboardInset: number;
-  floatingGap: number;
   selectedCategoryKey: TemplateCategory["key"] | null;
   onSelectCategoryKey: (key: TemplateCategory["key"] | null) => void;
   onInsertCategoryItem: (item: string) => void;
-  onOccupiedHeightChange?: (occupiedHeight: number) => void;
 }
 
 export function Stamp({
   visible,
-  keyboardInset,
-  floatingGap,
   selectedCategoryKey,
   onSelectCategoryKey,
   onInsertCategoryItem,
-  onOccupiedHeightChange,
 }: StampProps) {
-  const stampRef = useRef<HTMLDivElement>(null);
   const selectedCategory = useMemo(() => {
     const fallback = TEMPLATE_CATEGORIES[0];
     return TEMPLATE_CATEGORIES.find((category) => category.key === selectedCategoryKey) ?? fallback;
   }, [selectedCategoryKey]);
 
-  useEffect(() => {
-    if (!onOccupiedHeightChange) return;
-    if (!visible) {
-      onOccupiedHeightChange(0);
-      return;
-    }
-
-    const stampElement = stampRef.current;
-    if (!stampElement) {
-      onOccupiedHeightChange(0);
-      return;
-    }
-
-    const updateLayout = () => {
-      const rect = stampElement.getBoundingClientRect();
-      const viewportBottom = window.visualViewport
-        ? window.visualViewport.height + window.visualViewport.offsetTop
-        : window.innerHeight;
-      onOccupiedHeightChange(Math.max(0, Math.ceil(viewportBottom - rect.top)));
-    };
-
-    updateLayout();
-
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(updateLayout);
-      observer.observe(stampElement);
-      window.addEventListener("resize", updateLayout);
-      return () => {
-        observer.disconnect();
-        window.removeEventListener("resize", updateLayout);
-      };
-    }
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("resize", updateLayout);
-      return () => window.removeEventListener("resize", updateLayout);
-    }
-  }, [onOccupiedHeightChange, visible]);
-
   if (!visible) return null;
 
   return (
-    <div
-      ref={stampRef}
-      data-stamp-root="true"
-      className="fixed inset-x-0 z-50 px-2 pb-2"
-      style={{
-        bottom: `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px) + ${floatingGap}px)`,
-      }}
-    >
-      <div className="mx-auto max-w-4xl">
-        <div className="border-base-300 bg-base-100/95 rounded-xl border p-2 shadow-lg backdrop-blur">
+    <div data-stamp-root="true" className="z-10 w-full shrink-0">
+      <div
+        className="border-base-300 bg-base-100/98 border-t px-2 pt-1 backdrop-blur"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.25rem)" }}
+      >
+        <div className="mx-auto max-w-4xl">
           <div className="overflow-x-auto">
             <div className="join">
               {TEMPLATE_CATEGORIES.map((category) => (
@@ -104,7 +54,7 @@ export function Stamp({
               ))}
             </div>
           </div>
-          <div className="mt-2 flex items-center gap-1 overflow-x-auto">
+          <div className="mt-1 flex items-center gap-1 overflow-x-auto">
             {selectedCategory.items.map((item) => (
               <button
                 key={item}
