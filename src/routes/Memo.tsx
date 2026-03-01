@@ -184,6 +184,8 @@ export function Memo({
           onDownloadResolvedMemoImage={memo.downloadResolvedMemoImage}
           onCreateNewMemo={handleCreateNewMemo}
           onRestoreMemoHistory={handleRestoreMemoHistory}
+          onDeleteMemoHistory={memo.deleteMemoHistory}
+          onClearMemoHistory={memo.clearMemoHistory}
           onToggleHeaderVisibility={onToggleHeaderVisibility}
           onToggleMemoLock={handleToggleMemoLock}
           onOpenTemplate={memo.openTemplateModal}
@@ -219,8 +221,10 @@ export function Memo({
         configModalRef={memo.configModalRef}
         memoFontSizeLevel={memo.memoFontSizeLevel}
         formulaRoundDecimalPlaces={memo.formulaRoundDecimalPlaces}
+        memoHistoryAutoSaveIntervalMinutes={memo.memoHistoryAutoSaveIntervalMinutes}
         onChangeFontSizeLevel={memo.setFontSizeLevel}
         onChangeFormulaRoundDecimalPlaces={memo.setFormulaRoundDecimalPlaces}
+        onChangeMemoHistoryAutoSaveIntervalMinutes={memo.setMemoHistoryAutoSaveIntervalMinutes}
       />
 
       <TemplateDialog

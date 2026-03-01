@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Parser } from "expr-eval-fork";
 import { deflate, inflate } from "pako";
@@ -21,6 +21,7 @@ export interface MemoDraft {
   memo: string;
   fontSizeLevel: number;
   formulaRoundDecimalPlaces: number;
+  historyAutoSaveIntervalMinutes: MemoHistoryAutoSaveIntervalMinutes;
 }
 
 export interface MemoTemplate {
@@ -36,6 +37,7 @@ export interface MemoHistoryItem {
   createdAt: string;
 }
 
+export type MemoHistoryAutoSaveIntervalMinutes = 0 | 5 | 30 | 60;
 export type FormulaDisplayMode = "auto" | "percent" | "odds";
 
 export type MemoPart =
@@ -87,7 +89,8 @@ const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
 const MEMO_IMAGE_PADDING = 24;
 const MEMO_IMAGE_MIN_HEIGHT = 120;
 const MEMO_QUERY_KEY = "m";
-const MEMO_HISTORY_LIMIT = 50;
+const MEMO_HISTORY_LIMIT = 100;
+const MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT: MemoHistoryAutoSaveIntervalMinutes = 5;
 
 function bytesToBase64Url(bytes: Uint8Array): string | null {
   if (typeof btoa !== "function") return null;
@@ -395,11 +398,44 @@ function normalizeFormulaRoundDecimalPlaces(value: number): number {
   return clampNumber(integer, FORMULA_ROUND_DECIMAL_PLACES_MIN, FORMULA_ROUND_DECIMAL_PLACES_MAX);
 }
 
+function normalizeMemoHistoryAutoSaveIntervalMinutes(
+  value: number,
+): MemoHistoryAutoSaveIntervalMinutes {
+  if (value === 0 || value === 5 || value === 30 || value === 60) return value;
+  return MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT;
+}
+
+function pruneMemoHistoryItems(items: MemoHistoryItem[]): MemoHistoryItem[] {
+  return items
+    .filter((item) => {
+      if (
+        typeof item.id !== "string" ||
+        typeof item.memo !== "string" ||
+        typeof item.createdAt !== "string"
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .slice(0, MEMO_HISTORY_LIMIT);
+}
+
+function hasSameMemoHistoryItems(a: MemoHistoryItem[], b: MemoHistoryItem[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (item, index) =>
+      item.id === b[index]?.id &&
+      item.memo === b[index]?.memo &&
+      item.createdAt === b[index]?.createdAt,
+  );
+}
+
 function createDraft(): MemoDraft {
   return {
     fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     memo: "",
     formulaRoundDecimalPlaces: FORMULA_ROUND_DECIMAL_PLACES_DEFAULT,
+    historyAutoSaveIntervalMinutes: MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT,
   };
 }
 
@@ -748,10 +784,12 @@ export function useMemoEditor() {
   const urlMemoConfirmModalRef = useRef<HTMLDialogElement>(null);
   const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
   const didInitUrlMemoRef = useRef(false);
+  const latestMemoRef = useRef(draft.memo);
+  const lastSavedHistoryMemoRef = useRef<string | null>(null);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
   const memoHistoryList = useMemo(
-    () => (Array.isArray(memoHistory) ? memoHistory : []),
+    () => pruneMemoHistoryItems(Array.isArray(memoHistory) ? memoHistory : []),
     [memoHistory],
   );
   const pendingApplyTemplate = useMemo(
@@ -836,6 +874,30 @@ export function useMemoEditor() {
       setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
     }
   }, [draft.formulaRoundDecimalPlaces, setDraft]);
+
+  useEffect(() => {
+    const normalized = normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    );
+    if (draft.historyAutoSaveIntervalMinutes !== normalized) {
+      setDraft((prev) => ({ ...prev, historyAutoSaveIntervalMinutes: normalized }));
+    }
+  }, [draft.historyAutoSaveIntervalMinutes, setDraft]);
+
+  useEffect(() => {
+    latestMemoRef.current = draft.memo;
+  }, [draft.memo]);
+
+  useEffect(() => {
+    lastSavedHistoryMemoRef.current = memoHistoryList[0]?.memo ?? null;
+  }, [memoHistoryList]);
+
+  useEffect(() => {
+    const rawHistoryList = Array.isArray(memoHistory) ? memoHistory : [];
+    const normalizedHistoryList = pruneMemoHistoryItems(rawHistoryList);
+    if (hasSameMemoHistoryItems(rawHistoryList, normalizedHistoryList)) return;
+    setMemoHistory(normalizedHistoryList);
+  }, [memoHistory, setMemoHistory]);
 
   useEffect(() => {
     if (didInitUrlMemoRef.current) return;
@@ -944,11 +1006,62 @@ export function useMemoEditor() {
     setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
   };
 
+  const setMemoHistoryAutoSaveIntervalMinutes = (
+    historyAutoSaveIntervalMinutes: MemoHistoryAutoSaveIntervalMinutes,
+  ) => {
+    const normalized = normalizeMemoHistoryAutoSaveIntervalMinutes(historyAutoSaveIntervalMinutes);
+    setDraft((prev) => ({ ...prev, historyAutoSaveIntervalMinutes: normalized }));
+  };
+
+  const saveMemoToHistory = useCallback(
+    (memo: string): boolean => {
+      if (memo.trim().length === 0) return false;
+      if (lastSavedHistoryMemoRef.current === memo) return false;
+
+      const nextHistory: MemoHistoryItem = {
+        id: createTemplateId(),
+        memo,
+        createdAt: new Date().toISOString(),
+      };
+
+      lastSavedHistoryMemoRef.current = memo;
+      setMemoHistory((prev) => {
+        const list = pruneMemoHistoryItems(Array.isArray(prev) ? prev : []);
+        return [nextHistory, ...list].slice(0, MEMO_HISTORY_LIMIT);
+      });
+      return true;
+    },
+    [setMemoHistory],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const intervalMinutes = normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    );
+    if (intervalMinutes === 0) return;
+
+    const timerId = window.setInterval(
+      () => {
+        saveMemoToHistory(latestMemoRef.current);
+      },
+      intervalMinutes * 60 * 1000,
+    );
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [draft.historyAutoSaveIntervalMinutes, saveMemoToHistory]);
+
   const clearDraft = () => {
     setDraft((prev) => ({
       ...createDraft(),
       fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
       formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(prev.formulaRoundDecimalPlaces),
+      historyAutoSaveIntervalMinutes: normalizeMemoHistoryAutoSaveIntervalMinutes(
+        prev.historyAutoSaveIntervalMinutes,
+      ),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -957,19 +1070,7 @@ export function useMemoEditor() {
   };
 
   const createNewMemo = (): boolean => {
-    let didSaveToHistory = false;
-    if (draft.memo.trim().length > 0) {
-      didSaveToHistory = true;
-      const nextHistory: MemoHistoryItem = {
-        id: createTemplateId(),
-        memo: draft.memo,
-        createdAt: new Date().toISOString(),
-      };
-      setMemoHistory((prev) => {
-        const list = Array.isArray(prev) ? prev : [];
-        return [nextHistory, ...list].slice(0, MEMO_HISTORY_LIMIT);
-      });
-    }
+    const didSaveToHistory = saveMemoToHistory(draft.memo);
 
     setDraft((prev) => ({ ...prev, memo: "" }));
     setCounterPopup(null);
@@ -988,6 +1089,17 @@ export function useMemoEditor() {
     setFormulaPopup(null);
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
+  };
+
+  const deleteMemoHistory = (historyId: string) => {
+    setMemoHistory((prev) => {
+      const list = Array.isArray(prev) ? prev : [];
+      return list.filter((item) => item.id !== historyId);
+    });
+  };
+
+  const clearMemoHistory = () => {
+    setMemoHistory([]);
   };
 
   const handleMemoBlur = () => {
@@ -1388,16 +1500,22 @@ export function useMemoEditor() {
     formulaVariableList,
     memoFontSizeLevel,
     formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(draft.formulaRoundDecimalPlaces),
+    memoHistoryAutoSaveIntervalMinutes: normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    ),
     memoFontSizeClass,
     inlineControlSize,
     setMemo,
     setFontSizeLevel,
     setFormulaRoundDecimalPlaces,
+    setMemoHistoryAutoSaveIntervalMinutes,
     setSelectedCategoryKey,
     setIsMemoFocused,
     clearDraft,
     createNewMemo,
     restoreMemoHistory,
+    deleteMemoHistory,
+    clearMemoHistory,
     handleMemoBlur,
     insertTemplateItem,
     focusMemoEditor,

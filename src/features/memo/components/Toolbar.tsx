@@ -18,6 +18,8 @@ interface MemoToolbarProps {
   onDownloadResolvedMemoImage: () => Promise<void>;
   onCreateNewMemo: () => boolean;
   onRestoreMemoHistory: (historyId: string) => void;
+  onDeleteMemoHistory: (historyId: string) => void;
+  onClearMemoHistory: () => void;
   onToggleHeaderVisibility?: () => void;
   onToggleMemoLock: () => void;
   onOpenTemplate: () => void;
@@ -79,6 +81,8 @@ export function Toolbar({
   onDownloadResolvedMemoImage,
   onCreateNewMemo,
   onRestoreMemoHistory,
+  onDeleteMemoHistory,
+  onClearMemoHistory,
   onToggleHeaderVisibility,
   onToggleMemoLock,
   onOpenTemplate,
@@ -252,6 +256,8 @@ export function Toolbar({
         memoHistoryList={memoHistoryList}
         isMemoLocked={isMemoLocked}
         onRestoreMemoHistory={onRestoreMemoHistory}
+        onDeleteMemoHistory={onDeleteMemoHistory}
+        onClearMemoHistory={onClearMemoHistory}
       />
 
       {isNewMemoToastVisible ? (
