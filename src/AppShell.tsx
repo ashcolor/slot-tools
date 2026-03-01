@@ -33,8 +33,11 @@ function syncCanonicalHref(pathname: string) {
 export function AppShell() {
   const location = useLocation();
   const [isMemoEditing, setIsMemoEditing] = useState(false);
-  const shouldHideHeader = location.pathname === "/memo" && isMemoEditing;
-  const routeContainerClass = shouldHideHeader ? "p-0" : "max-w-4xl mx-auto p-2 sm:p-4";
+  const [isMemoHeaderVisible, setIsMemoHeaderVisible] = useState(true);
+  const isMemoRoute = location.pathname === "/memo";
+  const shouldShowHeader = !isMemoRoute || (!isMemoEditing && isMemoHeaderVisible);
+  const routeContainerClass =
+    isMemoRoute && !shouldShowHeader ? "p-0" : "max-w-4xl mx-auto p-2 sm:p-4";
 
   useEffect(() => {
     syncCanonicalHref(location.pathname);
@@ -42,11 +45,20 @@ export function AppShell() {
 
   return (
     <>
-      {!shouldHideHeader ? <Header /> : null}
+      {shouldShowHeader ? <Header /> : null}
       <div className={routeContainerClass}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/memo" element={<Memo onEditingChange={setIsMemoEditing} />} />
+          <Route
+            path="/memo"
+            element={
+              <Memo
+                onEditingChange={setIsMemoEditing}
+                isHeaderVisible={isMemoHeaderVisible}
+                onToggleHeaderVisibility={() => setIsMemoHeaderVisible((current) => !current)}
+              />
+            }
+          />
           <Route path="/noriuchi" element={<Noriuchi />} />
           <Route path="/operator" element={<OperatorInfo />} />
           <Route path="/contact" element={<Contact />} />

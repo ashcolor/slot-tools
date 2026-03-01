@@ -4,19 +4,25 @@ import type { MemoHistoryItem } from "../hooks/useMemoEditor";
 import { HistoryDialog } from "./HistoryDialog";
 import { LlmGuideDialog } from "./LlmGuideDialog";
 import { NotationDialog } from "./NotationDialog";
+import { ResetCountersDialog } from "./ResetCountersDialog";
 import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
+  isHeaderVisible: boolean;
   isMemoLocked: boolean;
   lockFeedbackNonce: number;
+  memoUrl: string;
   memoHistoryList: MemoHistoryItem[];
-  onCopyRawMemo: () => Promise<void>;
   onCopyResolvedMemo: () => Promise<void>;
-  onCopyTemplateMemo: () => Promise<void>;
   onCopyResolvedMemoImage: () => Promise<void>;
+  onCopyMemoUrl: () => Promise<void>;
   onDownloadResolvedMemoImage: () => Promise<void>;
   onCreateNewMemo: () => boolean;
+  onResetMemoCounters: () => void;
   onRestoreMemoHistory: (historyId: string) => void;
+  onDeleteMemoHistory: (historyId: string) => void;
+  onClearMemoHistory: () => void;
+  onToggleHeaderVisibility?: () => void;
   onToggleMemoLock: () => void;
   onOpenTemplate: () => void;
   onOpenConfig: () => void;
@@ -66,16 +72,21 @@ REG：[[c:reg=0]] [[f:reg / game;fmt=odds]]
 機種名、またはURL：`;
 
 export function Toolbar({
+  isHeaderVisible,
   isMemoLocked,
   lockFeedbackNonce,
+  memoUrl,
   memoHistoryList,
-  onCopyRawMemo,
   onCopyResolvedMemo,
-  onCopyTemplateMemo,
   onCopyResolvedMemoImage,
+  onCopyMemoUrl,
   onDownloadResolvedMemoImage,
   onCreateNewMemo,
+  onResetMemoCounters,
   onRestoreMemoHistory,
+  onDeleteMemoHistory,
+  onClearMemoHistory,
+  onToggleHeaderVisibility,
   onToggleMemoLock,
   onOpenTemplate,
   onOpenConfig,
@@ -84,21 +95,52 @@ export function Toolbar({
   const notationDialogRef = useRef<HTMLDialogElement>(null);
   const llmGuideDialogRef = useRef<HTMLDialogElement>(null);
   const historyDialogRef = useRef<HTMLDialogElement>(null);
+  const resetCountersDialogRef = useRef<HTMLDialogElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const llmCopiedTimerRef = useRef<number | null>(null);
-  const newMemoToastTimerRef = useRef<number | null>(null);
   const [isLlmGuideCopied, setIsLlmGuideCopied] = useState(false);
-  const [isNewMemoToastVisible, setIsNewMemoToastVisible] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+
+    if (typeof document === "undefined") return;
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement && menuRef.current?.contains(activeElement)) {
+      activeElement.blur();
+    }
+  };
 
   useEffect(() => {
     return () => {
       if (llmCopiedTimerRef.current !== null) {
         window.clearTimeout(llmCopiedTimerRef.current);
       }
-      if (newMemoToastTimerRef.current !== null) {
-        window.clearTimeout(newMemoToastTimerRef.current);
-      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMenuOpen || typeof document === "undefined") return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (menuRef.current?.contains(event.target as Node)) return;
+      closeMenu();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
 
   const copyLlmGuide = async () => {
     try {
@@ -126,24 +168,43 @@ export function Toolbar({
     }
   };
 
-  const handleLlmGuideClick = () => {
-    notationDialogRef.current?.close();
-    requestAnimationFrame(() => {
-      llmGuideDialogRef.current?.showModal();
-    });
+  const handleOpenNotation = () => {
+    closeMenu();
+    notationDialogRef.current?.showModal();
   };
-  const handleCreateNewMemo = () => {
-    const didSaveToHistory = onCreateNewMemo();
-    if (!didSaveToHistory) return;
 
-    setIsNewMemoToastVisible(true);
-    if (newMemoToastTimerRef.current !== null) {
-      window.clearTimeout(newMemoToastTimerRef.current);
+  const handleOpenHistory = () => {
+    closeMenu();
+    historyDialogRef.current?.showModal();
+  };
+
+  const handleOpenTemplate = () => {
+    closeMenu();
+    onOpenTemplate();
+  };
+
+  const handleOpenShare = () => {
+    closeMenu();
+    shareDialogRef.current?.showModal();
+  };
+
+  const handleOpenConfig = () => {
+    closeMenu();
+    onOpenConfig();
+  };
+
+  const handleCreateNewMemo = () => {
+    closeMenu();
+    onCreateNewMemo();
+  };
+
+  const handleResetMemoCounters = () => {
+    closeMenu();
+    if (isMemoLocked) {
+      onResetMemoCounters();
+      return;
     }
-    newMemoToastTimerRef.current = window.setTimeout(() => {
-      setIsNewMemoToastVisible(false);
-      newMemoToastTimerRef.current = null;
-    }, 1800);
+    resetCountersDialogRef.current?.showModal();
   };
 
   return (
@@ -151,33 +212,20 @@ export function Toolbar({
       <div className="flex items-center gap-1">
         <button
           type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={handleCreateNewMemo}
-          aria-label="New memo"
-          title="新規"
+          className={`btn btn-ghost btn-sm btn-square ${isHeaderVisible ? "text-primary" : ""}`}
+          onClick={onToggleHeaderVisibility}
+          aria-label={isHeaderVisible ? "Hide header" : "Show header"}
+          title={isHeaderVisible ? "Hide header" : "Show header"}
         >
-          <Icon icon="mdi:note-plus-outline" className="size-4" />
+          <Icon
+            icon={
+              isHeaderVisible
+                ? "fluent:window-header-horizontal-20-filled"
+                : "fluent:window-header-horizontal-off-20-filled"
+            }
+            className="size-4"
+          />
         </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={() => notationDialogRef.current?.showModal()}
-          aria-label="Memo notation help"
-          title="メモ記法"
-        >
-          <Icon icon="bi:info-circle" className="size-4" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={onOpenTemplate}
-          aria-label="Template"
-        >
-          <Icon icon="mdi:text-box-multiple-outline" className="size-4" />
-        </button>
-      </div>
-
-      <div className="flex items-center gap-1">
         <button
           key={`memo-lock-feedback-${lockFeedbackNonce}`}
           type="button"
@@ -191,39 +239,88 @@ export function Toolbar({
             className="size-4"
           />
         </button>
+      </div>
+
+      <div className="ml-auto flex items-center gap-1">
         <button
           type="button"
           className="btn btn-ghost btn-sm btn-square"
-          onClick={() => historyDialogRef.current?.showModal()}
-          aria-label="History"
-          title="履歴"
-        >
-          <Icon icon="mdi:history" className="size-4" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={() => shareDialogRef.current?.showModal()}
-          aria-label="Share"
+          onClick={handleOpenShare}
+          aria-label="共有"
+          title="共有"
         >
           <Icon icon="lucide:share" className="size-4" />
         </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square"
-          onClick={onOpenConfig}
-          aria-label="Config"
-        >
-          <Icon icon="fa6-solid:gear" className="size-4" />
-        </button>
+
+        <div ref={menuRef} className={`dropdown dropdown-end ${isMenuOpen ? "dropdown-open" : ""}`}>
+          <div
+            tabIndex={0}
+            role="button"
+            className={`btn btn-ghost btn-sm btn-square ${isMenuOpen ? "text-primary" : ""}`}
+            onClick={() => setIsMenuOpen((current) => !current)}
+            aria-label="メニュー"
+            aria-expanded={isMenuOpen}
+            aria-haspopup="menu"
+            title="メニュー"
+          >
+            <Icon icon="mdi:dots-vertical" className="size-4" />
+          </div>
+
+          <ul
+            tabIndex={-1}
+            className="dropdown-content menu z-[60] mt-1 w-56 rounded-box bg-base-100 p-2 shadow-sm"
+            role="menu"
+            aria-label="メモのメニュー"
+          >
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleCreateNewMemo}>
+                <Icon icon="mdi:note-plus-outline" className="size-4" />
+                <span>新規</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleOpenTemplate}>
+                <Icon icon="mdi:text-box-multiple-outline" className="size-4" />
+                <span>テンプレート</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleResetMemoCounters}>
+                <Icon icon="mdi:restore" className="size-4" />
+                <span>カウンター初期化</span>
+              </button>
+            </li>
+            <li role="none" aria-hidden="true">
+              <hr className="my-1 border-base-300" />
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleOpenNotation}>
+                <Icon icon="bi:info-circle" className="size-4" />
+                <span>使い方</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleOpenHistory}>
+                <Icon icon="mdi:history" className="size-4" />
+                <span>履歴</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" onClick={handleOpenConfig}>
+                <Icon icon="fa6-solid:gear" className="size-4" />
+                <span>設定</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <ShareDialog
         dialogRef={shareDialogRef}
-        onCopyRawMemo={onCopyRawMemo}
+        memoUrl={memoUrl}
         onCopyResolvedMemo={onCopyResolvedMemo}
-        onCopyTemplateMemo={onCopyTemplateMemo}
         onCopyResolvedMemoImage={onCopyResolvedMemoImage}
+        onCopyMemoUrl={onCopyMemoUrl}
         onDownloadResolvedMemoImage={onDownloadResolvedMemoImage}
       />
 
@@ -232,21 +329,11 @@ export function Toolbar({
         memoHistoryList={memoHistoryList}
         isMemoLocked={isMemoLocked}
         onRestoreMemoHistory={onRestoreMemoHistory}
+        onDeleteMemoHistory={onDeleteMemoHistory}
+        onClearMemoHistory={onClearMemoHistory}
       />
 
-      {isNewMemoToastVisible ? (
-        <div className="toast toast-top toast-center z-50">
-          <div className="alert alert-success">
-            <span className="text-sm">履歴に保存しました</span>
-          </div>
-        </div>
-      ) : null}
-
-      <NotationDialog
-        dialogRef={notationDialogRef}
-        isLlmGuideCopied={isLlmGuideCopied}
-        onOpenLlmGuide={handleLlmGuideClick}
-      />
+      <NotationDialog dialogRef={notationDialogRef} />
 
       <LlmGuideDialog
         dialogRef={llmGuideDialogRef}
@@ -254,6 +341,8 @@ export function Toolbar({
         isCopied={isLlmGuideCopied}
         onCopyGuide={() => void copyLlmGuide()}
       />
+
+      <ResetCountersDialog dialogRef={resetCountersDialogRef} onConfirm={onResetMemoCounters} />
     </div>
   );
 }

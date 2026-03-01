@@ -1,5 +1,3 @@
-import { DEFAULT_FONT_SIZE_LEVEL } from "../../constants";
-
 export interface TemplateCategory {
   key: "koyaku" | "game" | "cz" | "bonus" | "color" | "state" | "calc";
   label: string;
@@ -51,13 +49,9 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 export const TEMPLATE_COUNTER_ITEM_LABEL = "カウンター";
 export const TEMPLATE_FORMULA_ITEM_LABEL = "数式";
 
-export const EMPTY_MEMO_PLACEHOLDER = `📄: 新規
-ℹ️: ヘルプ
-📝: テンプレート
+export const EMPTY_MEMO_PLACEHOLDER = `🗓️：ヘッダー表示
 🔒: 編集のロック
-📜: 履歴
-📤: コピー
-⚙️: 設定
+⋮：メニュー
 `;
 
 const SAMPLE_TEMPLATE_MEMO = `■ゲーム数
@@ -79,7 +73,6 @@ export const INITIAL_TEMPLATES = [
   {
     id: "default-slot-sample-template-v1",
     memo: SAMPLE_TEMPLATE_MEMO,
-    fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     createdAt: "2026-02-21T00:00:00.000Z",
   },
 ];

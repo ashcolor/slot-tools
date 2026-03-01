@@ -307,7 +307,7 @@ export function Editor({
             <>
               <textarea
                 ref={memoRef}
-                className={`textarea textarea-bordered h-full min-h-0 w-full overscroll-y-contain pr-20 pb-16 ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
+                className={`textarea textarea-bordered h-full min-h-0 w-full overscroll-y-contain border-transparent pr-20 pb-16 shadow-none focus:border-transparent focus:outline-none ${memoFontSizeClass} ${inlineControlSize.lineHeightClass}`}
                 placeholder={EMPTY_MEMO_PLACEHOLDER}
                 value={memo}
                 onFocus={onMemoFocus}

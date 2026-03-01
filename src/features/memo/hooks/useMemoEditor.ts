@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Parser } from "expr-eval-fork";
 import { deflate, inflate } from "pako";
@@ -21,21 +21,23 @@ export interface MemoDraft {
   memo: string;
   fontSizeLevel: number;
   formulaRoundDecimalPlaces: number;
+  historyAutoSaveIntervalMinutes: MemoHistoryAutoSaveIntervalMinutes;
 }
 
 export interface MemoTemplate {
   id: string;
   memo: string;
-  fontSizeLevel: number;
   createdAt: string;
 }
 
 export interface MemoHistoryItem {
   id: string;
   memo: string;
+  resolvedMemo?: string;
   createdAt: string;
 }
 
+export type MemoHistoryAutoSaveIntervalMinutes = 0 | 5 | 30 | 60;
 export type FormulaDisplayMode = "auto" | "percent" | "odds";
 
 export type MemoPart =
@@ -87,7 +89,8 @@ const MEMO_IMAGE_MAX_TEXT_WIDTH = 960;
 const MEMO_IMAGE_PADDING = 24;
 const MEMO_IMAGE_MIN_HEIGHT = 120;
 const MEMO_QUERY_KEY = "m";
-const MEMO_HISTORY_LIMIT = 50;
+const MEMO_HISTORY_LIMIT = 100;
+const MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT: MemoHistoryAutoSaveIntervalMinutes = 5;
 
 function bytesToBase64Url(bytes: Uint8Array): string | null {
   if (typeof btoa !== "function") return null;
@@ -150,6 +153,20 @@ function readMemoFromLocationSearch(search: string): string | null {
   const encoded = params.get(MEMO_QUERY_KEY);
   if (!encoded) return null;
   return decodeMemoFromUrl(encoded);
+}
+
+function buildMemoUrl(href: string, memo: string): string {
+  const encodedMemo = encodeMemoForUrl(memo);
+  if (encodedMemo === null) return href;
+
+  const url = new URL(href);
+  if (encodedMemo.length > 0) {
+    url.searchParams.set(MEMO_QUERY_KEY, encodedMemo);
+  } else {
+    url.searchParams.delete(MEMO_QUERY_KEY);
+  }
+
+  return url.toString();
 }
 
 function easeOutCubic(progress: number): number {
@@ -324,7 +341,12 @@ export function toCounterDigits(value: number): string[] {
 
 function normalizeFontSizeLevel(level: number): (typeof FONT_SIZE_OPTIONS)[number]["level"] {
   if (!Number.isFinite(level)) return DEFAULT_FONT_SIZE_LEVEL;
-  return Math.min(5, Math.max(1, Math.round(level))) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
+  const minLevel = FONT_SIZE_OPTIONS[0].level;
+  const maxLevel = FONT_SIZE_OPTIONS[FONT_SIZE_OPTIONS.length - 1].level;
+  return Math.min(
+    maxLevel,
+    Math.max(minLevel, Math.round(level)),
+  ) as (typeof FONT_SIZE_OPTIONS)[number]["level"];
 }
 
 function getInlineControlSize(
@@ -336,40 +358,49 @@ function getInlineControlSize(
       formulaClass: "btn-xs",
       valueWidthClass: "min-w-8",
       iconClass: "size-3",
-      lineHeightClass: "leading-8",
+      lineHeightClass: "leading-7",
     };
   }
   if (level === 2) {
     return {
-      buttonClass: "btn-sm",
+      buttonClass: "btn-xs",
       formulaClass: "btn-xs",
-      valueWidthClass: "min-w-9",
-      iconClass: "size-4",
+      valueWidthClass: "min-w-8",
+      iconClass: "size-3",
       lineHeightClass: "leading-8",
     };
   }
   if (level === 3) {
     return {
       buttonClass: "btn-sm",
-      formulaClass: "btn-sm",
-      valueWidthClass: "min-w-10",
+      formulaClass: "btn-xs",
+      valueWidthClass: "min-w-9",
       iconClass: "size-4",
       lineHeightClass: "leading-9",
     };
   }
   if (level === 4) {
     return {
+      buttonClass: "btn-sm",
+      formulaClass: "btn-sm",
+      valueWidthClass: "min-w-10",
+      iconClass: "size-4",
+      lineHeightClass: "leading-10",
+    };
+  }
+  if (level === 5) {
+    return {
       buttonClass: "btn-md",
       formulaClass: "btn-md",
       valueWidthClass: "min-w-12",
       iconClass: "size-5",
-      lineHeightClass: "leading-10",
+      lineHeightClass: "leading-[2.8rem]",
     };
   }
   return {
-    buttonClass: "btn-lg",
-    formulaClass: "btn-lg",
-    valueWidthClass: "min-w-14",
+    buttonClass: "btn-md",
+    formulaClass: "btn-md",
+    valueWidthClass: "min-w-12",
     iconClass: "size-5",
     lineHeightClass: "leading-[2.8rem]",
   };
@@ -381,11 +412,48 @@ function normalizeFormulaRoundDecimalPlaces(value: number): number {
   return clampNumber(integer, FORMULA_ROUND_DECIMAL_PLACES_MIN, FORMULA_ROUND_DECIMAL_PLACES_MAX);
 }
 
+function normalizeMemoHistoryAutoSaveIntervalMinutes(
+  value: number,
+): MemoHistoryAutoSaveIntervalMinutes {
+  if (value === 0 || value === 5 || value === 30 || value === 60) return value;
+  return MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT;
+}
+
+function pruneMemoHistoryItems(items: MemoHistoryItem[]): MemoHistoryItem[] {
+  return items
+    .filter((item) => {
+      if (
+        typeof item.id !== "string" ||
+        typeof item.memo !== "string" ||
+        ("resolvedMemo" in item &&
+          typeof item.resolvedMemo !== "undefined" &&
+          typeof item.resolvedMemo !== "string") ||
+        typeof item.createdAt !== "string"
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .slice(0, MEMO_HISTORY_LIMIT);
+}
+
+function hasSameMemoHistoryItems(a: MemoHistoryItem[], b: MemoHistoryItem[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (item, index) =>
+      item.id === b[index]?.id &&
+      item.memo === b[index]?.memo &&
+      (item.resolvedMemo ?? null) === (b[index]?.resolvedMemo ?? null) &&
+      item.createdAt === b[index]?.createdAt,
+  );
+}
+
 function createDraft(): MemoDraft {
   return {
     fontSizeLevel: DEFAULT_FONT_SIZE_LEVEL,
     memo: "",
     formulaRoundDecimalPlaces: FORMULA_ROUND_DECIMAL_PLACES_DEFAULT,
+    historyAutoSaveIntervalMinutes: MEMO_HISTORY_AUTO_SAVE_INTERVAL_MINUTES_DEFAULT,
   };
 }
 
@@ -543,12 +611,43 @@ function buildResolvedMemoText(memoParts: MemoPart[], formulaResults: Map<number
     .join("");
 }
 
+function resolveMemoText(memo: string, roundDecimalPlaces: number): string {
+  const memoParts = parseMemoParts(memo);
+  const variables = Object.fromEntries(
+    memoParts.flatMap((part) => {
+      if (part.type !== "counter") return [];
+      const entries: [string, number][] = [[`c${part.index}`, part.value]];
+      if (part.name) {
+        entries.push([part.name, part.value]);
+      }
+      return entries;
+    }),
+  );
+  const formulaResults = new Map<number, string>();
+
+  memoParts.forEach((part) => {
+    if (part.type !== "formula") return;
+    formulaResults.set(
+      part.index,
+      evaluateFormula(
+        part.expression,
+        variables,
+        normalizeFormulaRoundDecimalPlaces(roundDecimalPlaces),
+        part.displayMode,
+      ),
+    );
+  });
+
+  return buildResolvedMemoText(memoParts, formulaResults);
+}
+
 function getMemoImageFontSize(fontSizeLevel: number): number {
-  if (fontSizeLevel <= 1) return 16;
-  if (fontSizeLevel === 2) return 18;
-  if (fontSizeLevel === 3) return 20;
-  if (fontSizeLevel === 4) return 22;
-  return 24;
+  if (fontSizeLevel <= 1) return 14;
+  if (fontSizeLevel === 2) return 16;
+  if (fontSizeLevel === 3) return 18;
+  if (fontSizeLevel === 4) return 20;
+  if (fontSizeLevel === 5) return 22;
+  return 22;
 }
 
 function wrapLineToWidth(
@@ -705,6 +804,15 @@ export function getTemplateTitle(memo: string): string {
   return firstLine ? firstLine.slice(0, 28) : "空のメモ";
 }
 
+export function getTemplatePreview(memo: string): string {
+  const lines = memo
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (lines.length <= 1) return "";
+  return lines.slice(1).join(" ").slice(0, 60);
+}
+
 export function useMemoEditor() {
   const [draft, setDraft] = useLocalStorage<MemoDraft>("slot-memo-draft", createDraft());
   const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>(
@@ -733,12 +841,20 @@ export function useMemoEditor() {
   const urlMemoConfirmModalRef = useRef<HTMLDialogElement>(null);
   const pendingKeyboardAvoidCaretPositionRef = useRef<number | null>(null);
   const didInitUrlMemoRef = useRef(false);
+  const latestMemoRef = useRef(draft.memo);
+  const latestResolvedMemoRef = useRef("");
+  const lastSavedHistoryMemoRef = useRef<string | null>(null);
 
   const templateList = useMemo(() => (Array.isArray(templates) ? templates : []), [templates]);
-  const memoHistoryList = useMemo(
-    () => (Array.isArray(memoHistory) ? memoHistory : []),
-    [memoHistory],
-  );
+  const memoHistoryList = useMemo(() => {
+    const normalizedRoundDecimalPlaces = normalizeFormulaRoundDecimalPlaces(
+      draft.formulaRoundDecimalPlaces,
+    );
+    return pruneMemoHistoryItems(Array.isArray(memoHistory) ? memoHistory : []).map((item) => ({
+      ...item,
+      resolvedMemo: item.resolvedMemo ?? resolveMemoText(item.memo, normalizedRoundDecimalPlaces),
+    }));
+  }, [draft.formulaRoundDecimalPlaces, memoHistory]);
   const pendingApplyTemplate = useMemo(
     () => templateList.find((template) => template.id === pendingApplyTemplateId) ?? null,
     [pendingApplyTemplateId, templateList],
@@ -821,6 +937,34 @@ export function useMemoEditor() {
       setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
     }
   }, [draft.formulaRoundDecimalPlaces, setDraft]);
+
+  useEffect(() => {
+    const normalized = normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    );
+    if (draft.historyAutoSaveIntervalMinutes !== normalized) {
+      setDraft((prev) => ({ ...prev, historyAutoSaveIntervalMinutes: normalized }));
+    }
+  }, [draft.historyAutoSaveIntervalMinutes, setDraft]);
+
+  useEffect(() => {
+    latestMemoRef.current = draft.memo;
+  }, [draft.memo]);
+
+  useEffect(() => {
+    latestResolvedMemoRef.current = resolvedMemoText;
+  }, [resolvedMemoText]);
+
+  useEffect(() => {
+    lastSavedHistoryMemoRef.current = memoHistoryList[0]?.memo ?? null;
+  }, [memoHistoryList]);
+
+  useEffect(() => {
+    const rawHistoryList = Array.isArray(memoHistory) ? memoHistory : [];
+    const normalizedHistoryList = pruneMemoHistoryItems(rawHistoryList);
+    if (hasSameMemoHistoryItems(rawHistoryList, normalizedHistoryList)) return;
+    setMemoHistory(normalizedHistoryList);
+  }, [memoHistory, setMemoHistory]);
 
   useEffect(() => {
     if (didInitUrlMemoRef.current) return;
@@ -929,11 +1073,63 @@ export function useMemoEditor() {
     setDraft((prev) => ({ ...prev, formulaRoundDecimalPlaces: normalized }));
   };
 
+  const setMemoHistoryAutoSaveIntervalMinutes = (
+    historyAutoSaveIntervalMinutes: MemoHistoryAutoSaveIntervalMinutes,
+  ) => {
+    const normalized = normalizeMemoHistoryAutoSaveIntervalMinutes(historyAutoSaveIntervalMinutes);
+    setDraft((prev) => ({ ...prev, historyAutoSaveIntervalMinutes: normalized }));
+  };
+
+  const saveMemoToHistory = useCallback(
+    (memo: string, resolvedMemo: string): boolean => {
+      if (memo.trim().length === 0) return false;
+      if (lastSavedHistoryMemoRef.current === memo) return false;
+
+      const nextHistory: MemoHistoryItem = {
+        id: createTemplateId(),
+        memo,
+        resolvedMemo,
+        createdAt: new Date().toISOString(),
+      };
+
+      lastSavedHistoryMemoRef.current = memo;
+      setMemoHistory((prev) => {
+        const list = pruneMemoHistoryItems(Array.isArray(prev) ? prev : []);
+        return [nextHistory, ...list].slice(0, MEMO_HISTORY_LIMIT);
+      });
+      return true;
+    },
+    [setMemoHistory],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const intervalMinutes = normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    );
+    if (intervalMinutes === 0) return;
+
+    const timerId = window.setInterval(
+      () => {
+        saveMemoToHistory(latestMemoRef.current, latestResolvedMemoRef.current);
+      },
+      intervalMinutes * 60 * 1000,
+    );
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [draft.historyAutoSaveIntervalMinutes, saveMemoToHistory]);
+
   const clearDraft = () => {
     setDraft((prev) => ({
       ...createDraft(),
       fontSizeLevel: normalizeFontSizeLevel(prev.fontSizeLevel),
       formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(prev.formulaRoundDecimalPlaces),
+      historyAutoSaveIntervalMinutes: normalizeMemoHistoryAutoSaveIntervalMinutes(
+        prev.historyAutoSaveIntervalMinutes,
+      ),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -942,19 +1138,7 @@ export function useMemoEditor() {
   };
 
   const createNewMemo = (): boolean => {
-    let didSaveToHistory = false;
-    if (draft.memo.trim().length > 0) {
-      didSaveToHistory = true;
-      const nextHistory: MemoHistoryItem = {
-        id: createTemplateId(),
-        memo: draft.memo,
-        createdAt: new Date().toISOString(),
-      };
-      setMemoHistory((prev) => {
-        const list = Array.isArray(prev) ? prev : [];
-        return [nextHistory, ...list].slice(0, MEMO_HISTORY_LIMIT);
-      });
-    }
+    const didSaveToHistory = saveMemoToHistory(draft.memo, resolvedMemoText);
 
     setDraft((prev) => ({ ...prev, memo: "" }));
     setCounterPopup(null);
@@ -962,6 +1146,13 @@ export function useMemoEditor() {
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
     return didSaveToHistory;
+  };
+
+  const resetMemoCounters = () => {
+    setDraft((prev) => ({ ...prev, memo: resetCounterValues(prev.memo) }));
+    setCounterPopup(null);
+    setFormulaPopup(null);
+    pendingKeyboardAvoidCaretPositionRef.current = null;
   };
 
   const restoreMemoHistory = (historyId: string) => {
@@ -973,6 +1164,17 @@ export function useMemoEditor() {
     setFormulaPopup(null);
     setIsMemoFocused(false);
     pendingKeyboardAvoidCaretPositionRef.current = null;
+  };
+
+  const deleteMemoHistory = (historyId: string) => {
+    setMemoHistory((prev) => {
+      const list = Array.isArray(prev) ? prev : [];
+      return list.filter((item) => item.id !== historyId);
+    });
+  };
+
+  const clearMemoHistory = () => {
+    setMemoHistory([]);
   };
 
   const handleMemoBlur = () => {
@@ -1039,7 +1241,7 @@ export function useMemoEditor() {
       insertFormulaToken();
       return;
     }
-    insertTextAtCursor(`${item} `);
+    insertTextAtCursor(item);
   };
 
   const focusMemoEditor = (cursorPosition?: number) => {
@@ -1248,6 +1450,19 @@ export function useMemoEditor() {
     await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
   };
 
+  const copyMemoUrlToClipboard = async () => {
+    if (typeof window === "undefined") {
+      throw new Error("この環境ではURLを取得できません。");
+    }
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+    }
+
+    await navigator.clipboard.writeText(buildMemoUrl(window.location.href, draft.memo));
+  };
+  const memoUrl =
+    typeof window === "undefined" ? "" : buildMemoUrl(window.location.href, draft.memo);
+
   const downloadResolvedMemoImage = async () => {
     const blob = await renderMemoTextImage(resolvedMemoText, memoFontSizeLevel);
     const url = URL.createObjectURL(blob);
@@ -1276,7 +1491,6 @@ export function useMemoEditor() {
     setDraft((prev) => ({
       ...prev,
       memo: template.memo,
-      fontSizeLevel: normalizeFontSizeLevel(template.fontSizeLevel),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -1288,7 +1502,6 @@ export function useMemoEditor() {
     setDraft((prev) => ({
       ...prev,
       memo: pendingApplyTemplate.memo,
-      fontSizeLevel: normalizeFontSizeLevel(pendingApplyTemplate.fontSizeLevel),
     }));
     setCounterPopup(null);
     setFormulaPopup(null);
@@ -1321,7 +1534,6 @@ export function useMemoEditor() {
     const nextTemplate: MemoTemplate = {
       id: createTemplateId(),
       memo: resetCounterValues(draft.memo),
-      fontSizeLevel: memoFontSizeLevel,
       createdAt: new Date().toISOString(),
     };
     setTemplates((prev) => [nextTemplate, ...(Array.isArray(prev) ? prev : [])]);
@@ -1345,6 +1557,10 @@ export function useMemoEditor() {
       Array.isArray(prev) ? prev.filter((item) => item.id !== pendingDeleteTemplateId) : [],
     );
     setPendingDeleteTemplateId(null);
+    deleteTemplateModalRef.current?.close();
+    requestAnimationFrame(() => {
+      templateModalRef.current?.showModal();
+    });
   };
 
   return {
@@ -1373,16 +1589,23 @@ export function useMemoEditor() {
     formulaVariableList,
     memoFontSizeLevel,
     formulaRoundDecimalPlaces: normalizeFormulaRoundDecimalPlaces(draft.formulaRoundDecimalPlaces),
+    memoHistoryAutoSaveIntervalMinutes: normalizeMemoHistoryAutoSaveIntervalMinutes(
+      draft.historyAutoSaveIntervalMinutes,
+    ),
     memoFontSizeClass,
     inlineControlSize,
     setMemo,
     setFontSizeLevel,
     setFormulaRoundDecimalPlaces,
+    setMemoHistoryAutoSaveIntervalMinutes,
     setSelectedCategoryKey,
     setIsMemoFocused,
     clearDraft,
     createNewMemo,
+    resetMemoCounters,
     restoreMemoHistory,
+    deleteMemoHistory,
+    clearMemoHistory,
     handleMemoBlur,
     insertTemplateItem,
     focusMemoEditor,
@@ -1401,6 +1624,8 @@ export function useMemoEditor() {
     copyResolvedMemoToClipboard,
     copyTemplateMemoToClipboard,
     copyResolvedMemoImageToClipboard,
+    copyMemoUrlToClipboard,
+    memoUrl,
     downloadResolvedMemoImage,
     openTemplateModal,
     applyTemplate,

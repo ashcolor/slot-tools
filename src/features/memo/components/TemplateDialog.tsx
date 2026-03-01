@@ -1,11 +1,13 @@
 import { Icon } from "@iconify/react";
 import type { RefObject } from "react";
-import { formatTemplateDate, getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
+import { getTemplatePreview, getTemplateTitle, type MemoTemplate } from "../hooks/useMemoEditor";
 
 interface MemoTemplateDialogProps {
   templateModalRef: RefObject<HTMLDialogElement | null>;
   templateList: MemoTemplate[];
+  isLlmGuideCopied: boolean;
   onSaveCurrentAsTemplate: () => void;
+  onOpenLlmGuide: () => void;
   onApplyTemplate: (template: MemoTemplate) => void;
   onRequestDeleteTemplate: (templateId: string) => void;
 }
@@ -13,23 +15,36 @@ interface MemoTemplateDialogProps {
 export function TemplateDialog({
   templateModalRef,
   templateList,
+  isLlmGuideCopied,
   onSaveCurrentAsTemplate,
+  onOpenLlmGuide,
   onApplyTemplate,
   onRequestDeleteTemplate,
 }: MemoTemplateDialogProps) {
   return (
     <dialog ref={templateModalRef} className="modal">
-      <div className="modal-box max-w-xl">
-        <h3 className="mb-3 text-lg font-bold">テンプレート</h3>
+      <div className="modal-box relative max-w-xl">
+        <h3 className="mb-3 pr-12 text-lg font-bold">テンプレート</h3>
         <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            className="btn btn-sm btn-primary self-start"
-            onClick={onSaveCurrentAsTemplate}
-          >
-            <Icon icon="mdi:content-save-outline" className="size-4 shrink-0" aria-hidden />
-            現在のメモをテンプレートに保存
-          </button>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              className="btn btn-sm self-start"
+              onClick={onSaveCurrentAsTemplate}
+            >
+              <Icon icon="mdi:content-save-outline" className="size-4 shrink-0" aria-hidden />
+              現在のメモをテンプレート保存
+            </button>
+            <button
+              type="button"
+              className="btn btn-circle btn-secondary"
+              onClick={onOpenLlmGuide}
+              aria-label="LLM向け説明を表示"
+              title="LLM向け説明を表示"
+            >
+              <Icon icon={isLlmGuideCopied ? "fa6-solid:check" : "mdi:brain"} className="size-4" />
+            </button>
+          </div>
           {templateList.length === 0 ? (
             <p className="text-sm opacity-70">保存済みテンプレートはありません。</p>
           ) : (
@@ -39,22 +54,24 @@ export function TemplateDialog({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{getTemplateTitle(template.memo)}</p>
-                      <p className="text-xs opacity-70">{formatTemplateDate(template.createdAt)}</p>
+                      <p className="truncate text-xs opacity-70">
+                        {getTemplatePreview(template.memo)}
+                      </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <button
                         type="button"
-                        className="btn btn-xs btn-primary"
-                        onClick={() => onApplyTemplate(template)}
+                        className="btn btn-sm btn-error btn-ghost btn-circle"
+                        onClick={() => onRequestDeleteTemplate(template.id)}
                       >
-                        読み込み
+                        <Icon icon="mdi:trash-can-outline" className="size-4" />
                       </button>
                       <button
                         type="button"
-                        className="btn btn-xs btn-error btn-outline"
-                        onClick={() => onRequestDeleteTemplate(template.id)}
+                        className="btn btn-sm btn-primary"
+                        onClick={() => onApplyTemplate(template)}
                       >
-                        削除
+                        読込
                       </button>
                     </div>
                   </div>

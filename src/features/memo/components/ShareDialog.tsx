@@ -4,21 +4,21 @@ import type { RefObject } from "react";
 
 interface ShareDialogProps {
   dialogRef: RefObject<HTMLDialogElement | null>;
-  onCopyRawMemo: () => Promise<void>;
+  memoUrl: string;
   onCopyResolvedMemo: () => Promise<void>;
-  onCopyTemplateMemo: () => Promise<void>;
   onCopyResolvedMemoImage: () => Promise<void>;
+  onCopyMemoUrl: () => Promise<void>;
   onDownloadResolvedMemoImage: () => Promise<void>;
 }
 
-type CopyActionKey = "raw" | "resolved" | "template" | "image";
+type CopyActionKey = "resolved" | "image" | "url";
 
 export function ShareDialog({
   dialogRef,
-  onCopyRawMemo,
+  memoUrl,
   onCopyResolvedMemo,
-  onCopyTemplateMemo,
   onCopyResolvedMemoImage,
+  onCopyMemoUrl,
   onDownloadResolvedMemoImage,
 }: ShareDialogProps) {
   const copiedTimerRef = useRef<number | null>(null);
@@ -65,9 +65,33 @@ export function ShareDialog({
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box">
         <h3 className="mb-1 text-lg font-bold">共有</h3>
-        <p className="mb-4 text-sm opacity-70">共有方法を選んでください</p>
-
         <div className="flex flex-col gap-4">
+          <section className="flex flex-col gap-2">
+            <p className="inline-flex items-center gap-1 text-xs font-semibold tracking-wide opacity-70">
+              <Icon icon="fa6-solid:link" className="size-3.5" />
+              <span>URL</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                className="input input-sm w-full"
+                value={memoUrl}
+                readOnly
+                onFocus={(event) => event.currentTarget.select()}
+                aria-label="共有URL"
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-soft btn-sm btn-square shrink-0"
+                onClick={() => void runShareAction(onCopyMemoUrl, "url")}
+                aria-label="URLをコピー"
+                title="URLをコピー"
+              >
+                <Icon icon={copyIcon("url")} className="size-4" />
+              </button>
+            </div>
+          </section>
+
           <section className="flex flex-col gap-2">
             <p className="inline-flex items-center gap-1 text-xs font-semibold tracking-wide opacity-70">
               <Icon icon="fa6-regular:file-lines" className="size-3.5" />
@@ -79,38 +103,15 @@ export function ShareDialog({
               onClick={() => void runShareAction(onCopyResolvedMemo, "resolved")}
             >
               <Icon icon={copyIcon("resolved")} className="size-4" />
-              <span>カウンター・数式を値でコピー</span>
+              <span>テキストコピー</span>
             </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-soft justify-start"
-              onClick={() => void runShareAction(onCopyRawMemo, "raw")}
-            >
-              <Icon icon={copyIcon("raw")} className="size-4" />
-              <span>メモ記法のままコピー</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-soft justify-start"
-              onClick={() => void runShareAction(onCopyTemplateMemo, "template")}
-            >
-              <Icon icon={copyIcon("template")} className="size-4" />
-              <span>テンプレートコピー（カウンター初期化）</span>
-            </button>
-          </section>
-
-          <section className="flex flex-col gap-2">
-            <p className="inline-flex items-center gap-1 text-xs font-semibold tracking-wide opacity-70">
-              <Icon icon="fa6-regular:image" className="size-3.5" />
-              <span>画像</span>
-            </p>
             <button
               type="button"
               className="btn btn-primary btn-soft justify-start"
               onClick={() => void runShareAction(onCopyResolvedMemoImage, "image")}
             >
               <Icon icon={copyIcon("image")} className="size-4" />
-              <span>画像としてコピー（値置換）</span>
+              <span>画像コピー</span>
             </button>
             <button
               type="button"
@@ -118,7 +119,7 @@ export function ShareDialog({
               onClick={() => void runShareAction(onDownloadResolvedMemoImage)}
             >
               <Icon icon="fa6-solid:download" className="size-4" />
-              <span>画像としてダウンロード（値置換）</span>
+              <span>画像ダウンロード</span>
             </button>
           </section>
         </div>
