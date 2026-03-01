@@ -4,6 +4,7 @@ import type { MemoHistoryItem } from "../hooks/useMemoEditor";
 import { HistoryDialog } from "./HistoryDialog";
 import { LlmGuideDialog } from "./LlmGuideDialog";
 import { NotationDialog } from "./NotationDialog";
+import { ResetCountersDialog } from "./ResetCountersDialog";
 import { ShareDialog } from "./ShareDialog";
 
 interface MemoToolbarProps {
@@ -94,10 +95,22 @@ export function Toolbar({
   const notationDialogRef = useRef<HTMLDialogElement>(null);
   const llmGuideDialogRef = useRef<HTMLDialogElement>(null);
   const historyDialogRef = useRef<HTMLDialogElement>(null);
+  const resetCountersDialogRef = useRef<HTMLDialogElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const llmCopiedTimerRef = useRef<number | null>(null);
   const [isLlmGuideCopied, setIsLlmGuideCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+
+    if (typeof document === "undefined") return;
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement && menuRef.current?.contains(activeElement)) {
+      activeElement.blur();
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -112,11 +125,11 @@ export function Toolbar({
 
     const handlePointerDown = (event: PointerEvent) => {
       if (menuRef.current?.contains(event.target as Node)) return;
-      setIsMenuOpen(false);
+      closeMenu();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsMenuOpen(false);
+        closeMenu();
       }
     };
 
@@ -155,46 +168,43 @@ export function Toolbar({
     }
   };
 
-  const handleLlmGuideClick = () => {
-    notationDialogRef.current?.close();
-    requestAnimationFrame(() => {
-      llmGuideDialogRef.current?.showModal();
-    });
-  };
-
   const handleOpenNotation = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     notationDialogRef.current?.showModal();
   };
 
   const handleOpenHistory = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     historyDialogRef.current?.showModal();
   };
 
   const handleOpenTemplate = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     onOpenTemplate();
   };
 
   const handleOpenShare = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     shareDialogRef.current?.showModal();
   };
 
   const handleOpenConfig = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     onOpenConfig();
   };
 
   const handleCreateNewMemo = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     onCreateNewMemo();
   };
 
   const handleResetMemoCounters = () => {
-    setIsMenuOpen(false);
-    onResetMemoCounters();
+    closeMenu();
+    if (isMemoLocked) {
+      onResetMemoCounters();
+      return;
+    }
+    resetCountersDialogRef.current?.showModal();
   };
 
   return (
@@ -323,11 +333,7 @@ export function Toolbar({
         onClearMemoHistory={onClearMemoHistory}
       />
 
-      <NotationDialog
-        dialogRef={notationDialogRef}
-        isLlmGuideCopied={isLlmGuideCopied}
-        onOpenLlmGuide={handleLlmGuideClick}
-      />
+      <NotationDialog dialogRef={notationDialogRef} />
 
       <LlmGuideDialog
         dialogRef={llmGuideDialogRef}
@@ -335,6 +341,8 @@ export function Toolbar({
         isCopied={isLlmGuideCopied}
         onCopyGuide={() => void copyLlmGuide()}
       />
+
+      <ResetCountersDialog dialogRef={resetCountersDialogRef} onConfirm={onResetMemoCounters} />
     </div>
   );
 }

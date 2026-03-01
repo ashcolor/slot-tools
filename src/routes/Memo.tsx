@@ -6,11 +6,13 @@ import { ConfigDialog } from "../features/memo/components/ConfigDialog";
 import { DeleteTemplateDialog } from "../features/memo/components/DeleteTemplateDialog";
 import { Editor } from "../features/memo/components/Editor";
 import { FormulaPopup } from "../features/memo/components/FormulaPopup";
+import { LlmGuideDialog } from "../features/memo/components/LlmGuideDialog";
 import { LoadUrlMemoDialog } from "../features/memo/components/LoadUrlMemoDialog";
 import { Stamp } from "../features/memo/components/Stamp";
 import { TemplateDialog } from "../features/memo/components/TemplateDialog";
 import { Toolbar } from "../features/memo/components/Toolbar";
 import { useMemoEditor } from "../features/memo/hooks/useMemoEditor";
+import { LLM_MEMO_GUIDE_TEXT } from "../features/memo/llmGuide";
 import { useLocalStorage } from "../utils/useLocalStorage";
 
 interface MemoProps {
@@ -27,9 +29,12 @@ export function Memo({
   const memo = useMemoEditor();
   const [isMemoLocked, setIsMemoLocked] = useState(false);
   const [lockFeedbackNonce, setLockFeedbackNonce] = useState(0);
+  const [isLlmGuideCopied, setIsLlmGuideCopied] = useState(false);
   const saveEditorRef = useRef(memo.saveMemoEditor);
   const memoBackGuardActiveRef = useRef(false);
   const memoBackGuardConsumedRef = useRef(false);
+  const llmGuideDialogRef = useRef<HTMLDialogElement>(null);
+  const llmCopiedTimerRef = useRef<number | null>(null);
   const [isStampVisible, setIsStampVisible] = useLocalStorage<boolean>(
     "slot-memo-stamp-visible",
     true,
@@ -48,6 +53,34 @@ export function Memo({
     : `relative left-1/2 -ml-[50vw] w-screen ${nonEditingHeightClass} px-2 sm:px-4 py-2 flex flex-col gap-2 overflow-hidden`;
   const triggerLockFeedback = useCallback(() => {
     setLockFeedbackNonce((current) => current + 1);
+  }, []);
+  const handleOpenLlmGuide = useCallback(() => {
+    llmGuideDialogRef.current?.showModal();
+  }, []);
+  const copyLlmGuide = useCallback(async () => {
+    try {
+      if (
+        typeof navigator === "undefined" ||
+        typeof navigator.clipboard?.writeText !== "function"
+      ) {
+        throw new Error("このブラウザではクリップボードへのコピーに対応していません。");
+      }
+      await navigator.clipboard.writeText(LLM_MEMO_GUIDE_TEXT);
+      setIsLlmGuideCopied(true);
+      if (llmCopiedTimerRef.current !== null) {
+        window.clearTimeout(llmCopiedTimerRef.current);
+      }
+      llmCopiedTimerRef.current = window.setTimeout(() => {
+        setIsLlmGuideCopied(false);
+        llmCopiedTimerRef.current = null;
+      }, 1400);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.length > 0
+          ? error.message
+          : "LLM向け説明のコピーに失敗しました。";
+      window.alert(message);
+    }
   }, []);
   const handleToggleMemoLock = useCallback(() => {
     if (!isMemoLocked) {
@@ -104,6 +137,14 @@ export function Memo({
   useEffect(() => {
     onEditingChange?.(memo.isMemoFocused);
   }, [memo.isMemoFocused, onEditingChange]);
+
+  useEffect(() => {
+    return () => {
+      if (llmCopiedTimerRef.current !== null) {
+        window.clearTimeout(llmCopiedTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     return () => onEditingChange?.(false);
@@ -237,7 +278,9 @@ export function Memo({
       <TemplateDialog
         templateModalRef={memo.templateModalRef}
         templateList={memo.templateList}
+        isLlmGuideCopied={isLlmGuideCopied}
         onSaveCurrentAsTemplate={memo.saveCurrentAsTemplate}
+        onOpenLlmGuide={handleOpenLlmGuide}
         onApplyTemplate={memo.applyTemplate}
         onRequestDeleteTemplate={memo.requestDeleteTemplate}
       />
@@ -262,6 +305,13 @@ export function Memo({
         pendingUrlMemo={memo.pendingUrlMemo}
         onConfirmOverwrite={memo.confirmUrlMemoOverwrite}
         onKeepCurrentMemo={memo.cancelUrlMemoOverwrite}
+      />
+
+      <LlmGuideDialog
+        dialogRef={llmGuideDialogRef}
+        guideText={LLM_MEMO_GUIDE_TEXT}
+        isCopied={isLlmGuideCopied}
+        onCopyGuide={() => void copyLlmGuide()}
       />
 
       {memo.counterPopup ? (

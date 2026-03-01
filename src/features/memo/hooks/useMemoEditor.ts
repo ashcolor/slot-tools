@@ -804,6 +804,15 @@ export function getTemplateTitle(memo: string): string {
   return firstLine ? firstLine.slice(0, 28) : "空のメモ";
 }
 
+export function getTemplatePreview(memo: string): string {
+  const lines = memo
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (lines.length <= 1) return "";
+  return lines.slice(1).join(" ").slice(0, 60);
+}
+
 export function useMemoEditor() {
   const [draft, setDraft] = useLocalStorage<MemoDraft>("slot-memo-draft", createDraft());
   const [templates, setTemplates] = useLocalStorage<MemoTemplate[]>(
@@ -1548,6 +1557,10 @@ export function useMemoEditor() {
       Array.isArray(prev) ? prev.filter((item) => item.id !== pendingDeleteTemplateId) : [],
     );
     setPendingDeleteTemplateId(null);
+    deleteTemplateModalRef.current?.close();
+    requestAnimationFrame(() => {
+      templateModalRef.current?.showModal();
+    });
   };
 
   return {
